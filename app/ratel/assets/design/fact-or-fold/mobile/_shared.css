@@ -1,0 +1,297 @@
+/* Mobile mockup baseline — Fact or Fold rounds (≤420px viewport).
+ * Stand-alone palette + typography so each round mockup renders
+ * with no external dependencies. Mirror of the dark palette from
+ * `../shared.css`, condensed to mobile spacing.
+ */
+
+:root {
+  --bg: #07070f;
+  --surface: rgba(18, 18, 32, 0.72);
+  --surface-2: rgba(28, 28, 46, 0.6);
+  --surface-3: rgba(38, 38, 58, 0.5);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text-primary: #f0f0f5;
+  --text-muted: #8a8aa6;
+  --text-faint: #5a5a78;
+  --gold: #fcb300;
+  --gold-soft: rgba(252, 179, 0, 0.12);
+  --pink: #db2780;
+  --pink-soft: rgba(219, 39, 128, 0.12);
+  --teal: #6eedd8;
+  --teal-soft: rgba(110, 237, 216, 0.12);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.14);
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Mobile frame — simulates a 390×844 phone canvas for the mockup
+ * preview. Each round mockup uses `.frame` as the outermost wrapper
+ * so the design renders at phone size when opened in a desktop
+ * browser. */
+.frame {
+  width: min(420px, 100vw);
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 14px 14px 80px;
+}
+
+/* Compact top bar — round views drop the menu so the header reads
+ * "you're playing, not browsing". Brand stays centered on its own
+ * to keep the chrome quiet. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 12px;
+}
+.topbar .brand-name {
+  font-family: "Orbitron", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+/* Stage strip — replaces the desktop sidebar timeline. Horizontal
+ * scroll-snap row of 6 dots, current step highlighted gold. */
+.stage-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.stage-strip::-webkit-scrollbar { display: none; }
+.stage-strip .step {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  /* Steps render as <a> so each chip links to the matching round
+   * mockup. Strip the default anchor look so they read as pills. */
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.stage-strip .step:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.stage-strip .step.active {
+  background: var(--gold-soft);
+  border-color: rgba(252,179,0,0.4);
+  color: var(--gold);
+}
+.stage-strip .step.done {
+  color: var(--text-faint);
+}
+
+/* Live timer pill — shown above each round's content card. */
+.timer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 12px;
+}
+.timer .stage-name {
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.timer .countdown {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* Generic card — every round's primary content sits in this
+ * container. Body padding kept tight (16px) for phone widths. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card .section-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.card .section-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+/* Collapsible news-card — every round mounts this so players can
+ * re-read the headline without leaving the current stage. Built on
+ * native <details>/<summary> so no JS needed. Default closed on
+ * stages 2-6; the news-reveal stage opens it by default via the
+ * `open` attribute. */
+.news-collapsible {
+  padding: 0;
+  overflow: hidden;
+}
+.news-collapsible > .news-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.news-collapsible > .news-summary::-webkit-details-marker {
+  display: none;
+}
+.news-collapsible .news-summary-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+.news-collapsible .news-summary-title {
+  flex: 1;
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  /* Single line + ellipsis when closed; once open the body takes
+   * over so this row stays compact regardless of headline length. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.news-collapsible .news-summary-toggle {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+.news-collapsible[open] .news-summary-toggle {
+  transform: rotate(180deg);
+}
+.news-collapsible[open] .news-summary-title {
+  white-space: normal;
+}
+.news-collapsible .news-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 12px;
+}
+.news-collapsible .news-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.news-collapsible .news-tag {
+  padding: 3px 8px;
+  background: var(--gold-soft);
+  border: 1px solid rgba(252,179,0,0.3);
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.news-collapsible .news-difficulty {
+  margin-left: auto;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.news-collapsible .news-headline-full {
+  font-family: "Orbitron", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+.news-collapsible .news-excerpt {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.news-collapsible .news-source {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+/* Primary CTA button — full-width on mobile. */
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  background: var(--gold);
+  color: #1a0a00;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.25);
+}
+.cta--ghost {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.cta:disabled {
+  opacity: 0.5;
+}
+
+/* Mockup caption — fixed footer label so each file labels which
+ * round it represents when opened standalone. */
+.mockup-caption {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  background: rgba(7, 7, 15, 0.7);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}

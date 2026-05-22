@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 · 설정 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="admin-shared.css" />
+    <style>
+      .settings-section {
+        margin-bottom: 22px;
+      }
+
+      .settings-section-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 4px;
+        padding: 0 4px;
+      }
+
+      .settings-section-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--gold);
+      }
+
+      .settings-section-sub {
+        font-size: 12.5px;
+        color: var(--text-muted);
+      }
+
+      .inline-input {
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-primary);
+        border-radius: var(--r-sm);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        width: 120px;
+        text-align: right;
+      }
+
+      .inline-select {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-primary);
+        border-radius: var(--r-sm);
+        font-family: "Outfit", sans-serif;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .unit-suffix {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-faint);
+        margin-left: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 설정</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <div class="admin-page-head">
+          <div>
+            <h1>설정</h1>
+            <p>플랫폼 단위 룰 — 변경 사항은 다음 라운드부터 적용됩니다.</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-ghost">변경 이력</button>
+            <button class="btn btn-primary">변경 사항 저장</button>
+          </div>
+        </div>
+
+        <!-- 1. 라운드 룰 -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-section-title">01 · 라운드 룰</span>
+            <span class="settings-section-sub">시간, 인원, 단계 길이</span>
+          </div>
+          <div class="panel">
+            <div class="setting-row">
+              <div class="setting-label">라운드 인원</div>
+              <div class="setting-desc">한 라운드에 매칭되는 참가자 수. 3~6 권장.</div>
+              <div class="setting-control">
+                <div class="num-step">
+                  <button>−</button>
+                  <span class="num-value">4</span>
+                  <button>+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">단계별 시간 제한</div>
+              <div class="setting-desc">초 단위. 뉴스 공개 / 1차 베팅 / 근거 작성 / 근거 공개 / 토론.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="30 / 10 / 30 / 20 / 70" style="width: 180px" />
+                <span class="unit-suffix">초</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">자동 발행 시각</div>
+              <div class="setting-desc">매일 새 라운드가 열리는 KST 기준 시각.</div>
+              <div class="setting-control">
+                <input class="inline-input" type="time" value="06:00" />
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">자동 백필</div>
+              <div class="setting-desc">스케줄이 비면 인사이더 풀에서 자동으로 매칭해 발행.</div>
+              <div class="setting-control">
+                <span class="toggle-switch" data-on="false" onclick="this.dataset.on=this.dataset.on==='true'?'false':'true'"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 베팅 / 보상 -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-section-title">02 · 베팅 / 보상</span>
+            <span class="settings-section-sub">RatelPoint 경제</span>
+          </div>
+          <div class="panel">
+            <div class="setting-row">
+              <div class="setting-label">최소 베팅</div>
+              <div class="setting-desc">한 라운드에 걸 수 있는 최저 RP.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="100" />
+                <span class="unit-suffix">RP</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">최대 베팅</div>
+              <div class="setting-desc">한 라운드 베팅 상한.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="1,000" />
+                <span class="unit-suffix">RP</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">정답 보너스 배율</div>
+              <div class="setting-desc">맞춘 진영이 틀린 진영의 RP를 가져가는 비율.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="1.6×" />
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">인사이더 정답 보너스</div>
+              <div class="setting-desc">정답 + 인사이더였을 때 추가 배율.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="+0.5×" />
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">마음 돌림 영향력 비율</div>
+              <div class="setting-desc">근거가 인용돼서 상대가 마음을 바꿨을 때 그 사람 베팅의 몇 %를 가져올지.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="30" />
+                <span class="unit-suffix">%</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">신규 가입 보너스</div>
+              <div class="setting-desc">계정 생성 시 1회 지급.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="5,000" />
+                <span class="unit-suffix">RP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 인사이더 (v1 — D1/D2: 단일 진실 인사이더 1명 고정, mafia mode v2 deferred) -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-section-title">03 · 인사이더</span>
+            <span class="settings-section-sub">v1: 단일 진실 인사이더 (TRUTH-KNOWER)</span>
+          </div>
+          <div class="panel">
+            <div class="setting-row">
+              <div class="setting-label">인사이더 모드</div>
+              <div class="setting-desc">v1은 라운드당 진실 인사이더 1명 고정. 거짓 인사이더(mafia mode)는 v2에 도입 예정.</div>
+              <div class="setting-control">
+                <span class="pill" style="opacity: 0.7">v1: TRUTH-KNOWER 1명 (고정)</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">인사이더 자기 노출 금지</div>
+              <div class="setting-desc">자신이 인사이더라는 사실을 채팅으로 직접 밝히는 것 차단.</div>
+              <div class="setting-control">
+                <span class="toggle-switch" data-on="true" onclick="this.dataset.on=this.dataset.on==='true'?'false':'true'"></span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">인사이더 정답 보너스 (×stake)</div>
+              <div class="setting-desc">인사이더가 정답 진영(자신이 아는 진실)으로 베팅하고 라운드 결과가 일치할 때 추가 지급되는 stake 배수. 스펙 §FR-30 기본 0.5.</div>
+              <div class="setting-control">
+                <input class="inline-input" value="0.5" />
+                <span class="unit-suffix">×</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Essence -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-section-title">04 · Essence 연동</span>
+            <span class="settings-section-sub">근거 텍스트의 Essence 등록 룰</span>
+          </div>
+          <div class="panel">
+            <div class="setting-row">
+              <div class="setting-label">기본 Essence 등록</div>
+              <div class="setting-desc">정산 후 사용자의 근거 텍스트가 디폴트로 Essence에 들어갈지.</div>
+              <div class="setting-control">
+                <span class="toggle-switch" data-on="true" onclick="this.dataset.on=this.dataset.on==='true'?'false':'true'"></span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">근거 최소 글자수</div>
+              <div class="setting-desc">이 길이 미만은 Essence에 등록되지 않음 (자동 제외).</div>
+              <div class="setting-control">
+                <input class="inline-input" value="50" />
+                <span class="unit-suffix">자</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">거짓 진영 글의 Essence 정책</div>
+              <div class="setting-desc">인사이더가 거짓말로 작성한 텍스트의 처리 방식.</div>
+              <div class="setting-control">
+                <select class="inline-select">
+                  <option>자동 비공개</option>
+                  <option selected>메타데이터 부착 후 공개</option>
+                  <option>일반 글과 동일</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">사용자 옵트아웃 가능</div>
+              <div class="setting-desc">정산 후 검토 화면에서 사용자가 항목 단위로 빼고 갈 수 있음.</div>
+              <div class="setting-control">
+                <span class="toggle-switch" data-on="true" onclick="this.dataset.on=this.dataset.on==='true'?'false':'true'"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 위험 영역 -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <span class="settings-section-title" style="color: var(--pink)">⚠ 위험 영역</span>
+            <span class="settings-section-sub">데이터 / 계정 영구 조작</span>
+          </div>
+          <div class="panel" style="border-color: rgba(219, 39, 128, 0.25); background: rgba(219, 39, 128, 0.04)">
+            <div class="setting-row">
+              <div class="setting-label" style="color: var(--pink)">진행 중 라운드 강제 종료</div>
+              <div class="setting-desc">현재 LIVE 라운드를 즉시 중단하고 베팅을 환불. 모든 참가자에게 알림.</div>
+              <div class="setting-control">
+                <button class="btn btn-ghost" style="color: var(--pink); border-color: var(--pink)">강제 종료</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label" style="color: var(--pink)">전체 라운드 데이터 내보내기</div>
+              <div class="setting-desc">CSV + JSON으로 전체 라운드, 베팅, 근거 텍스트 export.</div>
+              <div class="setting-control">
+                <button class="btn btn-ghost">내보내기 요청</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label" style="color: var(--pink)">관리자 추가</div>
+              <div class="setting-desc">사용자에게 admin 권한 부여. 신중히 진행.</div>
+              <div class="setting-control">
+                <button class="btn btn-ghost">사용자 검색</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+    <script src="theme-toggle.js" defer></script>
+  </body>
+</html>

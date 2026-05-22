@@ -16,6 +16,37 @@ use crate::features::spaces::pages::actions::actions::discussion::SpacePostComme
 use crate::features::spaces::pages::actions::actions::poll::SpacePoll;
 use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
 
+/// Register a FOF rationale into Essence (opt-in flow, PR6 step 4).
+/// Caller is the rationale author; the row already exists in DDB
+/// (written during the rationale-submit stage). This function only
+/// performs the Essence side: upserts an `Essence` row pointing at
+/// the rationale's (pk, sk) so the user's Essence House surfaces it
+/// alongside posts/comments/etc.
+pub async fn index_fact_fold_rationale(
+    cli: &aws_sdk_dynamodb::Client,
+    rationale: &crate::features::arcade::games::fact_or_fold::models::FactFoldRationale,
+) -> Result<()> {
+    let title = summarize(&rationale.text, 80);
+    let source_path = format!(
+        "Fact or Fold · {} / {}",
+        strip_prefix(&rationale.pk.to_string()),
+        strip_prefix(&rationale.sk.to_string()),
+    );
+    let word_count = rationale.text.split_whitespace().count() as i64;
+    Essence::upsert_for_source(
+        cli,
+        rationale.user_pk.clone(),
+        rationale.pk.clone(),
+        rationale.sk.clone(),
+        EssenceSourceKind::FactFoldRationale,
+        title,
+        source_path,
+        word_count,
+        None,
+    )
+    .await
+}
+
 pub async fn index_post(cli: &aws_sdk_dynamodb::Client, post: &Post) -> Result<()> {
     let title = if post.title.is_empty() {
         "(Untitled post)".to_string()

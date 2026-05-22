@@ -106,6 +106,44 @@ pub enum Partition {
     /// Pairs with `EntityType::LastBackfillVersion` to form a single
     /// (pk, sk) row at `MIGRATION` + `LAST_BACKFILL_VERSION`.
     Migration,
+
+    /// Ratel Arcade — *Fact or Fold*. One pk per round groups all rows
+    /// for that round (round state, participants, bets, rationales,
+    /// chat, settlements). Used starting PR3.
+    FactFold(String),
+
+    /// Anchor pk holding **all** *Fact or Fold* subject rows; each
+    /// subject (a news item players will judge) lives at the same pk
+    /// with a different sk (`EntityType::FactFoldSubject(subject_id)`)
+    /// so listing / scheduling queries work with a single `query` per pk.
+    FactFoldSubjects,
+
+    /// Singleton row carrying admin-tunable parameters for the
+    /// *Fact or Fold* game (stage durations, bet caps, bonus rates).
+    /// One row per deployment.
+    FactFoldSettings,
+
+    /// Singleton pointer row tracking the *current waiting Round* for
+    /// the *Fact or Fold* lobby. One row per deployment; the inner
+    /// `current_round_id` is updated transactionally on join + start.
+    FactFoldLobbySingleton,
+
+    /// Ratel Arcade — per-user wallet partition. Groups the balance
+    /// row (`EntityType::ArcadeWalletBalance`) and every transaction
+    /// row (`EntityType::ArcadeWalletTxn(txn_id)`) for one user so a
+    /// single pk query returns the full ledger.
+    ArcadeWallet(String), // user_id
+
+    /// Singleton row carrying admin-tunable parameters that apply to
+    /// the whole arcade platform (chip↔RP ratio, default buy-in, ...).
+    /// One row per deployment.
+    ArcadeSettings,
+
+    /// Anchor pk for the *Fact or Fold* leaderboard. Each row at this
+    /// pk is a single user's leaderboard entry; sk encodes the
+    /// accuracy + user id so an sk-descending query returns
+    /// top-accuracy users first (PR7).
+    FactFoldLeaderboard,
 }
 
 impl Partition {

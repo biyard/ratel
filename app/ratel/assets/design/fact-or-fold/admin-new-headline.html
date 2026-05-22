@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fact or Fold · 관리자 · 헤드라인 등록 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      /* ═══ ADMIN-only additions ════════════════════════════════════ */
+
+      /* admin badge */
+      .admin-tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        padding: 3px 9px;
+        border: 1px solid var(--pink);
+        border-radius: 4px;
+        color: var(--pink);
+        background: rgba(219, 39, 128, 0.08);
+        text-transform: uppercase;
+      }
+
+      /* ── admin sidebar nav ─────────────────────────────────── */
+      .admin-nav {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        backdrop-filter: blur(14px);
+        padding: 14px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .admin-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: var(--r-sm);
+        font-size: 13px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        background: transparent;
+        border: 1px solid transparent;
+      }
+
+      .admin-nav-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-primary);
+      }
+
+      [data-theme="light"] .admin-nav-item:hover {
+        background: rgba(15, 15, 35, 0.04);
+      }
+
+      .admin-nav-item[data-active="true"] {
+        background: rgba(252, 179, 0, 0.08);
+        border-color: rgba(252, 179, 0, 0.3);
+        color: var(--gold);
+      }
+
+      [data-theme="light"] .admin-nav-item[data-active="true"] {
+        background: rgba(252, 179, 0, 0.12);
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+
+      .admin-nav-icon {
+        width: 18px;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .admin-nav-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 6px 4px;
+      }
+
+      .admin-nav-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        color: var(--text-faint);
+        padding: 8px 12px 4px;
+        text-transform: uppercase;
+      }
+
+      /* ── admin page header ────────────────────────────────── */
+      .admin-page-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .admin-page-head h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+
+      .admin-page-head p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .admin-page-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* ── admin grid (form + side) ────────────────────────── */
+      .admin-grid {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      @media (max-width: 1100px) {
+        .admin-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── form card ────────────────────────────────────────── */
+      .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        backdrop-filter: blur(14px);
+        padding: 22px 24px;
+      }
+
+      .form-section {
+        padding: 18px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .form-section:first-child {
+        padding-top: 4px;
+      }
+
+      .form-section:last-child {
+        border-bottom: none;
+        padding-bottom: 4px;
+      }
+
+      .form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .form-section-number {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--gold);
+        padding: 2px 7px;
+        border: 1px solid rgba(252, 179, 0, 0.4);
+        border-radius: 4px;
+        background: rgba(252, 179, 0, 0.06);
+      }
+
+      .form-section-name {
+        font-family: "Orbitron", sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--text-primary);
+      }
+
+      .form-section-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* ── form fields ──────────────────────────────────────── */
+      .field {
+        margin-bottom: 14px;
+      }
+
+      .field:last-child {
+        margin-bottom: 0;
+      }
+
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .field-row.thirds {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .field-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-family: "JetBrains Mono", monospace;
+        color: var(--text-muted);
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+
+      .field-required {
+        color: var(--pink);
+        font-weight: 700;
+      }
+
+      .field-hint {
+        margin-top: 6px;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        line-height: 1.5;
+      }
+
+      .field-input,
+      .field-textarea,
+      .field-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-primary);
+        border-radius: var(--r-sm);
+        font-family: "Outfit", sans-serif;
+        font-size: 13.5px;
+        line-height: 1.5;
+        outline: none;
+        transition: border-color 0.15s, background 0.15s;
+      }
+
+      .field-input:focus,
+      .field-textarea:focus,
+      .field-select:focus {
+        border-color: var(--gold);
+        background: rgba(252, 179, 0, 0.04);
+      }
+
+      .field-input.mono {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+      }
+
+      .field-textarea {
+        resize: vertical;
+        min-height: 84px;
+      }
+
+      .field-textarea.tall {
+        min-height: 120px;
+      }
+
+      /* ── verdict toggle ───────────────────────────────────── */
+      .verdict-toggle {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .verdict-option {
+        padding: 14px;
+        border: 1.5px solid var(--border);
+        background: var(--surface-2);
+        border-radius: var(--r-md);
+        cursor: pointer;
+        transition: all 0.15s;
+        text-align: center;
+      }
+
+      .verdict-option:hover {
+        border-color: var(--border-strong);
+      }
+
+      .verdict-option[data-selected="true"][data-side="real"] {
+        border-color: var(--gold);
+        background: rgba(252, 179, 0, 0.08);
+        box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.1);
+      }
+
+      .verdict-option[data-selected="true"][data-side="fake"] {
+        border-color: var(--pink);
+        background: rgba(219, 39, 128, 0.08);
+        box-shadow: 0 0 0 4px rgba(219, 39, 128, 0.1);
+      }
+
+      .verdict-option-icon {
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+
+      .verdict-option-label {
+        font-family: "Orbitron", sans-serif;
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: 0.08em;
+      }
+
+      .verdict-option[data-side="real"] .verdict-option-label {
+        color: var(--gold);
+      }
+
+      .verdict-option[data-side="fake"] .verdict-option-label {
+        color: var(--pink);
+      }
+
+      .verdict-option-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      /* ── tag input ───────────────────────────────────────── */
+      .tag-input-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        border-radius: var(--r-sm);
+        min-height: 42px;
+        align-items: center;
+      }
+
+      .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 9px 4px 10px;
+        background: var(--gold-soft);
+        border: 1px solid rgba(252, 179, 0, 0.3);
+        color: var(--gold);
+        border-radius: 999px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .tag-chip-x {
+        font-size: 11px;
+        color: var(--gold);
+        cursor: pointer;
+        opacity: 0.7;
+      }
+
+      .tag-input-inline {
+        flex: 1;
+        min-width: 100px;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 13px;
+        padding: 4px 6px;
+      }
+
+      /* ── star picker ─────────────────────────────────────── */
+      .star-picker {
+        display: flex;
+        gap: 4px;
+      }
+
+      .star-btn {
+        background: transparent;
+        border: none;
+        font-size: 22px;
+        color: var(--border-strong);
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        transition: color 0.15s;
+      }
+
+      .star-btn.active {
+        color: var(--gold);
+      }
+
+      .star-btn:hover {
+        color: var(--gold);
+      }
+
+      /* ── insider role checks ─────────────────────────────── */
+      .role-check-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .role-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .role-check[data-checked="true"] {
+        border-color: var(--purple);
+        background: rgba(167, 139, 250, 0.06);
+      }
+
+      .role-check-box {
+        width: 18px;
+        height: 18px;
+        border: 1.5px solid var(--border-strong);
+        border-radius: 4px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        color: transparent;
+      }
+
+      .role-check[data-checked="true"] .role-check-box {
+        border-color: var(--purple);
+        background: var(--purple);
+        color: white;
+      }
+
+      .role-check-text {
+        flex: 1;
+      }
+
+      .role-check-name {
+        font-family: "Orbitron", sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+      }
+
+      .role-check-desc {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      /* ── verification url rows ────────────────────────────── */
+      .url-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .url-row {
+        display: grid;
+        grid-template-columns: 1fr 2fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .url-row .remove-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 13px;
+        padding: 8px 11px;
+        border-radius: var(--r-sm);
+        cursor: pointer;
+      }
+
+      .url-row .remove-btn:hover {
+        border-color: var(--pink);
+        color: var(--pink);
+      }
+
+      .add-url-btn {
+        margin-top: 4px;
+        padding: 8px 14px;
+        background: transparent;
+        border: 1px dashed var(--border-strong);
+        color: var(--text-muted);
+        border-radius: var(--r-sm);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        cursor: pointer;
+        align-self: start;
+      }
+
+      .add-url-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+      }
+
+      /* ── action row at bottom ────────────────────────────── */
+      .action-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        margin-top: 8px;
+      }
+
+      /* ── right side panels ───────────────────────────────── */
+      .side-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: sticky;
+        top: 24px;
+      }
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        backdrop-filter: blur(14px);
+        padding: 18px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .panel-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--text-primary);
+      }
+
+      .panel-sub {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      /* preview card mirrors news-card lite */
+      .preview-card {
+        padding: 14px 16px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+      }
+
+      .preview-source {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10.5px;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+
+      .preview-headline {
+        font-family: "Outfit", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: var(--text-primary);
+        margin: 0 0 8px;
+      }
+
+      .preview-excerpt {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin: 0 0 10px;
+      }
+
+      .preview-pills {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      /* checklist */
+      .check-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .check-item.done {
+        color: var(--text-primary);
+      }
+
+      .check-mark {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border-strong);
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        color: transparent;
+        flex-shrink: 0;
+      }
+
+      .check-item.done .check-mark {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      /* upcoming rounds compact list */
+      .round-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .round-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+
+      .round-row:hover {
+        border-color: var(--border-strong);
+      }
+
+      .round-row-id {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--gold);
+      }
+
+      .round-row-title {
+        font-size: 12.5px;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+      }
+
+      .round-row-status {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        letter-spacing: 0.04em;
+      }
+
+      .round-row-status.live {
+        background: rgba(219, 39, 128, 0.15);
+        color: var(--pink);
+        border: 1px solid rgba(219, 39, 128, 0.3);
+      }
+
+      .round-row-status.scheduled {
+        background: rgba(167, 139, 250, 0.12);
+        color: var(--purple);
+        border: 1px solid rgba(167, 139, 250, 0.3);
+      }
+
+      .round-row-status.draft {
+        background: var(--surface-3);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+      }
+
+      .round-row-status.done {
+        background: rgba(110, 237, 216, 0.1);
+        color: var(--teal);
+        border: 1px solid rgba(110, 237, 216, 0.3);
+      }
+
+      /* tip card */
+      .tip-card {
+        padding: 14px 16px;
+        background: rgba(167, 139, 250, 0.06);
+        border: 1px solid rgba(167, 139, 250, 0.2);
+        border-radius: var(--r-md);
+      }
+
+      .tip-card-head {
+        font-family: "Orbitron", sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--purple);
+        margin-bottom: 6px;
+      }
+
+      .tip-card-body {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+
+      <!-- ═══ TOP BAR ═══ -->
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 헤드라인 등록</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <!-- ═══ LAYOUT ═══ -->
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <!-- 페이지 헤더 -->
+        <div class="admin-page-head">
+          <div>
+            <h1>새 헤드라인 등록</h1>
+            <p>한 라운드(24h)에 사용될 뉴스 1건과 인사이더 정보, 정산 시 공개 자료를 등록합니다.</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-ghost" onclick="window.location.href='admin-headlines.html'">목록으로</button>
+            <button class="btn btn-ghost">임시 저장</button>
+            <button class="btn btn-primary">예약 발행 →</button>
+          </div>
+        </div>
+
+        <div class="admin-grid">
+
+          <!-- ─── LEFT: FORM ─── -->
+          <div class="form-card">
+
+            <!-- 섹션 1: 기본 -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="form-section-number">01</span>
+                <span class="form-section-name">기본</span>
+                <span class="form-section-sub">자동 생성됨 — 필요 시 수정</span>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <div class="field-label">
+                    라운드 ID <span class="field-required">*</span>
+                  </div>
+                  <input
+                    type="text"
+                    class="field-input mono"
+                    value="r-2026-05-15"
+                    placeholder="r-YYYY-MM-DD"
+                  />
+                  <div class="field-hint">날짜 기준 자동. 같은 날 2건 발행 시 -a / -b 접미사.</div>
+                </div>
+
+                <div class="field">
+                  <div class="field-label">
+                    공개 일시 <span class="field-required">*</span>
+                  </div>
+                  <input
+                    type="datetime-local"
+                    class="field-input mono"
+                    value="2026-05-15T06:00"
+                  />
+                  <div class="field-hint">참가자에게 라운드가 열리는 시각. KST 기준.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 섹션 2: 정답 & 분류 -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="form-section-number">02</span>
+                <span class="form-section-name">정답 & 분류</span>
+                <span class="form-section-sub">참가자에게 비공개 (정산 시 공개)</span>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  진실 판정 <span class="field-required">*</span>
+                </div>
+                <div class="verdict-toggle">
+                  <div class="verdict-option" data-side="real" data-selected="false" onclick="pickVerdict(this,'real')">
+                    <div class="verdict-option-icon">◎</div>
+                    <div class="verdict-option-label">REAL</div>
+                    <div class="verdict-option-sub">실제 발생한 사실</div>
+                  </div>
+                  <div class="verdict-option" data-side="fake" data-selected="true" onclick="pickVerdict(this,'fake')">
+                    <div class="verdict-option-icon">⊘</div>
+                    <div class="verdict-option-label">FAKE</div>
+                    <div class="verdict-option-sub">픽션 / 왜곡 / 미발생</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <div class="field-label">카테고리</div>
+                  <div class="tag-input-wrap">
+                    <span class="tag-chip">경제 <span class="tag-chip-x">×</span></span>
+                    <span class="tag-chip">단독 <span class="tag-chip-x">×</span></span>
+                    <input
+                      type="text"
+                      class="tag-input-inline"
+                      placeholder="+ 태그 입력 후 엔터"
+                    />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <div class="field-label">난이도</div>
+                  <div class="star-picker" id="starPick">
+                    <button type="button" class="star-btn active" onclick="pickStar(3)">★</button>
+                    <button type="button" class="star-btn active" onclick="pickStar(3)">★</button>
+                    <button type="button" class="star-btn active" onclick="pickStar(3)">★</button>
+                    <button type="button" class="star-btn" onclick="pickStar(4)">★</button>
+                    <button type="button" class="star-btn" onclick="pickStar(5)">★</button>
+                  </div>
+                  <div class="field-hint">사후 정답률로 자동 보정됨 (선택값은 초기 노출용).</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 섹션 3: 뉴스 카드 -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="form-section-number">03</span>
+                <span class="form-section-name">뉴스 카드 (참가자 노출)</span>
+                <span class="form-section-sub">실제 보이는 헤드라인 + 본문</span>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <div class="field-label">출처 표기</div>
+                  <input
+                    type="text"
+                    class="field-input"
+                    value="국내 종합지"
+                    placeholder="예: 국내 종합지 / 해외 통신 / 익명 SNS"
+                  />
+                </div>
+                <div class="field">
+                  <div class="field-label">기사 표기 일시</div>
+                  <input
+                    type="text"
+                    class="field-input mono"
+                    value="2026.05.13 06:42"
+                    placeholder="YYYY.MM.DD HH:MM"
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  헤드라인 <span class="field-required">*</span>
+                </div>
+                <input
+                  type="text"
+                  class="field-input"
+                  value='"한국은행, 6월 금리 0.5%p 전격 인하 검토 중 — 내부 보고서 단독 입수"'
+                  placeholder="따옴표 포함 그대로 노출됨"
+                  maxlength="120"
+                />
+                <div class="field-hint">120자 이하 권장.</div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  본문 발췌 <span class="field-required">*</span>
+                </div>
+                <textarea class="field-textarea tall" placeholder="본문 2~4문장 발췌">본지가 단독 입수한 한국은행 내부 보고서에 따르면, 통화정책국이 다음 달 금융통화위원회에서 기준금리를 현재 3.25%에서 2.75%로 0.5%p 인하하는 시나리오를 1순위 안으로 올렸다. 보고서는 4월 소비자물가지수 둔화와 가계부채 안정세를 근거로 들었으며, 일부 위원은 추가 인하 가능성도 언급한 것으로 알려졌다.</textarea>
+                <div class="field-hint">200~500자 권장. 마크다운 미지원.</div>
+              </div>
+            </div>
+
+            <!-- 섹션 4: INSIDER (v1 — 단일 진실 인사이더 1명, mafia mode v2 deferred) -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="form-section-number">04</span>
+                <span class="form-section-name">인사이더 설정</span>
+                <span class="form-section-sub">라운드 시작 시 1명에게만 전달</span>
+              </div>
+
+              <div class="field">
+                <div class="field-label">인사이더 역할</div>
+                <div class="role-check-list">
+                  <div class="role-check" data-checked="true" data-locked="true">
+                    <div class="role-check-box">✓</div>
+                    <div class="role-check-text">
+                      <div class="role-check-name">⊘ TRUTH-KNOWER</div>
+                      <div class="role-check-desc">라운드 시작 시 4명 중 무작위 1명이 선택되어 진실(REAL/FAKE)을 알게 됩니다. 진실 방향으로 다른 참가자를 설득하면 영향력 보너스를 받습니다.</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field-hint">v1은 단일 진실 인사이더만 운영합니다. 거짓 인사이더(mafia mode)는 v2에 도입 예정.</div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  인사이더에게 보낼 진술 <span class="field-required">*</span>
+                </div>
+                <textarea class="field-textarea" placeholder="라운드 시작 시 인사이더에게만 비공개 전달됨">이 뉴스는 가짜입니다. 한국은행 보고서는 단독 출처가 아닌 6개월 전 폐기된 내부 시나리오 문서이며, 실제 5월 회의록에는 동결 기조가 명시돼 있습니다.</textarea>
+                <div class="field-hint">한 줄 — 진실 진영의 근거 요약. 정확히 한 명에게 전달됩니다.</div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">인사이더 전략 팁</div>
+                <input
+                  type="text"
+                  class="field-input"
+                  value="다른 참가자가 당신 근거를 인용해 가짜로 베팅을 바꾸면 그 사람 베팅의 30%를 가져옵니다."
+                  placeholder="짧은 팁 — 인사이더 카드 하단에 노출"
+                />
+              </div>
+            </div>
+
+            <!-- 섹션 5: REVEAL -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="form-section-number">05</span>
+                <span class="form-section-name">정산 공개 (REVEAL)</span>
+                <span class="form-section-sub">라운드 종료 후 모두에게 표시</span>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  진실 한 줄 요약 <span class="field-required">*</span>
+                </div>
+                <textarea class="field-textarea" placeholder="진실이 무엇이었는지 평문으로">"한국은행 6월 0.5%p 인하 검토" 보도는 출처 없는 픽션이었습니다. 한은은 5월 9일 오전 보도 자체를 공식 부인했습니다.</textarea>
+              </div>
+
+              <div class="field">
+                <div class="field-label">검증 출처 (URL)</div>
+                <div class="url-list">
+                  <div class="url-row">
+                    <input type="text" class="field-input" value="한은 보도자료" placeholder="라벨" />
+                    <input type="text" class="field-input mono" value="https://bok.or.kr/press/..." placeholder="https://" />
+                    <button class="remove-btn">−</button>
+                  </div>
+                  <div class="url-row">
+                    <input type="text" class="field-input" value="팩트체크 한국" placeholder="라벨" />
+                    <input type="text" class="field-input mono" value="https://factcheck.kr/..." placeholder="https://" />
+                    <button class="remove-btn">−</button>
+                  </div>
+                </div>
+                <button class="add-url-btn">+ 검증 출처 추가</button>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  원본 출처 URL <span class="field-required">*</span>
+                </div>
+                <input
+                  type="text"
+                  class="field-input mono"
+                  value="https://example-news.kr/article/123456"
+                  placeholder="원본 기사 — 정산 시에만 공개"
+                />
+                <div class="field-hint">라운드 진행 중에는 "출처 비공개"로 가려지고 정산 화면에서만 노출됨.</div>
+              </div>
+            </div>
+
+            <!-- 액션 -->
+            <div class="action-row">
+              <button class="btn btn-ghost">취소</button>
+              <button class="btn btn-ghost">임시 저장</button>
+              <button class="btn btn-primary">예약 발행 →</button>
+            </div>
+
+          </div>
+
+          <!-- ─── RIGHT: SIDE STACK ─── -->
+          <div class="side-stack">
+
+            <!-- 미리보기 -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">참가자 화면 미리보기</span>
+                <span class="panel-sub">실시간</span>
+              </div>
+              <div class="preview-card">
+                <div class="preview-source">
+                  <span>📰</span>
+                  <span>국내 종합지 · 2026.05.13 06:42</span>
+                </div>
+                <h3 class="preview-headline">
+                  "한국은행, 6월 금리 0.5%p 전격 인하 검토 중 — 내부 보고서 단독 입수"
+                </h3>
+                <p class="preview-excerpt">
+                  본지가 단독 입수한 한국은행 내부 보고서에 따르면, 통화정책국이 다음 달 금융통화위원회에서 기준금리를 현재 3.25%에서 2.75%로 0.5%p 인하하는 시나리오를 1순위 안으로 올렸다…
+                </p>
+                <div class="preview-pills">
+                  <span class="pill">경제</span>
+                  <span class="pill">단독</span>
+                  <span class="pill purple">난이도 ★★★☆☆</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 발행 체크리스트 -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">발행 체크리스트</span>
+                <span class="panel-sub">5 / 7</span>
+              </div>
+              <ul class="check-list">
+                <li class="check-item done"><span class="check-mark">✓</span> 진실 판정 선택</li>
+                <li class="check-item done"><span class="check-mark">✓</span> 헤드라인 입력</li>
+                <li class="check-item done"><span class="check-mark">✓</span> 본문 발췌 입력</li>
+                <li class="check-item done"><span class="check-mark">✓</span> 인사이더 진술 작성</li>
+                <li class="check-item done"><span class="check-mark">✓</span> 진실 요약 작성</li>
+                <li class="check-item"><span class="check-mark"></span> 검증 출처 2개 이상</li>
+                <li class="check-item"><span class="check-mark"></span> 원본 URL 검증</li>
+              </ul>
+            </div>
+
+            <!-- 도움말 -->
+            <div class="tip-card">
+              <div class="tip-card-head">⚐ 인사이더 가이드 (v1)</div>
+              <div class="tip-card-body">
+                v1은 <strong style="color: var(--purple)">단일 진실 인사이더</strong>만 운영합니다. 라운드 시작 시 4명 중 무작위 1명이 인사이더로 지정되어 진술을 비공개로 받습니다. 거짓 인사이더(mafia mode)는 v2에 도입 예정.
+              </div>
+            </div>
+
+            <!-- 예정 라운드 -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">발행 큐</span>
+                <span class="panel-sub">앞으로 7일</span>
+              </div>
+              <div class="round-list">
+                <div class="round-row">
+                  <span class="round-row-id">r-2026-05-14</span>
+                  <span class="round-row-title">정부 4일제 시범 사업 확대 발표…</span>
+                  <span class="round-row-status live">LIVE</span>
+                </div>
+                <div class="round-row">
+                  <span class="round-row-id">r-2026-05-15</span>
+                  <span class="round-row-title">한국은행, 6월 금리 0.5%p…</span>
+                  <span class="round-row-status draft">초안</span>
+                </div>
+                <div class="round-row">
+                  <span class="round-row-id">r-2026-05-16</span>
+                  <span class="round-row-title">SK하이닉스 차세대 HBM 양산…</span>
+                  <span class="round-row-status scheduled">예약</span>
+                </div>
+                <div class="round-row">
+                  <span class="round-row-id">r-2026-05-17</span>
+                  <span class="round-row-title">서울시 25개구 카페 흡연실 폐지…</span>
+                  <span class="round-row-status scheduled">예약</span>
+                </div>
+                <div class="round-row">
+                  <span class="round-row-id">r-2026-05-18</span>
+                  <span class="round-row-title">—</span>
+                  <span class="round-row-status draft">비어있음</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+
+    <script>
+      // 진실 판정 토글
+      function pickVerdict(el, side) {
+        document.querySelectorAll(".verdict-option").forEach((o) => {
+          o.setAttribute("data-selected", o === el ? "true" : "false");
+        });
+      }
+
+      // 난이도 별점
+      function pickStar(n) {
+        document.querySelectorAll("#starPick .star-btn").forEach((b, i) => {
+          b.classList.toggle("active", i < n);
+        });
+      }
+
+      // 인사이더 역할 체크
+      function toggleRole(el) {
+        const next = el.dataset.checked === "true" ? "false" : "true";
+        el.dataset.checked = next;
+      }
+
+      // 태그 chip 제거
+      document.querySelectorAll(".tag-chip-x").forEach((x) => {
+        x.addEventListener("click", (e) => {
+          e.stopPropagation();
+          x.closest(".tag-chip").remove();
+        });
+      });
+
+      // 검증 출처 row 추가
+      document.querySelector(".add-url-btn")?.addEventListener("click", () => {
+        const list = document.querySelector(".url-list");
+        const row = document.createElement("div");
+        row.className = "url-row";
+        row.innerHTML = `
+          <input type="text" class="field-input" placeholder="라벨" />
+          <input type="text" class="field-input mono" placeholder="https://" />
+          <button class="remove-btn">−</button>
+        `;
+        row.querySelector(".remove-btn").addEventListener("click", () => row.remove());
+        list.appendChild(row);
+      });
+
+      // 기존 remove 버튼들
+      document.querySelectorAll(".url-row .remove-btn").forEach((b) => {
+        b.addEventListener("click", () => b.closest(".url-row").remove());
+      });
+
+      // admin nav 활성화
+      document.querySelectorAll(".admin-nav-item").forEach((it) => {
+        it.addEventListener("click", () => {
+          document.querySelectorAll(".admin-nav-item").forEach((x) => x.removeAttribute("data-active"));
+          it.setAttribute("data-active", "true");
+        });
+      });
+    </script>
+    <script src="theme-toggle.js" defer></script>
+  </body>
+</html>

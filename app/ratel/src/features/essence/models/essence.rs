@@ -180,6 +180,9 @@ impl Essence {
                 }
                 EssenceSourceKind::Poll => updater.increase_total_poll(source_delta),
                 EssenceSourceKind::Quiz => updater.increase_total_quiz(source_delta),
+                EssenceSourceKind::FactFoldRationale => {
+                    updater.increase_total_fact_fold_rationale(source_delta)
+                }
             };
         }
         if let Err(e) = updater.execute(cli).await {

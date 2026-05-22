@@ -277,6 +277,61 @@ pub enum EntityType {
     SyndicationJob(String),         // pk=Feed(post_id), inner=platform.to_string()
     EngagementSnapshot(String),     // pk=Feed(post_id), inner=platform.to_string()
     UserOnboardingFlags,            // pk=User(user_id), singleton per user
+
+    // Ratel Arcade — *Fact or Fold*. v1 PR1 only registers subject + settings;
+    // round/participant/bet/rationale/chat/settlement entries are added in PR3+.
+    FactFoldSubject(String),        // pk=FactFoldSubjects, inner=subject_id
+    FactFoldSettings,               // pk=FactFoldSettings (singleton)
+
+    // PR3 — round + lobby. Per-participant rows (bets, rationales,
+    // chat, settlements) come in PR4+; the Round itself carries the
+    // participant_pks list for the join/leave + capacity check.
+    FactFoldRound(String),          // pk=FactFold(round_id), inner=round_id
+    FactFoldLobby,                  // pk=FactFoldLobbySingleton (singleton)
+
+    // PR4 — per-participant round state. All keyed by user_id under
+    // the same Partition::FactFold(round_id) as the Round itself, so
+    // a single sk-prefix query lists everything for a round.
+    FactFoldParticipant(String),    // pk=FactFold(round_id), inner=user_id
+    FactFoldBet(String),            // pk=FactFold(round_id), inner=user_id
+    FactFoldRationale(String),      // pk=FactFold(round_id), inner=user_id
+
+    /// One row per chat message in a round. inner = uuid_v7 (time-
+    /// sortable) so an sk-prefix query returns the chat log in
+    /// chronological order. A DDB Stream filter on this sk prefix
+    /// drives the SSE fan-out (PR4f).
+    FactFoldChat(String),           // pk=FactFold(round_id), inner=msg_id
+
+    // PR6 — settlement.
+    /// One row per (round, user). Written by the settlement
+    /// handler with the §FR-28~30 breakdown. `idempotency_key =
+    /// round_id#user_id` ensures retries are no-ops.
+    FactFoldSettlement(String),     // pk=FactFold(round_id), inner=user_id
+
+    /// Per-user lifetime statistics. Lives under
+    /// `Partition::User(user_pk)` so a single user query reads it
+    /// alongside other user-scoped rows.
+    FactFoldUserStats,              // pk=User(user_pk) (singleton sk)
+
+    /// Leaderboard entry row (PR7). inner = `{accuracy_bps:010}#{user_id}`
+    /// — zero-padded basis-points accuracy followed by user id, so
+    /// an sk-descending query at `Partition::FactFoldLeaderboard`
+    /// returns top users first. Updated as a side effect of
+    /// settlement.
+    FactFoldLeaderboardEntry(String),
+
+    // Ratel Arcade — chip wallet (PR4b).
+    /// Singleton balance row under `Partition::ArcadeWallet(user_id)`.
+    /// One row per user; carries `chip_balance` + `last_updated`.
+    ArcadeWalletBalance,            // pk=ArcadeWallet(user_id) (singleton sk)
+    /// Per-transaction ledger row under `Partition::ArcadeWallet(user_id)`.
+    /// inner=ulid (time-sortable) so a single sk-prefix query lists
+    /// transactions in chronological order.
+    ArcadeWalletTxn(String),        // pk=ArcadeWallet(user_id), inner=txn_id
+
+    /// Singleton arcade-wide settings (chip↔RP ratio, default buy-in,
+    /// ...). Pairs with `Partition::ArcadeSettings`.
+    ArcadeSettings,                 // pk=ArcadeSettings (singleton)
 }
 
 impl TryInto<Partition> for EntityType {

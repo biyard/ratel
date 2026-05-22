@@ -125,11 +125,18 @@ pub enum BroadcastTarget {
 
 #[cfg(feature = "server")]
 impl SubTeamAnnouncement {
+    /// Create a Draft. `target_child_team_id` is `None` for the standard
+    /// broadcast-to-all flow and `Some(child_id)` for the direct-to-one
+    /// flow (composed from the parent's sub-team detail page) — both
+    /// share the same Draft → Publish 2-step lifecycle; the difference
+    /// only shows up at publish time, where the fanout writes one Post
+    /// to the target child's feed instead of every recognized sub-team.
     pub fn new_draft(
         parent_team_pk: Partition,
         title: String,
         body: String,
         author_user_id: String,
+        target_child_team_id: Option<TeamPartition>,
     ) -> Self {
         let announcement_id = uuid::Uuid::new_v4().to_string();
         let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -153,49 +160,10 @@ impl SubTeamAnnouncement {
             space_type: None,
             space_pk: None,
             fan_out_count: 0,
-            target_child_team_id: None,
+            target_child_team_id: target_child_team_id.map(|p| p.0),
             target_post_pk: None,
             broadcast_notified_at: None,
         }
     }
 
-    /// Direct announcement to a single recognized sub-team. Created as
-    /// `Published` immediately — no draft step. The fanout handler picks
-    /// up the `target_child_team_id` and writes exactly one Post to that
-    /// child's feed, demoting any prior direct-message Post from this
-    /// parent so only the latest stays pinned.
-    pub fn new_direct(
-        parent_team_pk: Partition,
-        target_child_team_id: String,
-        title: String,
-        body: String,
-        author_user_id: String,
-    ) -> Self {
-        let announcement_id = uuid::Uuid::new_v4().to_string();
-        let now = crate::common::utils::time::get_now_timestamp_millis();
-        Self {
-            pk: parent_team_pk,
-            sk: EntityType::SubTeamAnnouncement(announcement_id.clone()),
-            created_at: now,
-            updated_at: now,
-            published_at: Some(now),
-            announcement_id,
-            title,
-            body: String::new(),
-            html_contents: body,
-            tags: Vec::new(),
-            attachments: Vec::new(),
-            author_user_id,
-            status: SubTeamAnnouncementStatus::Published,
-            target_type: BroadcastTarget::AllRecognizedSubTeams,
-            visibility: Visibility::Public,
-            space_enabled: false,
-            space_type: None,
-            space_pk: None,
-            fan_out_count: 0,
-            target_child_team_id: Some(target_child_team_id),
-            target_post_pk: None,
-            broadcast_notified_at: None,
-        }
-    }
 }

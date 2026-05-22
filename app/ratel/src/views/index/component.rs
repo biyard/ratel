@@ -133,6 +133,10 @@ pub fn Index() -> Element {
         nav.auth_push(Route::EssenceSourcesPage {});
     };
 
+    let go_arcade = move |_: Event<MouseData>| {
+        nav.auth_push(Route::ArcadeHomePage {});
+    };
+
     let go_my_ai = move |_: Event<MouseData>| {
         nav.auth_push(Route::MyAiPage {});
     };
@@ -180,6 +184,36 @@ pub fn Index() -> Element {
                         crate::features::notifications::components::NotificationBell {
                             class: "hud-btn",
                             onclick: move |_| notifications_open.toggle(),
+                        }
+                    }
+                    if is_arcade_visible_env() {
+                        button {
+                            class: "hud-btn",
+                            aria_label: "{t.arcade}",
+                            "data-testid": "home-btn-arcade",
+                            onclick: go_arcade,
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                rect {
+                                    x: "3",
+                                    y: "3",
+                                    width: "18",
+                                    height: "18",
+                                    rx: "2",
+                                }
+                                circle { cx: "8", cy: "8", r: "1" }
+                                circle { cx: "16", cy: "8", r: "1" }
+                                circle { cx: "12", cy: "12", r: "1" }
+                                circle { cx: "8", cy: "16", r: "1" }
+                                circle { cx: "16", cy: "16", r: "1" }
+                            }
+                            span { class: "hud-btn__label", "{t.arcade}" }
                         }
                     }
                     if has_user {
@@ -859,6 +893,18 @@ fn balance_text(has_user: bool) -> String {
     } else {
         "0".to_string()
     }
+}
+
+/// Arcade is still pre-release — surface the entry button only on the
+/// developer's local box and the shared dev environment. Staging and
+/// production builds hide it. Mirrors the `is_local_env` gate used by
+/// the Report space-app, but widens the allow-list to include `Dev`.
+fn is_arcade_visible_env() -> bool {
+    use crate::common::config::Environment;
+    matches!(
+        Environment::default(),
+        Environment::Local | Environment::Dev,
+    )
 }
 
 #[component]

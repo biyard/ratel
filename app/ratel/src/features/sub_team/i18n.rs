@@ -139,6 +139,11 @@ translate! {
     broadcast_title: { en: "Title", ko: "제목" },
     broadcast_body: { en: "Body", ko: "본문" },
     broadcast_compose: { en: "Write announcement", ko: "공지 작성" },
+    // direct_compose — composer eyebrow + topbar copy + detail-page CTA
+    // for the direct-to-one-sub-team flow. Shares the broadcast editor +
+    // Draft → Publish lifecycle; only the publish-time fanout target
+    // diverges (one child team vs every recognized sub-team).
+    direct_compose: { en: "Write to this sub-team", ko: "이 하위팀에만 공지" },
     broadcast_publish: { en: "Publish", ko: "발행" },
     sub_team_options: { en: "Options", ko: "옵션" },
     sub_team_options_drawer_title: { en: "Document options", ko: "문서 옵션" },
@@ -353,15 +358,6 @@ translate! {
     direct_announce_title: {
         en: "Direct announcement",
         ko: "이 하위팀에만 공지",
-    },
-    direct_announce_placeholder: {
-        en: "Write a private announcement for this sub-team only…",
-        ko: "이 하위팀에만 보낼 공지를 작성하세요…",
-    },
-    direct_announce_send: { en: "Send", ko: "발송" },
-    direct_announce_title_input: {
-        en: "Announcement title",
-        ko: "공지 제목",
     },
     direct_announce_note: {
         en: "Pinned to this sub-team's feed only · not counted as a broadcast",

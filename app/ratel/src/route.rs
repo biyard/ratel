@@ -40,14 +40,27 @@ use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 use crate::features::admin::{AdminLayout, AdminMainPage};
 
+// Fact or Fold — admin pages share `FactFoldAdminLayout` (sub-tabs)
+// nested under the global `AdminLayout` (admin-only guard). The
+// player-facing pages (home, matching, game room) share
+// `ArcadeLayout` (top-bar + chip wallet) under `/arcade`.
+use crate::features::arcade::games::fact_or_fold::pages::{
+    FactFoldAdminSubjectsPage, FactFoldAdminLayout, FactFoldAdminNewSubjectPage,
+    FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
+    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldMatchingPage,
+};
+use crate::features::arcade::layout::ArcadeLayout;
+use crate::features::arcade::pages::{ArcadeHomePage, ArcadeLeaderboardPage};
+use crate::FactFoldRoundEntityType;
+
 // Sub-team governance pages — placeholders wired up now; content lives
 // under `features::sub_team::pages::*` and will be fleshed out by the
 // UI-implementation dispatches.
 use crate::features::sub_team::pages::{
     TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage, TeamSubTeamApplyPage,
     TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage, TeamSubTeamDeregisterPage,
-    TeamSubTeamBylawsComposePage, TeamSubTeamDetailPage, TeamSubTeamDocEditPage,
-    TeamSubTeamManagementPage,
+    TeamSubTeamBylawsComposePage, TeamSubTeamDetailPage, TeamSubTeamDirectComposePage,
+    TeamSubTeamDocEditPage, TeamSubTeamManagementPage,
 };
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
@@ -130,10 +143,40 @@ pub enum Route {
         #[route("/me/character")]
         CharacterPage { },
 
+        #[nest("/arcade")]
+            #[layout(ArcadeLayout)]
+                #[route("/home")]
+                ArcadeHomePage { },
+                #[route("/leaderboard")]
+                ArcadeLeaderboardPage { },
+                #[route("/games/fact-or-fold/matching/:round_id")]
+                FactFoldMatchingPage { round_id: FactFoldRoundEntityType },
+                #[route("/games/fact-or-fold/rounds/:round_id")]
+                FactFoldGameRoomPage { round_id: FactFoldRoundEntityType },
+            #[end_layout]
+        #[end_nest]
+
         #[nest("/admin")]
             #[layout(AdminLayout)]
                 #[route("/")]
                 AdminMainPage {},
+
+                #[nest("/fact-or-fold")]
+                    #[layout(FactFoldAdminLayout)]
+                        #[route("/subjects")]
+                        FactFoldAdminSubjectsPage {},
+                        #[route("/subjects/new")]
+                        FactFoldAdminNewSubjectPage {},
+                        #[route("/schedule")]
+                        FactFoldAdminSchedulePage {},
+                        #[route("/stats")]
+                        FactFoldAdminStatsPage {},
+                        #[route("/reports")]
+                        FactFoldAdminReportsPage {},
+                        #[route("/settings")]
+                        FactFoldAdminSettingsPage {},
+                    #[end_layout]
+                #[end_nest]
             #[end_layout]
         #[end_nest]
 
@@ -206,6 +249,15 @@ pub enum Route {
                 TeamSubTeamManagementPage { username: String },
             #[end_layout]
 
+            // Direct-to-one-sub-team composer. Same shared editor as
+            // `TeamSubTeamBroadcastComposePage`, but the publish fans
+            // out to exactly one sub-team (the route's `sub_team_id`)
+            // instead of every recognized child. Declared BEFORE the
+            // wildcard `:sub_team_id` detail route so the router matches
+            // the more specific `/sub-teams/:sub_team_id/compose` path
+            // first.
+            #[route("/sub-teams/:sub_team_id/compose")]
+            TeamSubTeamDirectComposePage { username: String, sub_team_id: String },
             // Sub-team detail — declared AFTER the layout block so the
             // dioxus router matches the more specific `/sub-teams/manage`
             // (inside the layout) before falling back to this wildcard.

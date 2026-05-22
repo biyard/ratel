@@ -45,6 +45,11 @@ pub struct UseSubTeamBroadcastCompose {
     pub attachments: Signal<Vec<File>>,
     pub space_enabled: Signal<bool>,
     pub space_type: Signal<Option<SpaceType>>,
+    /// `Some(child_id)` when the composer was opened from the parent's
+    /// sub-team detail page → publish fans out to exactly that one sub-team.
+    /// `None` for the standard broadcast-to-all flow. Seeded from context
+    /// on first hook construction; immutable for the composer's lifetime.
+    pub target_child_team_id: ReadSignal<Option<TeamPartition>>,
 
     // Draft autosave lifecycle.
     pub draft_status: Signal<BroadcastDraftStatus>,
@@ -91,6 +96,12 @@ pub fn use_sub_team_broadcast_compose(
     let team_id_signal: ReadSignal<TeamPartition> = use_signal(|| team_id).into();
     let initial_announcement_id: Option<String> = try_consume_context().unwrap_or(None);
     let announcement_id: Signal<Option<String>> = use_signal(|| initial_announcement_id);
+    // Direct-message target seeded from context by the page wrapper.
+    // `None` for the broadcast-to-all flow; `Some(child)` for the
+    // direct-to-one flow opened from the parent's sub-team detail page.
+    let initial_target: Option<TeamPartition> = try_consume_context().unwrap_or(None);
+    let target_child_team_id: ReadSignal<Option<TeamPartition>> =
+        use_signal(|| initial_target).into();
 
     let announcement_loader = use_loader(move || {
         let tid = team_id_signal();
@@ -165,6 +176,7 @@ pub fn use_sub_team_broadcast_compose(
         attachments,
         space_enabled,
         space_type,
+        target_child_team_id,
         draft_status,
         last_saved_at,
         handle_save_new,
