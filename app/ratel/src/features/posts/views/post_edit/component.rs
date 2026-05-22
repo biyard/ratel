@@ -503,15 +503,30 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                                             on_success: move |
                                                 resp: crate::features::posts::controllers::generate_ai_draft::GenerateAiDraftResponse|
                                             {
+                                                let new_body = resp.body_html.clone();
                                                 title.set(resp.title);
                                                 content.set(resp.body_html);
                                                 ai_draft_used.set(true);
-                                                // Force the RichEditor to remount so it
-                                                // picks up the new body (it snapshots
-                                                // content on mount and ignores later
-                                                // signal changes — see editor/component.rs).
+                                                // The RichEditor snapshots its initial
+                                                // HTML on mount and never re-applies the
+                                                // `content` prop (caret-jump avoidance
+                                                // during Korean IME composition — see
+                                                // editor/component.rs). For programmatic
+                                                // content swaps we inject the new HTML
+                                                // directly into `.re-content` and
+                                                // dispatch a synthetic `input` event so
+                                                // the bridge resyncs `content` via the
+                                                // normal autosave path.
                                                 let next = editor_remount_key.peek().wrapping_add(1);
                                                 editor_remount_key.set(next);
+                                                let body_lit = serde_json::to_string(&new_body)
+                                                    .unwrap_or_else(|_| "\"\"".to_string());
+                                                let script = format!(
+                                                    "(function() {{ var el = document.querySelector('.ratel-editor .re-content'); if (!el) return; el.innerHTML = {body_lit}; el.dataset.empty = 'false'; var bridge = el.parentElement && el.parentElement.querySelector('.re-bridge'); if (bridge) {{ bridge.value = el.innerHTML; bridge.dispatchEvent(new Event('input', {{ bubbles: true }})); }} }})();",
+                                                );
+                                                spawn(async move {
+                                                    let _ = dioxus::document::eval(&script).await;
+                                                });
                                                 popup.close();
                                             },
                                         }
