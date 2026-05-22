@@ -45404,6 +45404,16 @@ body.comments-panel-resizing {
   font-size: 12px;
 }
 
+.ff-settings__warning {
+  color: var(--dark, #fcb300) var(--light, #b87a00);
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--dark, rgba(252, 179, 0, 0.35)) var(--light, rgba(184, 122, 0, 0.4));
+  border-radius: 6px;
+  background: var(--dark, rgba(252, 179, 0, 0.08)) var(--light, rgba(252, 179, 0, 0.12));
+}
+
 /* === src/features/fact_or_fold/pages/admin/subjects === */
 
 .ff-subjects {

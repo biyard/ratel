@@ -17,6 +17,10 @@ translate! {
         en: "Players per round (v1 fixed at 4 in spec; this knob is for ops experiments).",
         ko: "라운드당 인원 (v1 스펙 고정 4명; 운영 실험용 노브).",
     },
+    round_capacity_solo_warning: {
+        en: "Solo mode (capacity 1) bypasses the insider dynamic — use for dev / smoke tests only.",
+        ko: "솔로 모드 (정원 1)는 인사이더 게임을 우회해요 — 개발/스모크 테스트 용도로만 사용하세요.",
+    },
     stage_news_reveal_sec: { en: "Stage 1 — News reveal (sec)", ko: "단계 1 — 뉴스 공개 (초)" },
     stage_bet_sec: { en: "Stage 2 — First bet (sec)", ko: "단계 2 — 1차 베팅 (초)" },
     stage_rationale_sec: { en: "Stage 3 — Rationale (sec)", ko: "단계 3 — 근거 작성 (초)" },
