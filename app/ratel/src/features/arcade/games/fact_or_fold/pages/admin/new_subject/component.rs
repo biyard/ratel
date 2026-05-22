@@ -70,6 +70,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                 reveal_summary: reveal_summary(),
                 reveal_sources: reveal_sources(),
                 scheduled_at: None,
+                expires_at: 0,
             });
         };
         Some(CreateSubjectRequest {
@@ -83,6 +84,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
             reveal_summary: reveal_summary(),
             reveal_sources: reveal_sources(),
             scheduled_at: Some(scheduled_ts),
+            expires_at: 0,
         })
     };
 

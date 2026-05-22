@@ -313,6 +313,13 @@ pub enum EntityType {
     /// alongside other user-scoped rows.
     FactFoldUserStats,              // pk=User(user_pk) (singleton sk)
 
+    /// Marker row written when a user joins a round, used to enforce
+    /// "one game per active subject window" — `pick_next_subject`
+    /// checks for the row's absence before letting the user matchmake
+    /// into a round bound to a given subject. Inner = subject_id.
+    /// pk = User(user_pk).
+    FactFoldSubjectPlay(String),
+
     /// Leaderboard entry row (PR7). inner = `{accuracy_bps:010}#{user_id}`
     /// — zero-padded basis-points accuracy followed by user id, so
     /// an sk-descending query at `Partition::FactFoldLeaderboard`
