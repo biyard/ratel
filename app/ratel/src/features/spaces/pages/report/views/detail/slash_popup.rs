@@ -1,3 +1,4 @@
+use super::i18n::ReportDetailTranslate;
 use crate::features::spaces::pages::report::types::*;
 use crate::features::spaces::pages::report::*;
 use crate::*;
@@ -8,6 +9,7 @@ use crate::*;
 /// stays in sync with mouse clicks here.
 #[component]
 pub fn SlashPopup() -> Element {
+    let tr: ReportDetailTranslate = use_translate();
     let mut ctx = use_report_detail_context();
     let state = ctx.slash.read().clone();
     let Some(state) = state else {
@@ -15,10 +17,10 @@ pub fn SlashPopup() -> Element {
     };
 
     let heading = match state.level {
-        0 => "COMMAND",
-        1 => "ANALYZE",
-        2 => "DATA SOURCE",
-        _ => "ITEMS",
+        0 => tr.slash_heading_command.to_string(),
+        1 => tr.slash_heading_analyze.to_string(),
+        2 => tr.slash_heading_data_source.to_string(),
+        _ => tr.slash_heading_items.to_string(),
     };
     // Coords come from the editor's slash watcher and are viewport-
     // relative (from `getBoundingClientRect`). The popup is positioned
@@ -51,11 +53,11 @@ pub fn SlashPopup() -> Element {
             style: "{style}",
             div { class: "report-detail__slash-pop-head",
                 span { class: "report-detail__slash-pop-heading", "{heading}" }
-                span { class: "report-detail__slash-pop-hint", "↑↓ 이동 · ↵ 선택 · esc 닫기" }
+                span { class: "report-detail__slash-pop-hint", "{tr.slash_pop_hint}" }
             }
             div { class: "report-detail__slash-pop-list",
                 if options.is_empty() {
-                    div { class: "report-detail__slash-pop-empty", "일치하는 항목 없음" }
+                    div { class: "report-detail__slash-pop-empty", "{tr.slash_pop_empty}" }
                 } else {
                     for (i, opt) in options.into_iter().enumerate() {
                         SlashItem {

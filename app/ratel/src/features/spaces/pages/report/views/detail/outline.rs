@@ -64,6 +64,7 @@ fn OutlineDefault() -> Element {
 /// same — only the rendering shape changes.
 #[component]
 fn OutlineSwap(chart_id: String) -> Element {
+    let tr: ReportDetailTranslate = use_translate();
     let mut ctx = use_report_detail_context();
     let meta = ctx.chart_meta(&chart_id);
     let (current_type, source, title) = match meta.as_ref() {
@@ -75,12 +76,12 @@ fn OutlineSwap(chart_id: String) -> Element {
         div { class: "report-detail__outline-section report-detail__outline-swap",
             div { class: "report-detail__outline-swap-head",
                 div { class: "report-detail__outline-swap-title-col",
-                    span { class: "report-detail__outline-swap-eyebrow", "차트 종류 변경" }
+                    span { class: "report-detail__outline-swap-eyebrow", "{tr.outline_swap_eyebrow}" }
                     span { class: "report-detail__outline-swap-title", "{title}" }
                 }
                 button {
                     class: "report-detail__outline-swap-close",
-                    "aria-label": "닫기",
+                    "aria-label": tr.outline_swap_close_aria,
                     onclick: move |_| ctx.close_outline_swap(),
                     svg {
                         view_box: "0 0 24 24",
@@ -112,28 +113,55 @@ fn OutlineSwap(chart_id: String) -> Element {
                     }
                 }
             }
-            div { class: "report-detail__outline-swap-hint",
-                "선택 즉시 본문 차트가 교체됩니다"
-            }
+            div { class: "report-detail__outline-swap-hint", "{tr.outline_swap_hint}" }
         }
     }
 }
 
 #[component]
 fn SwapOption(chart_id: String, chart_type: ChartType, active: bool) -> Element {
+    let tr: ReportDetailTranslate = use_translate();
     let mut ctx = use_report_detail_context();
     let (label, hint, preview_icon) = match chart_type {
-        ChartType::Bar => ("막대 차트", "응답 분포를 막대 그래프로", swap_icon_bar()),
-        ChartType::Pie => ("파이 차트", "비율을 원형으로", swap_icon_pie()),
-        ChartType::Table => ("표", "원본 집계 표 형식", swap_icon_table()),
-        ChartType::Lda => ("LDA Topics", "토픽별 상위 키워드", swap_icon_lda()),
-        ChartType::TfIdf => ("TF-IDF", "단어 중요도 순위표", swap_icon_tfidf()),
-        ChartType::Network => ("Network", "공출현 단어 네트워크", swap_icon_network()),
+        ChartType::Bar => (
+            tr.chart_type_bar_label.to_string(),
+            tr.chart_type_bar_desc.to_string(),
+            swap_icon_bar(),
+        ),
+        ChartType::Pie => (
+            tr.chart_type_pie_label.to_string(),
+            tr.chart_type_pie_desc.to_string(),
+            swap_icon_pie(),
+        ),
+        ChartType::Table => (
+            tr.chart_type_table_label.to_string(),
+            tr.chart_type_table_desc.to_string(),
+            swap_icon_table(),
+        ),
+        ChartType::Lda => (
+            tr.chart_type_lda_label.to_string(),
+            tr.chart_type_lda_desc.to_string(),
+            swap_icon_lda(),
+        ),
+        ChartType::TfIdf => (
+            tr.chart_type_tfidf_label.to_string(),
+            tr.chart_type_tfidf_desc.to_string(),
+            swap_icon_tfidf(),
+        ),
+        ChartType::Network => (
+            tr.chart_type_network_label.to_string(),
+            tr.chart_type_network_desc.to_string(),
+            swap_icon_network(),
+        ),
         // `TextList` never reaches this branch — the chart-type swap
         // button is hidden on TextList figures, so the user can't open
         // the swap panel against one. Render a generic table icon for
         // exhaustiveness in case the enum gets reused elsewhere.
-        ChartType::TextList => ("주관식 응답", "응답 목록", swap_icon_table()),
+        ChartType::TextList => (
+            tr.chart_type_textlist_label.to_string(),
+            tr.chart_type_textlist_desc.to_string(),
+            swap_icon_table(),
+        ),
     };
     let id_for_click = chart_id.clone();
     rsx! {
