@@ -1,10 +1,11 @@
 //! Audience gate for sub-team broadcast / direct-message Posts.
 //!
 //! Posts authored via `publish_announcement_handler` (broadcast to every
-//! recognized child) and `send_direct_message_handler` (1:1 to a single
-//! recognized child) are written with `visibility = Visibility::Broadcast`.
-//! That marker hands access control off to this module — Posts and any
-//! attached Space refuse to render to viewers outside the audience.
+//! recognized child when `target_child_team_id = None`, 1:1 to a single
+//! recognized child when `target_child_team_id = Some(child)`) are
+//! written with `visibility = Visibility::Broadcast`. That marker hands
+//! access control off to this module — Posts and any attached Space
+//! refuse to render to viewers outside the audience.
 //!
 //! Audience by announcement shape:
 //! - **Broadcast** (`SubTeamAnnouncement.target_child_team_id = None`):

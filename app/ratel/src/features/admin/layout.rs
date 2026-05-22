@@ -1,7 +1,13 @@
 use crate::features::admin::*;
 
+translate! {
+    AdminLayoutTranslate;
+    brand_name: { en: "Admin", ko: "관리자" },
+}
+
 #[component]
 pub fn AppLayout() -> Element {
+    let tr: AdminLayoutTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let user = user_ctx().user.clone();
     let nav = use_navigator();
@@ -33,7 +39,12 @@ pub fn AppLayout() -> Element {
                             }
                             span { "Back" }
                         }
-                        span { class: "admin-arena__title", "Admin" }
+                        div { class: "ff-admin-arena__brand",
+                            div { class: "ff-admin-arena__brand-logo", "R" }
+                            div { class: "ff-admin-arena__brand-text",
+                                div { class: "ff-admin-arena__brand-name", "{tr.brand_name}" }
+                            }
+                        }
                     }
                     Outlet::<Route> {}
                 }

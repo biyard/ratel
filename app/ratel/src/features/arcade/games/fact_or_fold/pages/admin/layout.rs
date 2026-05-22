@@ -19,18 +19,10 @@ pub fn FactFoldAdminLayout() -> Element {
     let r_stats = Route::FactFoldAdminStatsPage {};
     let r_reports = Route::FactFoldAdminReportsPage {};
     let r_settings = Route::FactFoldAdminSettingsPage {};
-    let r_new = Route::FactFoldAdminNewSubjectPage {};
 
     rsx! {
         div { class: "ff-admin-arena",
             header { class: "ff-admin-arena__topbar",
-                div { class: "ff-admin-arena__brand",
-                    div { class: "ff-admin-arena__brand-logo", "R" }
-                    div { class: "ff-admin-arena__brand-text",
-                        div { class: "ff-admin-arena__brand-name", "{tr.brand}" }
-                        div { class: "ff-admin-arena__brand-sub", "{tr.brand_sub}" }
-                    }
-                }
                 nav { class: "ff-admin-arena__tabs", role: "tablist",
                     Link {
                         class: "ff-admin-arena__tab",
@@ -66,15 +58,6 @@ pub fn FactFoldAdminLayout() -> Element {
                         "aria-selected": route == r_settings,
                         to: r_settings.clone(),
                         "{tr.tab_settings}"
-                    }
-                }
-                div { class: "ff-admin-arena__cta",
-                    Link {
-                        class: "ff-admin-arena__new-btn",
-                        "data-testid": "ff-admin-new-subject-cta",
-                        to: r_new,
-                        span { class: "ff-admin-arena__new-icon", "✚" }
-                        span { "{tr.new_subject_cta}" }
                     }
                 }
             }
