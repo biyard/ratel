@@ -4899,7 +4899,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "dioxus",
  "dioxus-translate-macro",
@@ -4925,7 +4925,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-types"
-version = "0.1.3"
+version = "0.1.4"
 
 [[package]]
 name = "dioxus-web"

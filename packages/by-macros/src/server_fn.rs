@@ -413,27 +413,8 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
         }
     };
 
-    // Re-attach dioxus-fullstack's own attribute macro on the not-tauri-web
-    // branch. dioxus-fullstack's `#[get]/#[post]/...` accept the same
-    // attribute syntax (`"/path", extractor: Type, ...`) we parsed, BUT only
-    // recognize `{name}` path placeholders. Rebuild the attribute from the
-    // normalized path + the preserved extractor tokens so callers can write
-    // either `{name}` or `:name` and the dioxus side always sees `{name}`.
-    let method_ident = format_ident!("{}", method.to_lowercase());
-    let normalized_path = normalize_path_for_dioxus(&route.path.value());
-    let normalized_path_lit = LitStr::new(&normalized_path, route.path.span());
-    let extractor_tokens = &route.extractor_tokens;
-    let dioxus_passthrough = quote! {
-        #[::dioxus::fullstack::#method_ident( #normalized_path_lit #extractor_tokens )]
-        #item_passthrough
-    };
-
     quote! {
-        #[cfg(feature = "tauri-web")]
         #tauri
-
-        #[cfg(not(feature = "tauri-web"))]
-        #dioxus_passthrough
     }
     .into()
 }
