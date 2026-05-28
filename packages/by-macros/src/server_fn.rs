@@ -33,7 +33,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use std::collections::HashSet;
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, FnArg, Ident, ItemFn, LitStr, Pat, PatType, Token, Type};
+use syn::{parse_macro_input, FnArg, Ident, ItemFn, LitStr, Pat, PatType, Type};
 
 /// `#[get("/path", extractor: T, ...)]` — parsed attribute args.
 struct RouteAttr {
@@ -48,10 +48,7 @@ impl Parse for RouteAttr {
         let path: LitStr = input.parse()?;
         let mut extractors = HashSet::new();
         while !input.is_empty() {
-            let comma: Token![,] = input.parse()?;
             let name: Ident = input.parse()?;
-            let colon: Token![:] = input.parse()?;
-            let ty: Type = input.parse()?;
             extractors.insert(name.to_string());
         }
         Ok(RouteAttr { path, extractors })
