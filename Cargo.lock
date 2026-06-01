@@ -2313,7 +2313,7 @@ checksum = "46c5e41b57b8bba42a04676d81cb89e9ee8e859a1a66f80a5a72e1cb76b34d43"
 
 [[package]]
 name = "by-macros"
-version = "0.6.15"
+version = "0.6.20"
 dependencies = [
  "Inflector",
  "bigdecimal",
@@ -4899,7 +4899,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "dioxus",
  "dioxus-translate-macro",
@@ -4912,7 +4912,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-macro"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "dioxus-translate",
  "dioxus-translate-types",
@@ -4925,7 +4925,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-types"
-version = "0.1.3"
+version = "0.1.4"
 
 [[package]]
 name = "dioxus-web"
