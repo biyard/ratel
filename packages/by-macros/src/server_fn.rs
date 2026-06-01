@@ -33,7 +33,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use std::collections::HashSet;
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, FnArg, Ident, ItemFn, LitStr, Pat, PatType, Type};
+use syn::{parse_macro_input, FnArg, Ident, ItemFn, LitStr, Pat, PatType, Token, Type};
 
 /// `#[get("/path", extractor: T, ...)]` — parsed attribute args.
 struct RouteAttr {
@@ -47,9 +47,30 @@ impl Parse for RouteAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let path: LitStr = input.parse()?;
         let mut extractors = HashSet::new();
+        // Accept three shapes used across biyard/asset and biyard/ratel:
+        //   #[get("/path")]                                  — no extractors
+        //   #[get("/path", name)]                            — name only
+        //   #[get("/path", name: Type, name2: Type2, ...)]   — name + type
+        //
+        // The type half is meaningful only on the server side via
+        // `dioxus::fullstack`'s own parser. The client-stub branch
+        // emitted by this macro only needs the extractor *names* so
+        // they can be stripped from the stub signature.
         while !input.is_empty() {
+            // Optional leading `,` between args (path → first extractor,
+            // and between successive extractors). Tolerated as optional
+            // so a stray trailing comma doesn't fail the parse.
+            let _ = input.parse::<Token![,]>();
+            if input.is_empty() {
+                break;
+            }
             let name: Ident = input.parse()?;
             extractors.insert(name.to_string());
+            // Optional `: <Type>` annotation — consumed and discarded.
+            if input.peek(Token![:]) {
+                let _: Token![:] = input.parse()?;
+                let _: Type = input.parse()?;
+            }
         }
         Ok(RouteAttr { path, extractors })
     }
