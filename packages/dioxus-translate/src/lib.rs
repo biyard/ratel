@@ -89,6 +89,22 @@ pub fn language_from_cookie() -> Language {
 /// Sets the global language signal value.
 pub fn set_language(lang: Language) {
     LANGUAGE.signal().set(lang);
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        use web_sys::wasm_bindgen::JsCast;
+
+        if let Some(window) = web_sys::window() {
+            if let Ok(Some(storage)) = window.local_storage() {
+                let _ = storage.set_item(STORAGE_KEY, &next.to_string());
+            }
+
+            if let Some(doc) = window.document() {
+                let html_document = doc.dyn_into::<web_sys::HtmlDocument>().unwrap();
+                let _ = html_document.set_cookie(&format!("language={}; path=/;", next));
+            }
+        }
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -140,23 +156,7 @@ impl Language {
         #[cfg(not(feature = "ko"))]
         let next = Language::En;
 
-        LANGUAGE.signal().set(next);
-
-        #[cfg(target_arch = "wasm32")]
-        {
-            use web_sys::wasm_bindgen::JsCast;
-
-            if let Some(window) = web_sys::window() {
-                if let Ok(Some(storage)) = window.local_storage() {
-                    let _ = storage.set_item(STORAGE_KEY, &next.to_string());
-                }
-
-                if let Some(doc) = window.document() {
-                    let html_document = doc.dyn_into::<web_sys::HtmlDocument>().unwrap();
-                    let _ = html_document.set_cookie(&format!("language={}; path=/;", next));
-                }
-            }
-        }
+        set_language(next);
 
         next
     }
