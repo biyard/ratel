@@ -96,6 +96,7 @@ use crate::features::social::pages::SocialSetting;
 // User pages
 use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
 use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectionsPage;
+use crate::features::launchpad_partner::views::LaunchpadReturnPage;
 use crate::features::social::pages::credentials::Home as CredentialPage;
 use crate::features::social::pages::post::Home as UserPosts;
 use crate::features::social::pages::space::Home as UserSpaces;
@@ -124,6 +125,10 @@ pub enum Route {
 
         #[route("/onboarding/connections")]
         OnboardingConnectionsPage {},
+
+        // OAuth-style hand-back from Launchpad after a point conversion.
+        #[route("/launchpad/return?:project_id&:conversion_id&:brand_tx_id&:deducted_points&:remaining_points&:round_id&:community_url&:ts&:sig")]
+        LaunchpadReturnPage { project_id: Option<String>, conversion_id: Option<String>, brand_tx_id: Option<String>, deducted_points: Option<String>, remaining_points: Option<String>, round_id: Option<String>, community_url: Option<String>, ts: Option<String>, sig: Option<String> },
 
         #[nest("/posts")]
             #[route("/")]

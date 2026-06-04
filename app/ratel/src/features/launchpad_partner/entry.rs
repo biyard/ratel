@@ -28,7 +28,18 @@ pub async fn launchpad_entry_url_handler() -> crate::common::Result<LaunchpadEnt
         crate::error!("launchpad entry-url: token encryption failed: {e}");
         crate::common::Error::Internal
     })?;
-    let url = format!("{base}/connect?project_id={}&lp_user={token}", cfg.project_id);
+    // OAuth-style return target: Launchpad bounces the user back here (signed)
+    // after the conversion completes. Must live on a host Launchpad allowlists
+    // against the project's brand_page_url / callback_base_url.
+    let return_url = format!(
+        "{}/launchpad/return",
+        site_base_url().trim_end_matches('/')
+    );
+    let url = format!(
+        "{base}/connect?project_id={}&lp_user={token}&redirect_uri={}",
+        cfg.project_id,
+        urlencoding::encode(&return_url),
+    );
 
     Ok(LaunchpadEntryUrlResponse { url })
 }
