@@ -53,6 +53,9 @@ pub enum EntityType {
     // Migration framework
     LastBackfillVersion,
 
+    // Launchpad partner integration (idempotency ledger for point deducts)
+    LaunchpadDeduction(String), // launchpad idempotency_key
+
     // Character (account-level progression)
     CharacterXp,
     CharacterXpSource(String), // space_id (unprefixed; SubPartition wraps SpacePartition)

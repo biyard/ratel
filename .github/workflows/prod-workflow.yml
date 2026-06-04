@@ -186,6 +186,10 @@ jobs:
           # the token-exchange POST.
           LINKEDIN_CLIENT_ID: ${{ secrets.PROD_LINKEDIN_CLIENT_ID }}
           LINKEDIN_CLIENT_SECRET: ${{ secrets.PROD_LINKEDIN_CLIENT_SECRET }}
+          LAUNCHPAD_BASE_URL: ${{ secrets.LAUNCHPAD_BASE_URL }}
+          LAUNCHPAD_PROJECT_ID: ${{ secrets.LAUNCHPAD_PROJECT_ID }}
+          LAUNCHPAD_PARTNER_SECRET: ${{ secrets.LAUNCHPAD_PARTNER_SECRET }}
+          LAUNCHPAD_POINT_SYMBOL: RT
         run: |
           rm -rf target/dx
 

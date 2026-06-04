@@ -33,7 +33,8 @@ impl TestContext {
         let arcade_router = crate::features::arcade::server::router();
         let dioxus_router = dioxus::server::router(App)
             .merge(mcp_router)
-            .merge(arcade_router);
+            .merge(arcade_router)
+            .merge(crate::features::launchpad_partner::server::router());
         let app = dioxus_router.layer(session_layer);
         crate::common::mcp::set_app_router(app.clone());
 

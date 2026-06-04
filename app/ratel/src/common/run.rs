@@ -121,11 +121,13 @@ fn serve(app: fn() -> Element) {
     let membership_router = crate::features::membership::server::router();
     let arcade_router = crate::features::arcade::server::router();
     let cross_posting_router = crate::features::cross_posting::server::router();
+    let launchpad_partner_router = crate::features::launchpad_partner::server::router();
     let dioxus_router = dioxus::server::router(app)
         .merge(mcp_router)
         .merge(membership_router)
         .merge(arcade_router)
-        .merge(cross_posting_router);
+        .merge(cross_posting_router)
+        .merge(launchpad_partner_router);
     // CatchPanicLayer turns any panic in the request future into a 500 response
     // instead of letting it propagate up the spawn_pinned worker thread, which
     // would terminate the worker (and drop the connection). Pairs with the
