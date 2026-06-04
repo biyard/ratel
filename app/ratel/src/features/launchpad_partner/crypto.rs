@@ -37,7 +37,9 @@ pub fn verify_signature(secret: &str, timestamp: &str, signature_hex: &str, raw_
     if timestamp.is_empty() || signature_hex.is_empty() {
         return false;
     }
-    let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(secret.as_bytes()) else {
+    // `new_from_slice` exists on both `aes_gcm::KeyInit` and `hmac::Mac`
+    // (both in scope), so disambiguate explicitly.
+    let Ok(mut mac) = <Hmac<Sha256> as Mac>::new_from_slice(secret.as_bytes()) else {
         return false;
     };
     mac.update(timestamp.as_bytes());
@@ -54,7 +56,7 @@ mod tests {
     use super::*;
 
     fn sign(secret: &str, timestamp: &str, body: &str) -> String {
-        let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes()).unwrap();
+        let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(secret.as_bytes()).unwrap();
         mac.update(timestamp.as_bytes());
         mac.update(b".");
         mac.update(body.as_bytes());
