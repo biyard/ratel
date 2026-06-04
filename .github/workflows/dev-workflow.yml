@@ -62,6 +62,13 @@ jobs:
           BIYARD_PUBLIC_API_URL: https://api.biyard.co
           BIYARD_PRIVATE_API_URL: http://api.biyard-prod-svc.local:8080
 
+          # Launchpad partner config → injected into the Lambda RUNTIME env by
+          # cdk/bin/cdk.ts (read via std::env::var at runtime, no rebuild needed).
+          LAUNCHPAD_BASE_URL: ${{ secrets.DEV_LAUNCHPAD_BASE_URL }}
+          LAUNCHPAD_PROJECT_ID: ${{ secrets.DEV_LAUNCHPAD_PROJECT_ID }}
+          LAUNCHPAD_PARTNER_SECRET: ${{ secrets.DEV_LAUNCHPAD_PARTNER_SECRET }}
+          LAUNCHPAD_POINT_SYMBOL: RT
+
           QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
         run: |
           npm i -g aws-cdk
