@@ -240,7 +240,7 @@ jobs:
           LAUNCHPAD_BASE_URL: ${{ secrets.DEV_LAUNCHPAD_BASE_URL }}
           LAUNCHPAD_PROJECT_ID: ${{ secrets.DEV_LAUNCHPAD_PROJECT_ID }}
           LAUNCHPAD_PARTNER_SECRET: ${{ secrets.DEV_LAUNCHPAD_PARTNER_SECRET }}
-          LAUNCHPAD_POINT_SYMBOL: RATEL
+          LAUNCHPAD_POINT_SYMBOL: RT
         run: |
           rm -rf target/dx
 
