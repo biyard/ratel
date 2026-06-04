@@ -6,10 +6,14 @@
 //! point state except an idempotency ledger (`LaunchpadDeduction`).
 
 pub mod config;
-pub mod crypto;
 pub mod error;
 pub mod types;
 pub mod views;
+
+// Uses aes-gcm/hmac which are server/full-only deps (not in the web feature),
+// and token encryption / signature verification only run server-side.
+#[cfg(feature = "server")]
+pub mod crypto;
 
 #[cfg(feature = "server")]
 pub mod controllers;
