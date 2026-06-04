@@ -13,6 +13,7 @@ mod fact_or_fold_tests;
 mod get_space_admin_tests;
 mod home_tests;
 mod inbox_helper_tests;
+mod launchpad_partner_tests;
 mod mcp_tests;
 mod meet_action_tests;
 mod notifications_tests;
