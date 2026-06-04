@@ -256,6 +256,37 @@ impl SpaceReward {
             user_reward
         };
 
+        // Scope-A balance: credit local `points` to the actor (and the
+        // owner's 10% bonus) in the same atomic transaction, routing to the
+        // User row or the Team row by partition kind.
+        let mut credit_points = |pk: &Partition, amt: i64| match pk {
+            Partition::User(_) => txs.push(
+                crate::common::models::auth::User::updater(
+                    pk.clone(),
+                    crate::common::types::EntityType::User,
+                )
+                .increase_points(amt)
+                .with_updated_at(now)
+                .transact_write_item(),
+            ),
+            Partition::Team(_) => txs.push(
+                crate::features::posts::models::Team::updater(
+                    pk.clone(),
+                    crate::common::types::EntityType::Team,
+                )
+                .increase_points(amt)
+                .with_updated_at(now)
+                .transact_write_item(),
+            ),
+            _ => {}
+        };
+        credit_points(&target_pk, amount);
+        if let Some(ref owner) = owner_pk {
+            if *owner != target_pk {
+                credit_points(owner, amount * 10 / 100);
+            }
+        }
+
         // Update SpaceReward totals
         txs.push(
             SpaceReward::updater(&space_pk, &space_reward.sk)

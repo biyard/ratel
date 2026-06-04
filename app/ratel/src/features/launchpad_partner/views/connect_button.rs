@@ -11,8 +11,10 @@ pub fn PointConversionButton(available_points: i64) -> Element {
     let mut popup = use_popup();
 
     rsx! {
-        Button {
-            style: ButtonStyle::Primary,
+        button {
+            r#type: "button",
+            class: "inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-extrabold cursor-pointer transition-transform hover:-translate-y-px",
+            style: "background: linear-gradient(135deg,#ffd24a 0%,#fcb300 100%); color:#0a0a0a; box-shadow:0 10px 24px -10px rgba(252,179,0,0.5);",
             onclick: move |_| {
                 popup
                     .open(rsx! {

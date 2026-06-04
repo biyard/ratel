@@ -32,15 +32,18 @@ pub fn PointConversionModal(available_points: i64) -> Element {
             h3 { class: "text-lg font-bold text-text-primary", "{tr.intro_title}" }
             p { class: "text-sm text-foreground-muted leading-relaxed", "{tr.intro_body}" }
 
-            div { class: "flex justify-between items-center py-3 px-4 rounded-xl bg-card-bg",
+            div {
+                class: "flex justify-between items-center py-3 px-4 rounded-xl",
+                style: "background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06);",
                 span { class: "text-sm font-semibold text-foreground-muted", "{tr.amount_balance_label}" }
-                span { class: "text-base font-bold text-text-primary",
+                span { class: "text-xl font-extrabold", style: "color:#fcb300",
                     "{format_with_commas(available_points)} P"
                 }
             }
 
             a {
-                class: "w-full inline-flex items-center justify-center min-h-[44px] rounded-lg bg-primary text-btn-primary-text text-sm font-extrabold transition-opacity hover:opacity-80",
+                class: "w-full inline-flex items-center justify-center min-h-[46px] rounded-xl text-sm font-extrabold transition-transform hover:-translate-y-px",
+                style: "background: linear-gradient(135deg,#ffd24a 0%,#fcb300 100%); color:#0a0a0a; box-shadow:0 12px 26px -12px rgba(252,179,0,0.55);",
                 href: "{url}",
                 "{tr.go_convert}"
             }

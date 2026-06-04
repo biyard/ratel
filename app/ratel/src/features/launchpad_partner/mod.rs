@@ -8,6 +8,8 @@
 pub mod config;
 pub mod entry;
 pub mod error;
+pub mod round_info;
+pub mod token_balance;
 pub mod types;
 pub mod views;
 

@@ -28,6 +28,11 @@ pub struct Team {
     pub created_at: i64,
     pub updated_at: i64,
 
+    /// Scope-A local point balance (credited by reward awards, debited by
+    /// launchpad conversions). Existing rows default to 0 until migrated.
+    #[serde(default)]
+    pub points: i64,
+
     #[dynamo(index = "gsi1", sk)]
     pub display_name: String,
     pub profile_url: String,
@@ -101,6 +106,7 @@ impl Team {
             sk,
             created_at: now,
             updated_at: now,
+            points: 0,
             display_name,
             profile_url,
             username,

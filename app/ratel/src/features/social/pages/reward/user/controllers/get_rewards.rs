@@ -45,60 +45,27 @@ async fn sum_local_points(
 #[cfg(feature = "server")]
 async fn fetch_rewards(user_pk: Partition, month: Option<String>) -> Result<RewardsResponse> {
     let cfg = crate::common::CommonConfig::default();
-    let biyard = cfg.biyard();
     let cli = cfg.dynamodb();
 
     let month = month.unwrap_or_else(|| utils::time::current_month());
 
-    // Local total is the authoritative source for "how many points does this
-    // user have on Ratel right now". Biyard is queried for the project-wide
-    // pool info and the token contract; if Biyard is offline or returns less
-    // than the local total (e.g. a pending reward has not yet replayed), we
-    // still surface what the user actually earned.
-    let local_points = sum_local_points(cli, &user_pk).await;
-
-    let biyard_balance = match biyard.get_user_balance(user_pk.clone(), month.clone()).await {
-        Ok(b) => Some(b),
-        Err(e) => {
-            crate::error!(
-                "Biyard get_user_balance failed for {user_pk} month={month}: {e} (falling back to local points)"
-            );
-            None
-        }
-    };
-
-    let token = match biyard.get_project_info().await {
-        Ok(t) => Some(t),
-        Err(e) => {
-            crate::error!("Biyard get_project_info failed: {e}");
-            None
-        }
-    };
-
-    let biyard_points = biyard_balance.as_ref().map(|b| b.balance).unwrap_or(0);
-    let points = std::cmp::max(local_points, biyard_points);
-    let total_points = biyard_balance
-        .as_ref()
-        .map(|b| b.project_total_points)
-        .filter(|v| *v > 0)
-        .unwrap_or(points.max(1));
-    let monthly_token_supply = biyard_balance
-        .as_ref()
-        .map(|b| b.monthly_token_supply)
-        .unwrap_or(0);
+    // Scope-A: the balance is the local `User.points` (credited by reward
+    // awards, debited by launchpad conversions). No console (Biyard) reads.
+    let user =
+        crate::features::auth::User::get(cli, user_pk.clone(), Some(crate::common::types::EntityType::User))
+            .await?
+            .unwrap_or_default();
+    let points = user.points;
 
     Ok(RewardsResponse {
         month,
-        project_name: token.as_ref().map(|t| t.name.clone()).unwrap_or_default(),
-        token_symbol: token
-            .as_ref()
-            .map(|t| t.symbol.clone())
-            .unwrap_or_else(|| "RATEL".to_string()),
-        total_points,
+        project_name: String::new(),
+        token_symbol: "RATEL".to_string(),
+        total_points: points.max(1),
         points,
-        monthly_token_supply,
-        chain_id: token.as_ref().and_then(|t| t.chain_id),
-        contract_address: token.as_ref().and_then(|t| t.contract_address.clone()),
+        monthly_token_supply: 0,
+        chain_id: None,
+        contract_address: None,
     })
 }
 
@@ -124,35 +91,4 @@ pub async fn get_user_rewards_handler(
         .ok_or(Error::NotFound(format!("User not found: {}", username)))?;
 
     fetch_rewards(user.pk.clone(), month).await
-}
-
-/// True for the launch quarter (Apr–Jun 2026), which the rewards hero and
-/// the launchpad point lookup both treat as one cumulative cycle.
-#[cfg(feature = "server")]
-fn is_launch_quarter(month: &str) -> bool {
-    matches!(month, "2026-04" | "2026-05" | "2026-06")
-}
-
-/// Cumulative points for the current cycle: the current-month total
-/// (max of local + console) plus earlier launch-quarter months' earnings.
-/// Mirrors the rewards hero so the launchpad `/connect` "보유 포인트" matches
-/// the figure shown on the ratel rewards page.
-#[cfg(feature = "server")]
-pub async fn cumulative_cycle_points(user_pk: Partition) -> Result<i64> {
-    let month = utils::time::current_month();
-    let base = fetch_rewards(user_pk.clone(), Some(month.clone())).await?;
-    let mut points = base.points;
-
-    if is_launch_quarter(&month) {
-        let cfg = crate::common::CommonConfig::default();
-        if let Ok(summaries) = cfg.biyard().get_monthly_summaries(user_pk).await {
-            for m in summaries.months {
-                if m.month != month && is_launch_quarter(&m.month) {
-                    points += m.total_earned;
-                }
-            }
-        }
-    }
-
-    Ok(points)
 }

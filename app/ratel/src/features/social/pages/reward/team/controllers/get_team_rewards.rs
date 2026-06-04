@@ -9,25 +9,21 @@ pub async fn get_team_rewards_handler(
     team_pk: TeamPartition,
     month: Option<String>,
 ) -> Result<TeamRewardsResponse> {
-    let cfg = crate::common::CommonConfig::default();
     let _ = user;
     let _ = team_pk;
-    let team_pk = team.pk.clone();
 
     let month = month.unwrap_or_else(|| utils::time::current_month());
 
-    let biyard_service = cfg.biyard();
-    let balance = biyard_service
-        .get_user_balance(team_pk.clone(), month.clone())
-        .await?;
-    let token = biyard_service.get_project_info().await?;
+    // Scope-A: team balance is the local `Team.points` (the `team`
+    // extractor already loaded the row). No console (Biyard) reads.
+    let team_points = team.points;
 
     Ok(TeamRewardsResponse {
         month,
-        project_name: token.name,
-        token_symbol: token.symbol,
-        total_points: balance.project_total_points,
-        team_points: balance.balance,
-        monthly_token_supply: balance.monthly_token_supply,
+        project_name: String::new(),
+        token_symbol: "RATEL".to_string(),
+        total_points: team_points.max(1),
+        team_points,
+        monthly_token_supply: 0,
     })
 }

@@ -51,6 +51,16 @@ pub fn verify_signature(secret: &str, timestamp: &str, signature_hex: &str, raw_
     mac.verify_slice(&sig).is_ok()
 }
 
+/// Sign an outbound request body the way launchpad's external read APIs
+/// expect: `hex(HMAC_SHA256(secret, "{timestamp}.{raw_body}"))`.
+pub fn sign_callback(secret: &str, timestamp: &str, raw_body: &str) -> Option<String> {
+    let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(secret.as_bytes()).ok()?;
+    mac.update(timestamp.as_bytes());
+    mac.update(b".");
+    mac.update(raw_body.as_bytes());
+    Some(hex::encode(mac.finalize().into_bytes()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
