@@ -1,21 +1,25 @@
-//! Per-user "Convert on Launchpad" entry point. Loads the encrypted
-//! handoff URL from the server (`launchpad_entry_url_handler`) so the
-//! token-bearing href is identical on SSR and after hydration.
+//! "Request point conversion" button shown on the rewards page. Opens the
+//! step-by-step `PointConversionModal` in a popup.
 
+use crate::common::*;
 use crate::features::launchpad_partner::LaunchpadPartnerTranslate;
-use crate::features::launchpad_partner::entry::launchpad_entry_url_handler;
-use crate::*;
+use crate::features::launchpad_partner::views::PointConversionModal;
 
 #[component]
-pub fn LaunchpadConnectButton() -> Element {
+pub fn PointConversionButton(available_points: i64) -> Element {
     let tr: LaunchpadPartnerTranslate = use_translate();
-    let url_loader = use_loader(move || async move { launchpad_entry_url_handler().await })?;
-    let url = url_loader().url;
+    let mut popup = use_popup();
 
     rsx! {
-        a {
-            class: "inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-btn-primary-text text-sm font-semibold transition-opacity hover:opacity-80",
-            href: "{url}",
+        Button {
+            style: ButtonStyle::Primary,
+            onclick: move |_| {
+                popup
+                    .open(rsx! {
+                    PointConversionModal { available_points }
+                })
+                .with_title(tr.modal_title.to_string());
+            },
             "{tr.convert_cta}"
         }
     }

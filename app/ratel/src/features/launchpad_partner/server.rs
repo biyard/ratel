@@ -46,7 +46,11 @@ fn verify_and_parse<T: serde::de::DeserializeOwned>(
     let raw = std::str::from_utf8(body.as_ref()).map_err(|_| PartnerError::Server)?;
     let ts = header(headers, "x-launchpad-timestamp");
     let sig = header(headers, "x-launchpad-signature");
-    if !verify_signature(cfg.shared_secret, &ts, &sig, raw) {
+    if !verify_signature(&cfg.shared_secret, &ts, &sig, raw) {
+        tracing::warn!(
+            "launchpad callback signature mismatch (project_id={}); check LAUNCHPAD_PARTNER_SECRET matches the launchpad project secret",
+            cfg.project_id,
+        );
         return Err(PartnerError::InvalidSignature);
     }
     let parsed: T = serde_json::from_str(raw).map_err(|_| PartnerError::Server)?;

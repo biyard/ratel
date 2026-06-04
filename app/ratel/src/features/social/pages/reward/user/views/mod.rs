@@ -10,6 +10,7 @@ use super::dto::RewardsResponse;
 use super::*;
 use crate::common::services::{MonthlySummaryItem, PointTransactionResponse};
 use crate::common::*;
+use crate::features::launchpad_partner::views::PointConversionButton;
 
 pub use i18n::UserRewardsTranslate;
 
@@ -403,6 +404,12 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                     monthly_supply: hero_supply,
                     token_symbol: token_symbol.clone(),
                     month_pretty: month_pretty.clone(),
+                }
+
+                // Launchpad point→token conversion entry: opens the
+                // step-by-step modal seeded with the current balance.
+                div { class: "flex justify-end my-4",
+                    PointConversionButton { available_points: hero_points }
                 }
 
                 // TokenCard {

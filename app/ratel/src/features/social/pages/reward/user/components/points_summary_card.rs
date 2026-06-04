@@ -3,7 +3,6 @@ use super::super::{
     views::{format_points, format_tokens, RewardsPageTranslate},
     *,
 };
-use crate::features::launchpad_partner::views::LaunchpadConnectButton;
 
 pub fn points_summary_card(
     tr: &RewardsPageTranslate,
@@ -72,13 +71,6 @@ pub fn points_summary_card(
                 div { class: "absolute right-3 top-1/2 text-sm font-bold text-white -translate-y-1/2",
                     "100%"
                 }
-            }
-
-            // Launchpad conversion entry point. Isolated in its own
-            // SuspenseBoundary so loading the per-user handoff URL can't
-            // blank the rest of the card.
-            div { class: "mt-4 flex justify-end",
-                SuspenseBoundary { LaunchpadConnectButton {} }
             }
         }
     }

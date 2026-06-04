@@ -12,23 +12,24 @@ use crate::features::launchpad_partner::types::{
     DeductBody, DeductResponse, HealthResponse, LookupResponse,
 };
 
-/// Read the user's current-month console balance.
+/// Read the user's cumulative cycle points (same figure as the ratel
+/// rewards hero): during the launch quarter this is the Apr–Jun total,
+/// not just the current month. Reuses the rewards controller so both
+/// surfaces stay in lockstep.
 pub async fn lookup(company_user_key: &str) -> Result<LookupResponse, PartnerError> {
     let cfg = LaunchpadPartnerConfig::default();
-    let common = crate::common::CommonConfig::default();
-    let biyard = common.biyard();
     let pk = Partition::User(company_user_key.to_string());
 
-    let balance = biyard
-        .get_user_balance(pk, current_month())
-        .await
-        .map_err(|e| {
-            crate::error!("launchpad lookup: biyard balance failed: {e}");
-            PartnerError::UnknownUser
-        })?;
+    let points =
+        crate::features::social::pages::reward::user::controllers::cumulative_cycle_points(pk)
+            .await
+            .map_err(|e| {
+                crate::error!("launchpad lookup: cycle points failed: {e}");
+                PartnerError::UnknownUser
+            })?;
 
     Ok(LookupResponse {
-        available_points: balance.balance,
+        available_points: points,
         point_symbol: cfg.point_symbol.to_string(),
     })
 }
@@ -58,26 +59,22 @@ pub async fn deduct(req: &DeductBody) -> Result<DeductResponse, PartnerError> {
         });
     }
 
-    let tx = biyard
-        .exchange_points(pk.clone(), req.point_amount, current_month())
-        .await
-        .map_err(|e| {
-            crate::error!("launchpad deduct: biyard exchange failed: {e}");
-            PartnerError::Insufficient
-        })?;
-
-    // Exchange returns no remaining balance; re-query for it.
+    // NOTE: point deduction is temporarily DISABLED. We acknowledge the
+    // deduct so Launchpad's convert proceeds (round registration + token
+    // issuance) but DO NOT reduce the console balance. The real deduction
+    // (biyard `exchange_points`) will be wired in later.
     let remaining = biyard
         .get_user_balance(pk, current_month())
         .await
         .map(|b| b.balance)
         .unwrap_or(0);
+    let brand_tx_id = format!("ratel_nodeduct_{}", req.idempotency_key);
 
     let row = LaunchpadDeduction::new(
         &req.company_user_key,
         &req.idempotency_key,
         req.point_amount,
-        &tx.transaction_id,
+        &brand_tx_id,
         remaining,
     );
     if let Err(e) = row.create(cli).await {
@@ -85,7 +82,7 @@ pub async fn deduct(req: &DeductBody) -> Result<DeductResponse, PartnerError> {
     }
 
     Ok(DeductResponse {
-        brand_tx_id: tx.transaction_id,
+        brand_tx_id,
         deducted_points: req.point_amount,
         remaining_points: remaining,
     })

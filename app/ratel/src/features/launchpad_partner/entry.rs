@@ -24,7 +24,7 @@ pub async fn launchpad_entry_url_handler() -> crate::common::Result<LaunchpadEnt
 
     let cfg = LaunchpadPartnerConfig::default();
     let base = cfg.base_url.trim_end_matches('/');
-    let token = encrypt_user_token(cfg.shared_secret, &user.id()).map_err(|e| {
+    let token = encrypt_user_token(&cfg.shared_secret, &user.id()).map_err(|e| {
         crate::error!("launchpad entry-url: token encryption failed: {e}");
         crate::common::Error::Internal
     })?;

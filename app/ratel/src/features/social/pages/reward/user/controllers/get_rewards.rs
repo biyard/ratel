@@ -125,3 +125,34 @@ pub async fn get_user_rewards_handler(
 
     fetch_rewards(user.pk.clone(), month).await
 }
+
+/// True for the launch quarter (Apr–Jun 2026), which the rewards hero and
+/// the launchpad point lookup both treat as one cumulative cycle.
+#[cfg(feature = "server")]
+fn is_launch_quarter(month: &str) -> bool {
+    matches!(month, "2026-04" | "2026-05" | "2026-06")
+}
+
+/// Cumulative points for the current cycle: the current-month total
+/// (max of local + console) plus earlier launch-quarter months' earnings.
+/// Mirrors the rewards hero so the launchpad `/connect` "보유 포인트" matches
+/// the figure shown on the ratel rewards page.
+#[cfg(feature = "server")]
+pub async fn cumulative_cycle_points(user_pk: Partition) -> Result<i64> {
+    let month = utils::time::current_month();
+    let base = fetch_rewards(user_pk.clone(), Some(month.clone())).await?;
+    let mut points = base.points;
+
+    if is_launch_quarter(&month) {
+        let cfg = crate::common::CommonConfig::default();
+        if let Ok(summaries) = cfg.biyard().get_monthly_summaries(user_pk).await {
+            for m in summaries.months {
+                if m.month != month && is_launch_quarter(&m.month) {
+                    points += m.total_earned;
+                }
+            }
+        }
+    }
+
+    Ok(points)
+}
