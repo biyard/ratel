@@ -14,7 +14,7 @@ pub fn LaunchpadConnectButton() -> Element {
 
     rsx! {
         a {
-            class: "launchpad-connect-btn",
+            class: "inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-btn-primary-text text-sm font-semibold transition-opacity hover:opacity-80",
             href: "{url}",
             "{tr.convert_cta}"
         }
