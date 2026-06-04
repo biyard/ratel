@@ -4,8 +4,8 @@
 //! issuance. ratel's only role is the (currently no-op) deduct callback.
 
 use crate::common::*;
-use crate::features::launchpad_partner::LaunchpadPartnerTranslate;
 use crate::features::launchpad_partner::entry::launchpad_entry_url_handler;
+use crate::features::launchpad_partner::LaunchpadPartnerTranslate;
 
 fn format_with_commas(value: i64) -> String {
     let digits = value.abs().to_string();
@@ -22,6 +22,7 @@ fn format_with_commas(value: i64) -> String {
 #[component]
 pub fn PointConversionModal(available_points: i64) -> Element {
     let tr: LaunchpadPartnerTranslate = use_translate();
+    let mut popup = use_popup();
     // Token-bearing `/connect` URL, built server-side (needs the shared
     // secret). Same value on SSR and after hydration → no href mismatch.
     let url_loader = use_loader(move || async move { launchpad_entry_url_handler().await })?;
@@ -45,6 +46,9 @@ pub fn PointConversionModal(available_points: i64) -> Element {
                 class: "w-full inline-flex items-center justify-center min-h-[46px] rounded-xl text-sm font-extrabold transition-transform hover:-translate-y-px",
                 style: "background: linear-gradient(135deg,#ffd24a 0%,#fcb300 100%); color:#0a0a0a; box-shadow:0 12px 26px -12px rgba(252,179,0,0.55);",
                 href: "{url}",
+                // Close the popup as we hand off so returning here later (Back /
+                // bfcache) doesn't restore this modal open.
+                onclick: move |_| popup.close(),
                 "{tr.go_convert}"
             }
             p { class: "text-xs text-foreground-muted text-center", "{tr.go_convert_hint}" }
