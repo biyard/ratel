@@ -19,19 +19,23 @@ pub fn use_space_user() -> Result<SpaceUser> {
         ..
     } = use_space()();
     let user = use_user_context();
-    let user_pk = user().user_pk().ok_or(Error::UnauthorizedAccess)?;
+    let user_inner = user();
+    let user_pk = user_inner.user_pk().ok_or(Error::UnauthorizedAccess)?;
 
-    if !participated && participant_display_name.is_none()
-        || participant_username.is_none()
-        || participant_profile_url.is_none()
-    {
-        return Err(Error::UnauthorizedAccess);
+    if participated {
+        return Ok(SpaceUser {
+            pk: user_pk,
+            username: participant_username.unwrap_or_default(),
+            display_name: participant_display_name.unwrap_or_default(),
+            profile_url: participant_profile_url.unwrap_or_default(),
+        });
     }
 
+    let user_obj = user_inner.user.as_ref().ok_or(Error::UnauthorizedAccess)?;
     Ok(SpaceUser {
         pk: user_pk,
-        username: participant_username.unwrap(),
-        display_name: participant_display_name.unwrap(),
-        profile_url: participant_profile_url.unwrap(),
+        username: user_obj.username.clone(),
+        display_name: user_obj.display_name.clone(),
+        profile_url: user_obj.profile_url.clone(),
     })
 }
