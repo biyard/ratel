@@ -59,8 +59,6 @@ jobs:
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
           HIGH_TRAFFIC_REGION: ap-northeast-2
-          BIYARD_PUBLIC_API_URL: https://api.biyard.co
-          BIYARD_PRIVATE_API_URL: http://api.biyard-prod-svc.local:8080
 
           # Launchpad partner config → injected into the Lambda RUNTIME env by
           # cdk/bin/cdk.ts (read via std::env::var at runtime, no rebuild needed).
@@ -196,16 +194,6 @@ jobs:
           DYNAMO_ENDPOINT: none
           # RUST_FLAG: "--features lambda --release"
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-
-          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
-          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
-          # Use the in-VPC CloudMap A-record (added by biyard app-cluster
-          # stack) so VPC-attached Lambdas reach the console API directly,
-          # avoiding the missing NAT path to `api.biyard.co`. Both ratel
-          # dev and prod call biyard prod, so the URL points at the prod
-          # namespace; the per-stage `BIYARD_PROJECT_ID` keeps the data
-          # writes scoped to the right project.
-          BIYARD_API_URL: http://api.biyard-prod-svc.local:8080
 
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}

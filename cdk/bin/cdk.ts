@@ -25,11 +25,6 @@ const host = process.env.DOMAIN || "dev.ratel.foundation";
 const webDomain = host;
 const apiDomain = `api.${host}`;
 const baseDomain = "ratel.foundation";
-const publicBiyardApiUrl =
-  process.env.BIYARD_PUBLIC_API_URL || "https://api.biyard.co";
-const privateBiyardApiUrl =
-  process.env.BIYARD_PRIVATE_API_URL ||
-  "http://api.biyard-prod-svc.local:8080";
 
 // Launchpad point-integration partner config — injected as RUNTIME Lambda env
 // (read via `std::env::var` in `features/launchpad_partner/config.rs`, which
@@ -106,7 +101,6 @@ const ap_northeast_2_svc = new RegionalLambdaStack(
     apiDomain,
     webOrigin: `https://${webDomain}`,
     runtimeEnvironment: {
-      BIYARD_API_URL: publicBiyardApiUrl,
       ...launchpadEnv,
     },
   },
@@ -149,7 +143,6 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     apiDomain: `lambda-${apiDomain}`,
     webOrigin: `https://${webDomain}`,
     runtimeEnvironment: {
-      BIYARD_API_URL: privateBiyardApiUrl,
       ...launchpadEnv,
     },
     // Place Lambda in the same VPC as Qdrant so CloudMap private DNS resolves.
@@ -169,7 +162,6 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-eu-central-1`, {
   apiDomain,
   webOrigin: `https://${webDomain}`,
   runtimeEnvironment: {
-    BIYARD_API_URL: publicBiyardApiUrl,
     ...launchpadEnv,
   },
 });
@@ -185,7 +177,6 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-us-east-1`, {
   apiDomain,
   webOrigin: `https://${webDomain}`,
   runtimeEnvironment: {
-    BIYARD_API_URL: publicBiyardApiUrl,
     ...launchpadEnv,
   },
 });

@@ -1,5 +1,5 @@
 use crate::common::{
-    models::reward::{PendingReward, UserReward, UserRewardHistory},
+    models::reward::{UserReward, UserRewardHistory},
     types::*,
     utils::time::get_now_timestamp_millis,
     *,
@@ -384,93 +384,10 @@ impl SpaceReward {
             return Err(SpaceError::RewardDistributionFailed.into());
         }
 
-        // Award points via Biyard service (best-effort, after DB tx committed)
-        let cfg = crate::common::CommonConfig::default();
-        let biyard = cfg.biyard();
-
-        match biyard
-            .award_points(
-                target_pk.clone(),
-                amount,
-                space_reward.description.clone(),
-                None,
-            )
-            .await
-        {
-            Ok(user_res) => {
-                crate::info!(
-                    target_pk = %target_pk,
-                    amount = amount,
-                    reward_key = %space_reward.sk,
-                    "Awarded points via Biyard"
-                );
-
-                if let Err(e) = UserRewardHistory::updater(&history.pk, &history.sk)
-                    .with_transaction_id(user_res.transaction_id.clone())
-                    .with_month(user_res.month.clone())
-                    .execute(cli)
-                    .await
-                {
-                    tracing::error!(
-                        pk = %history.pk,
-                        sk = %history.sk,
-                        transaction_id = %user_res.transaction_id,
-                        error = %e,
-                        "failed to set transaction_id/month on UserRewardHistory after Biyard award succeeded",
-                    );
-                }
-
-                if let Some(ref owner) = owner_pk {
-                    if *owner == target_pk {
-                        return Ok(user_reward);
-                    }
-                    if let Err(e) = biyard
-                        .award_points(
-                            owner.clone(),
-                            amount * 10 / 100,
-                            space_reward.description.clone(),
-                            Some(user_res.month.clone()),
-                        )
-                        .await
-                    {
-                        tracing::error!(
-                            owner_pk = %owner,
-                            amount = amount * 10 / 100,
-                            reward_key = %space_reward.sk,
-                            error = %e,
-                            "Failed to award owner points via Biyard"
-                        );
-                    } else {
-                        tracing::info!(
-                            owner_pk = %owner,
-                            amount = amount * 10 / 100,
-                            reward_key = %space_reward.sk,
-                            "Awarded owner points via Biyard"
-                        );
-                    }
-                }
-            }
-            Err(e) => {
-                tracing::error!(
-                    target_pk = %target_pk,
-                    amount = amount,
-                    reward_key = %space_reward.sk,
-                    error = %e,
-                    "Failed to award points via Biyard"
-                );
-                let _ = PendingReward::new(
-                    &target_pk,
-                    &space_pk,
-                    &space_reward.sk,
-                    amount,
-                    &space_reward.description,
-                    owner_pk.as_ref(),
-                )
-                .create(cli)
-                .await;
-            }
-        }
-
+        // Scope-A is authoritative: the DB transaction above already
+        // credited `User.points` / `Team.points` AND wrote the
+        // per-event `UserRewardHistory` rows (actor + owner). No more
+        // Biyard mirror — ratel keeps the entire reward ledger locally.
         Ok(user_reward)
     }
 }

@@ -20,10 +20,20 @@ pub struct LaunchpadPartnerConfig {
 }
 
 fn env_or(name: &str, compile: Option<&str>, default: &str) -> String {
+    // Filter empty on BOTH layers so a `LAUNCHPAD_PROJECT_ID=` (empty)
+    // env passed during `cargo build` doesn't bake `Some("")` into the
+    // binary via `option_env!` and silently defeat the default. The
+    // Makefile's BUILD_ENV exports `LAUNCHPAD_*=$(LAUNCHPAD_*)` even
+    // when the Make variable is unset, so this guard is what keeps the
+    // test fixtures' default secret / project id usable in CI.
     std::env::var(name)
         .ok()
         .filter(|v| !v.trim().is_empty())
-        .or_else(|| compile.map(|s| s.to_string()))
+        .or_else(|| {
+            compile
+                .filter(|s| !s.trim().is_empty())
+                .map(|s| s.to_string())
+        })
         .unwrap_or_else(|| default.to_string())
 }
 

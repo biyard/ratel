@@ -3,18 +3,6 @@ pub use thiserror::Error;
 
 #[derive(Debug, Error, Serialize, Deserialize, Translate, Clone)]
 pub enum ServiceError {
-    #[error("biyard API request failed")]
-    #[translate(en = "Service request failed", ko = "서비스 요청에 실패했습니다.")]
-    BiyardApiRequestFailed,
-
-    #[error("biyard API returned bad status")]
-    #[translate(en = "Service returned an error", ko = "서비스에서 오류가 반환되었습니다.")]
-    BiyardApiBadStatus,
-
-    #[error("biyard API returned empty response")]
-    #[translate(en = "Service returned empty response", ko = "서비스에서 빈 응답이 반환되었습니다.")]
-    BiyardApiEmptyResponse,
-
     #[error("ICP agent creation failed")]
     #[translate(
         en = "Blockchain service unavailable",
@@ -66,9 +54,7 @@ impl ServiceError {
     pub fn status_code(&self) -> crate::axum::http::StatusCode {
         use crate::axum::http::StatusCode;
         match self {
-            ServiceError::BiyardApiBadStatus | ServiceError::InvalidCanisterId => {
-                StatusCode::BAD_REQUEST
-            }
+            ServiceError::InvalidCanisterId => StatusCode::BAD_REQUEST,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

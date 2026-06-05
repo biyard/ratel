@@ -33,14 +33,12 @@ pub struct BackfillUserPointsResponse {
 /// earned points BEFORE that refactor have their points only in the
 /// event log (`UserRewardHistory`) — never propagated to `User.points`.
 /// This migration sums every per-event `point` per user and writes the
-/// total to `User.points`, so the ratel console can serve balances
-/// without ever calling the (now-disabled) biyard console.
+/// total to `User.points` so the rewards page can serve balances from
+/// the local ledger alone.
 ///
-/// Why not biyard: the biyard monthly aggregate (`MONTH#{YYYY-MM}`) and
-/// the local event log already share the same data — every Scope-A
-/// award writes both rows in lockstep. The event log is what the
-/// rewards page already renders ("REWARD HISTORY"), so summing it
-/// guarantees the displayed balance equals the credited balance.
+/// The event log is what the rewards page renders ("REWARD HISTORY"),
+/// so summing it guarantees the displayed balance equals the credited
+/// balance.
 ///
 /// UserRewardHistory event-row layout:
 /// - `pk    = USER#{uuid}##REWARD` (or `TEAM#{uuid}##REWARD`)
