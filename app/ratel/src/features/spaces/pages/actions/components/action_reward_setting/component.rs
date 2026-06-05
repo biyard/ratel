@@ -189,25 +189,28 @@ pub fn ActionRewardSetting(
                     }
                 }
                 if base_is_paid && available_credits > 0 {
+                    // Use the shared `Switch` primitive so the reward
+                    // toggle matches the participation-requirement toggle
+                    // (PrerequisiteTile uses the same component) instead
+                    // of the dimmer inline `class: "switch"` look. Wrap
+                    // with `data-testid` so the existing selector keeps
+                    // working.
                     div {
-                        class: "switch",
-                        role: "switch",
-                        tabindex: "0",
-                        "aria-checked": enable_reward(),
-                        "aria-disabled": reward_locked,
                         "data-testid": "reward-setting-toggle",
-                        onclick: move |_| {
-                            if reward_locked {
-                                toast.info(tr_reward.locked_started.to_string());
-                                return;
-                            }
-                            let new_enabled = !enable_reward();
-                            enable_reward.set(new_enabled);
-                            let new_credits = if new_enabled { 1 } else { 0 };
-                            save_credits(new_credits);
-                        },
-                        span { class: "switch__track",
-                            span { class: "switch__thumb" }
+                        crate::common::components::Switch {
+                            active: enable_reward(),
+                            disabled: reward_locked,
+                            label: tr_reward.reward.to_string(),
+                            on_toggle: move |_| {
+                                if reward_locked {
+                                    toast.info(tr_reward.locked_started.to_string());
+                                    return;
+                                }
+                                let new_enabled = !enable_reward();
+                                enable_reward.set(new_enabled);
+                                let new_credits = if new_enabled { 1 } else { 0 };
+                                save_credits(new_credits);
+                            },
                         }
                     }
                 } else {

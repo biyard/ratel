@@ -28,43 +28,30 @@ adb wait-for-device
 timeout 180 bash -c 'until adb shell getprop sys.boot_completed | grep -q 1; do sleep 2; done'
 
 adb install -r "$APK_PATH"
-
-# Bridge the host backend into the emulator BEFORE launching the app.
-# The APK is built with `MOBILE_API_URL=http://localhost:8080` — every
-# first-paint server-fn call (session bootstrap, hot spaces, etc.) hits
-# that URL during onCreate. If `adb reverse` is set up AFTER `am start`
-# (the previous ordering), those calls connection-refuse, the WebView
-# hangs in init, ActivityTaskManager hits the ~10s launch timeout and
-# tears the process down — which manifested as the recurring
-# "co.biyard.ratel process did not start" smoke failure even though
-# the build was healthy. Reversing the port first removes the race.
-#
-# Chromium treats `localhost` as same-site with `tauri.localhost` (the
-# WebView origin), so the SameSite=Lax session cookie set by the local
-# backend rides across the cross-origin fetch. The emulator's own
-# loopback doesn't reach the runner's docker stack; `adb reverse`
-# punches the hole.
-adb reverse tcp:8080 tcp:8080
-
 adb shell am start -n co.biyard.ratel/.MainActivity
 
-# Poll for the app process — the WebView devtools socket only exists
-# once the app is running. Software-rendered swiftshader emulator on
-# ubuntu-latest is slow enough that a tight 30s budget can race the
-# WebView's first paint; give it ~90s and capture rolling logcat so a
-# real crash (vs. slow boot) is distinguishable in the artifact.
+# Poll for the app process — the WebView devtools socket only exists once
+# the app is running.
 PID=""
-for _ in $(seq 1 90); do
+for _ in $(seq 1 30); do
   PID=$(adb shell pidof co.biyard.ratel | tr -d '\r' || true)
   [ -n "$PID" ] && break
   sleep 1
 done
 if [ -z "$PID" ]; then
   echo "::error::co.biyard.ratel process did not start"
-  adb logcat -d | tail -200
+  adb logcat -d | tail -100
   exit 1
 fi
 echo "App PID: $PID"
+
+# Bridge the host backend into the emulator. The APK is built with
+# `MOBILE_API_URL=http://localhost:8080` and Chromium treats `localhost`
+# as same-site with `tauri.localhost` (the WebView origin) so the
+# SameSite=Lax session cookie set by the local backend rides across the
+# cross-origin fetch. The emulator's own loopback doesn't reach the
+# runner's docker stack; `adb reverse` punches the hole.
+adb reverse tcp:8080 tcp:8080
 
 # Tauri WebView opens its devtools socket as
 # `@webview_devtools_remote_<pid>`. adb forward bridges it to a local
