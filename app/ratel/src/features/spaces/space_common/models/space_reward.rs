@@ -1,5 +1,5 @@
 use crate::common::{
-    models::reward::{PendingReward, UserReward, UserRewardHistory},
+    models::reward::{UserReward, UserRewardHistory},
     types::*,
     utils::time::get_now_timestamp_millis,
     *,
@@ -256,6 +256,37 @@ impl SpaceReward {
             user_reward
         };
 
+        // Scope-A balance: credit local `points` to the actor (and the
+        // owner's 10% bonus) in the same atomic transaction, routing to the
+        // User row or the Team row by partition kind.
+        let mut credit_points = |pk: &Partition, amt: i64| match pk {
+            Partition::User(_) => txs.push(
+                crate::common::models::auth::User::updater(
+                    pk.clone(),
+                    crate::common::types::EntityType::User,
+                )
+                .increase_points(amt)
+                .with_updated_at(now)
+                .transact_write_item(),
+            ),
+            Partition::Team(_) => txs.push(
+                crate::features::posts::models::Team::updater(
+                    pk.clone(),
+                    crate::common::types::EntityType::Team,
+                )
+                .increase_points(amt)
+                .with_updated_at(now)
+                .transact_write_item(),
+            ),
+            _ => {}
+        };
+        credit_points(&target_pk, amount);
+        if let Some(ref owner) = owner_pk {
+            if *owner != target_pk {
+                credit_points(owner, amount * 10 / 100);
+            }
+        }
+
         // Update SpaceReward totals
         txs.push(
             SpaceReward::updater(&space_pk, &space_reward.sk)
@@ -265,7 +296,7 @@ impl SpaceReward {
                 .transact_write_item(),
         );
 
-        // Create UserRewardHistory.
+        // Create UserRewardHistory for the actor.
         //
         // `description = "{space_pk}#{space_title}"` is resolved on the
         // way in so the per-event row carries a human-readable label
@@ -285,12 +316,56 @@ impl SpaceReward {
             space_reward.get_amount(),
         );
         if !description.is_empty() {
-            history.description = Some(description);
+            history.description = Some(description.clone());
         }
         if !action_name.is_empty() {
-            history.action_name = Some(action_name);
+            history.action_name = Some(action_name.clone());
         }
         txs.push(history.create_transact_write_item());
+
+        // Create UserRewardHistory for the OWNER bonus (10%) when the
+        // space is owned by someone other than the actor.
+        //
+        // Why this branch needs its own constructor: the actor row's
+        // TimeKey is `period.to_time_key(now)` — for `RewardPeriod::Once`
+        // that resolves to the constant `"ONCE"`, which is exactly the
+        // idempotency guarantee we want for the actor ("same user can't
+        // re-claim the same reward"). Reusing it as-is for the owner
+        // would collide on the next claim from a different actor and
+        // tank the whole transaction.
+        //
+        // We give the owner one row per (reward, actor, period) —
+        // namespaced as `OWNER#{actor_uid}#{period_key}`. That keeps the
+        // owner log symmetric with the actor's: if the actor row is
+        // allowed under the period (Daily, Hourly, etc.), so is the
+        // owner row; if the actor row is blocked by the period guard,
+        // so is the owner row (same tx, both fail conditionally → tx
+        // rolls back cleanly).
+        if let Some(ref owner) = owner_pk {
+            if *owner != target_pk {
+                let actor_uid = match &target_pk {
+                    Partition::User(id) | Partition::Team(id) => id.clone(),
+                    _ => String::new(),
+                };
+                if !actor_uid.is_empty() {
+                    let owner_amount = space_reward.get_amount() * 10 / 100;
+                    let period_key = space_reward.period.to_time_key(now);
+                    let mut owner_history = UserRewardHistory::from_params_with_time_key(
+                        owner.clone(),
+                        space_reward.sk.clone(),
+                        format!("OWNER#{}#{}", actor_uid, period_key),
+                        owner_amount,
+                    );
+                    if !description.is_empty() {
+                        owner_history.description = Some(description);
+                    }
+                    if !action_name.is_empty() {
+                        owner_history.action_name = Some(action_name);
+                    }
+                    txs.push(owner_history.create_transact_write_item());
+                }
+            }
+        }
 
         // Execute DB transaction
         if let Err(err) = crate::transact_write_items!(cli, txs) {
@@ -309,93 +384,10 @@ impl SpaceReward {
             return Err(SpaceError::RewardDistributionFailed.into());
         }
 
-        // Award points via Biyard service (best-effort, after DB tx committed)
-        let cfg = crate::common::CommonConfig::default();
-        let biyard = cfg.biyard();
-
-        match biyard
-            .award_points(
-                target_pk.clone(),
-                amount,
-                space_reward.description.clone(),
-                None,
-            )
-            .await
-        {
-            Ok(user_res) => {
-                crate::info!(
-                    target_pk = %target_pk,
-                    amount = amount,
-                    reward_key = %space_reward.sk,
-                    "Awarded points via Biyard"
-                );
-
-                if let Err(e) = UserRewardHistory::updater(&history.pk, &history.sk)
-                    .with_transaction_id(user_res.transaction_id.clone())
-                    .with_month(user_res.month.clone())
-                    .execute(cli)
-                    .await
-                {
-                    tracing::error!(
-                        pk = %history.pk,
-                        sk = %history.sk,
-                        transaction_id = %user_res.transaction_id,
-                        error = %e,
-                        "failed to set transaction_id/month on UserRewardHistory after Biyard award succeeded",
-                    );
-                }
-
-                if let Some(ref owner) = owner_pk {
-                    if *owner == target_pk {
-                        return Ok(user_reward);
-                    }
-                    if let Err(e) = biyard
-                        .award_points(
-                            owner.clone(),
-                            amount * 10 / 100,
-                            space_reward.description.clone(),
-                            Some(user_res.month.clone()),
-                        )
-                        .await
-                    {
-                        tracing::error!(
-                            owner_pk = %owner,
-                            amount = amount * 10 / 100,
-                            reward_key = %space_reward.sk,
-                            error = %e,
-                            "Failed to award owner points via Biyard"
-                        );
-                    } else {
-                        tracing::info!(
-                            owner_pk = %owner,
-                            amount = amount * 10 / 100,
-                            reward_key = %space_reward.sk,
-                            "Awarded owner points via Biyard"
-                        );
-                    }
-                }
-            }
-            Err(e) => {
-                tracing::error!(
-                    target_pk = %target_pk,
-                    amount = amount,
-                    reward_key = %space_reward.sk,
-                    error = %e,
-                    "Failed to award points via Biyard"
-                );
-                let _ = PendingReward::new(
-                    &target_pk,
-                    &space_pk,
-                    &space_reward.sk,
-                    amount,
-                    &space_reward.description,
-                    owner_pk.as_ref(),
-                )
-                .create(cli)
-                .await;
-            }
-        }
-
+        // Scope-A is authoritative: the DB transaction above already
+        // credited `User.points` / `Team.points` AND wrote the
+        // per-event `UserRewardHistory` rows (actor + owner). No more
+        // Biyard mirror — ratel keeps the entire reward ledger locally.
         Ok(user_reward)
     }
 }

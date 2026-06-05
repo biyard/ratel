@@ -46,6 +46,15 @@ translate! {
     section_publish_sub: { en: "Save as draft, or schedule a publish time.", ko: "초안으로 저장하거나 발행 시각 예약." },
     schedule_label: { en: "Scheduled publish at (local time)", ko: "발행 예약 시각 (로컬 시간)" },
     schedule_hint: { en: "Leave empty to save as Draft.", ko: "비워두면 초안으로 저장됩니다." },
+    expires_label: { en: "Active until (local time)", ko: "활성 종료 시각 (로컬 시간)" },
+    expires_hint: {
+        en: "After this time the subject auto-retires from matchmaking. Leave empty to keep it open indefinitely.",
+        ko: "이 시각이 지나면 매칭에서 자동으로 제외돼요. 비워두면 만료 없이 계속 활성화됩니다.",
+    },
+    expires_invalid: {
+        en: "Active-until time must be after the scheduled publish time.",
+        ko: "활성 종료 시각은 발행 예약 시각 이후여야 합니다.",
+    },
 
     fields_incomplete: { en: "Fill required fields above to enable Save / Schedule.", ko: "위 필수 항목을 채우면 저장 / 예약이 활성화됩니다." },
     save_draft: { en: "Save draft", ko: "초안 저장" },

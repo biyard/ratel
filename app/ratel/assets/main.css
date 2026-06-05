@@ -1921,6 +1921,65 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   z-index: 50;
 }
 
+/* ─── Primary "Insert data" affordance ─────────────────────
+   The editor's `on_insert_data` callback renders an extra toolbar
+   button (e.g. in the report editor) that opens an external picker.
+   Style it as a primary-tone pill so authors can spot it among the
+   neutral formatting commands. */
+.ratel-editor .re-toolbar__group--insert {
+  border-left: none;
+  margin-left: 4px;
+  padding-left: 0;
+}
+.ratel-editor .re-tb-btn--insert-data {
+  width: auto;
+  /* Keep the pill at a single row's height (the wrapping toolbar uses
+     `row-gap` for vertical separation between rows; without these the
+     uppercase Orbitron label was breaking across two lines inside the
+     btn's flex column when the toolbar got cramped on mobile). */
+  height: auto;
+  min-width: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0 14px;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(168, 85, 247, 0.10));
+  border-color: var(--dark, rgba(168, 85, 247, 0.35)) var(--light, rgba(168, 85, 247, 0.50));
+  color: var(--dark, #c4a3f7) var(--light, #6b3ec5);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.ratel-editor .re-tb-btn--insert-data span {
+  white-space: nowrap;
+}
+
+/* Mobile: the floating toolbar pill is horizontally scrollable, but
+   the Orbitron "INSERT DATA" label is still wide enough to overrun
+   the button's own background on the smallest viewports. Drop the
+   label there and keep the icon — same affordance the topbar action
+   buttons use on mobile. */
+@media (max-width: 500px) {
+  .ratel-editor .re-tb-btn--insert-data {
+    padding: 0 10px;
+  }
+  .ratel-editor .re-tb-btn--insert-data span {
+    display: none;
+  }
+  .ratel-editor .re-tb-btn--insert-data svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+.ratel-editor .re-tb-btn--insert-data:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.40), rgba(168, 85, 247, 0.16));
+  color: var(--dark, #d8bdfb) var(--light, #5a30ad);
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.30);
+}
+.ratel-editor .re-tb-btn--insert-data svg { width: 14px; height: 14px; }
+
 /* ─── Block-format dropdown ───────────────────────────────── */
 .ratel-editor .re-block { position: relative; }
 .ratel-editor .re-block__btn {
@@ -2083,17 +2142,90 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   width: 100%;
   border-collapse: collapse;
   margin: 0.75rem 0;
+  /* Use `auto` layout so the browser sizes columns to their content —
+     with `fixed` + the empty-cell `&nbsp;` placeholders the columns
+     collapsed to a hairline and borders weren't visible at a glance. */
+  table-layout: auto;
+  border: 1px solid var(--dark, rgba(255, 255, 255, 0.22)) var(--light, rgba(0, 0, 0, 0.28));
 }
 .ratel-editor .re-content table th,
 .ratel-editor .re-content table td {
-  border: 1px solid var(--re-border-strong);
-  padding: 6px 10px;
+  /* Make grid lines clearly visible — the previous `--re-border-strong`
+     was too dim on dark mode (12% white) and made fresh empty tables
+     read as a featureless dark block. */
+  border: 1px solid var(--dark, rgba(255, 255, 255, 0.22)) var(--light, rgba(0, 0, 0, 0.28));
+  padding: 8px 12px;
   text-align: left;
   min-width: 60px;
+  min-height: 32px;
+  /* Long unbroken strings (no spaces between letters) must wrap so a
+     wide cell doesn't push the rest of the table off-screen. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  vertical-align: top;
 }
 .ratel-editor .re-content table th {
   background: var(--re-input-bg-focus);
   font-weight: 600;
+}
+/* Highlight cells the user has drag-selected for a future merge. The
+   default browser text selection inside contenteditable doesn't make
+   the cell boundary obvious; this style fills the cell so the
+   selection range is unambiguous. */
+.ratel-editor .re-content table td.re-cell-selected,
+.ratel-editor .re-content table th.re-cell-selected {
+  background: rgba(168, 85, 247, 0.18);
+  outline: 2px solid rgba(168, 85, 247, 0.55);
+  outline-offset: -2px;
+}
+
+/* ─── Table action toolbar (floating mini-toolbar) ─────────
+   Shown when the caret enters a `.re-content` table. JS positions it
+   above the table; consumers (the editor's script.js) wire each
+   button to a DOM manipulation. */
+.ratel-editor .re-table-actions {
+  position: fixed;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  background: var(--re-toolbar-bg);
+  border: 1px solid var(--re-border-strong);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+}
+.ratel-editor .re-table-actions[data-visible="true"] {
+  display: inline-flex;
+}
+.ratel-editor .re-table-actions__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--re-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.ratel-editor .re-table-actions__btn:hover {
+  color: var(--re-text-primary);
+  background: var(--re-input-bg-focus);
+}
+.ratel-editor .re-table-actions__btn svg { width: 14px; height: 14px; }
+.ratel-editor .re-table-actions__btn--danger:hover {
+  color: var(--dark, #f87171) var(--light, #d04444);
+}
+.ratel-editor .re-table-actions__sep {
+  width: 1px;
+  height: 16px;
+  background: var(--re-border-subtle);
+  margin: 0 2px;
 }
 .ratel-editor .re-content .yt-wrap {
   position: relative;
@@ -16400,9 +16532,19 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-gold: #fcb300;
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
+}
 
-  position: relative;
-  height: 100vh;
+/* Action editor scope — `:has(.action-edit-footer)` bumps specificity
+   above the bare `.arena` block at line 29282 (space-index page) so
+   our viewport-pinned layout wins the cascade. */
+.arena:has(> .action-edit-footer) {
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -17014,8 +17156,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
 
-  position: relative;
-  height: 100vh;
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -17853,8 +18000,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
 
-  position: relative;
-  height: 100vh;
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -18592,8 +18744,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
 
-  position: relative;
-  height: 100vh;
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -28873,6 +29030,14 @@ body.comments-panel-resizing {
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--apps-text);
+  /* Keep the name to a single line + ellipsis just like
+     `.app-row__desc`. Without this, multi-word titles like
+     "Untitled report 1" wrap onto a second line inside the narrow
+     settings sidebar. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .app-row__check {
   color: #22c55e;
@@ -45434,6 +45599,16 @@ body.comments-panel-resizing {
   font-size: 12px;
 }
 
+.ff-settings__warning {
+  color: var(--dark, #fcb300) var(--light, #b87a00);
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--dark, rgba(252, 179, 0, 0.35)) var(--light, rgba(184, 122, 0, 0.4));
+  border-radius: 6px;
+  background: var(--dark, rgba(252, 179, 0, 0.08)) var(--light, rgba(252, 179, 0, 0.12));
+}
+
 /* === src/features/fact_or_fold/pages/admin/subjects === */
 
 .ff-subjects {
@@ -48549,14 +48724,34 @@ body.comments-panel-resizing {
    are intentionally dropped for the initial port; cards render at
    full opacity in a horizontally-scrollable strip. */
 .reports-arena {
-  --bg-void: #06060e;
-  --bg-glass: rgba(12, 12, 26, 0.65);
-  --bg-glass-hover: rgba(20, 20, 40, 0.80);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --text-primary: #f0f0f5;
-  --text-muted: #8888a8;
-  --text-dim: #55556a;
+  /* Tokens. The space-toggle pattern (`var(--dark, X) var(--light, Y)`)
+     leans on the `--dark` / `--light` custom properties that
+     `dx-components-theme.css` flips on `html[data-theme=...]` — at
+     runtime one branch resolves to the value, the other to a space,
+     so only the active theme's color is applied. The accent
+     (`--report-color`) and its glow are deliberately NOT toggled —
+     the purple stays identical in both themes by design. */
+  --bg-void: var(--dark, #06060e) var(--light, #f4f3ef);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
+  --bg-glass-hover: var(--dark, rgba(20, 20, 40, 0.80)) var(--light, rgba(255, 255, 255, 0.92));
+  --border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(0, 0, 0, 0.14));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --card-shadow: var(--dark, rgba(0, 0, 0, 0.5)) var(--light, rgba(0, 0, 0, 0.10));
+  --card-shadow-soft: var(--dark, rgba(0, 0, 0, 0.45)) var(--light, rgba(0, 0, 0, 0.08));
+  /* Modal scrim is always a real dim — even in light mode the modal
+     must visually pop out, so we tint with dark (not pale) overlay.
+     Panel keeps a strong contrast: deep glass in dark, bright white
+     card with a hairline border in light. */
+  --modal-scrim: var(--dark, rgba(4, 4, 12, 0.65)) var(--light, rgba(20, 20, 35, 0.45));
+  --modal-panel: var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.97), rgba(10, 10, 20, 0.99))) var(--light, linear-gradient(160deg, #ffffff, #fafaf6));
+  --menu-panel: var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.96), rgba(10, 10, 20, 0.98))) var(--light, #ffffff);
+  /* Danger pink reads on glass-dark, but vanishes on white — switch
+     to a strong rose-red on light so 삭제하기 is unmistakably visible. */
+  --danger-fg: var(--dark, #e7a8a8) var(--light, #b91c1c);
+  --danger-fg-hover: var(--dark, #f5b5b5) var(--light, #991b1b);
   --accent-gold: #fcb300;
   --accent-teal: #6eedd8;
   --report-color: #a855f7;
@@ -48818,19 +49013,24 @@ body.comments-panel-resizing {
   scroll-snap-align: center;
   position: relative;
   overflow: hidden;
-  transform: scale(0.78);
-  opacity: 0.3;
-  filter: blur(5px);
+  /* Spotlight effect on desktop — active card stands out, siblings
+     dim. Mobile keeps every card uniform (the same effect at 84vw
+     card width on a phone screen ate too much of the carousel and
+     read as "broken edges" rather than spotlight focus). The mobile
+     override lives in the `@media (max-width: 500px)` block below. */
+  transform: scale(0.82);
+  opacity: 0.4;
+  filter: blur(4px);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
   color: inherit;
 }
 .reports-arena .report-card[hidden] { display: none !important; }
 .reports-arena .report-card.active {
-  transform: scale(1.05);
+  transform: scale(1.03);
   opacity: 1;
   filter: blur(0);
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.5), 0 0 50px var(--report-glow);
+  box-shadow: 0 12px 60px var(--card-shadow), 0 0 50px var(--report-glow);
   border-color: var(--report-border);
 }
 /* Aurora wave — only animates on the active card. */
@@ -48876,23 +49076,25 @@ body.comments-panel-resizing {
   40% { transform: translate3d(-5%, 4%, 0) rotate(-10deg) scale(1.05); opacity: 0.95; }
   70% { transform: translate3d(5%, -3%, 0) rotate(7deg) scale(0.98); opacity: 0.8; }
 }
-/* Stationary idle tint behind dimmed cards. */
-.reports-arena .report-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  pointer-events: none;
-  opacity: 0.35;
-  transition: opacity 0.6s ease;
-  background: radial-gradient(ellipse 70% 50% at 30% 30%, rgba(168, 85, 247, 0.06) 0%, transparent 70%);
-}
-.reports-arena .report-card.active::before { opacity: 0; }
+/* Stationary tint disabled — was an idle purple wash that read as
+   "faded corner" once the spotlight scale/opacity dimming was
+   removed; better to keep every card visually uniform. */
+.reports-arena .report-card::before { display: none; }
 .reports-arena .report-card > *:not(.report-card__wave) {
   position: relative;
   z-index: 1;
 }
-.reports-arena .report-card__top {
+/* Top row sits in its own stacking context above the rest of the
+   card body — otherwise the dropdown menu (`position: absolute` inside
+   `.report-card__menu-wrap`) loses to later siblings like
+   `.report-card__identity` whose text would visually cover the menu
+   even though its own z-index is only 30 within its parent.
+   The selector matches the specificity of the `report-card > *`
+   wildcard above (3 class selectors), so this z-index actually wins
+   the cascade — using just `.reports-arena .report-card__top` is
+   one class lighter and gets overridden back to z-index: 1. */
+.reports-arena .report-card > .report-card__top {
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -48935,7 +49137,7 @@ body.comments-panel-resizing {
 }
 .reports-arena .report-card__menu-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.04));
 }
 .reports-arena .report-card__menu-btn svg { width: 14px; height: 14px; }
 .reports-arena .report-card__identity {
@@ -50634,7 +50836,7 @@ html[data-theme="light"] .ff-home .featured-title {
   background: rgba(168, 85, 247, 0.08);
   border-color: var(--report-color);
   border-style: dashed;
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.45), 0 0 40px var(--report-glow);
+  box-shadow: 0 12px 60px var(--card-shadow-soft), 0 0 40px var(--report-glow);
 }
 .reports-arena .report-card__create-icon {
   width: 64px;
@@ -50720,7 +50922,2102 @@ html[data-theme="light"] .ff-home .featured-title {
   .reports-arena .reports-topbar__btn { padding: 0 10px; }
   .reports-arena .report-card { width: 84vw; min-height: 360px; }
   .reports-arena .carousel-track { gap: 16px; padding: 28px 12px; }
+
+  /* Mobile carousels show one card at a time (~84vw wide), so the
+     spotlight scale/opacity dim doesn't help focus — it just makes
+     the off-center edges look broken. Reset every card to a
+     uniform full-opacity render here; the JS `.active` class still
+     toggles the box-shadow / border-color in the base rule so the
+     selected card keeps the purple glow but stays the same size. */
+  .reports-arena .report-card {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+  .reports-arena .report-card.active {
+    transform: none;
+  }
 }
+
+/* ── Card overflow menu (the `...` dropdown) ─────────
+   Dioxus renders one dropdown per card and shows/hides it based on
+   `ctx.menu_open_for` — no JS positioning needed (unlike the mockup
+   which uses a single shared dropdown). */
+.reports-arena .report-card__menu-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.reports-arena .card-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px;
+  min-width: 170px;
+  background: var(--menu-panel);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px var(--card-shadow), 0 0 22px rgba(168, 85, 247, 0.06);
+}
+.reports-arena .card-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.14s;
+}
+.reports-arena .card-menu__item:hover {
+  /* Subtle wash that flips lightness so the hover state stays
+     readable in both themes. */
+  background: var(--dark, rgba(255, 255, 255, 0.05)) var(--light, rgba(0, 0, 0, 0.04));
+  color: var(--text-primary);
+}
+.reports-arena .card-menu__item svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.reports-arena .card-menu__item--danger {
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+.reports-arena .card-menu__item--danger:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(168, 85, 247, 0.04));
+  color: var(--danger-fg-hover);
+}
+
+/* ── Delete-confirm modal — arena glass + purple aurora ── */
+.reports-arena .confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--modal-scrim);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.reports-arena .confirm-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  background: var(--modal-panel);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 30px 80px var(--card-shadow), 0 0 60px rgba(168, 85, 247, 0.1);
+  padding: 32px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  overflow: hidden;
+}
+.reports-arena .confirm-modal__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(239, 68, 68, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.reports-arena .confirm-modal__panel > * { position: relative; z-index: 1; }
+.reports-arena .confirm-modal__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--danger-fg);
+  padding: 3px 11px;
+  border-radius: 99px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+}
+.reports-arena .confirm-modal__eyebrow svg { width: 11px; height: 11px; }
+.reports-arena .confirm-modal__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(168, 85, 247, 0.04));
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger-fg);
+  margin-top: 8px;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.reports-arena .confirm-modal__icon svg { width: 26px; height: 26px; }
+.reports-arena .confirm-modal__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.reports-arena .confirm-modal__body {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding: 0 4px;
+}
+.reports-arena .confirm-modal__body strong {
+  color: var(--report-color);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+.reports-arena .confirm-modal__note {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: block;
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+.reports-arena .confirm-modal__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+}
+.reports-arena .confirm-modal__btn {
+  flex: 1;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s;
+  border: 1px solid transparent;
+}
+.reports-arena .confirm-modal__btn--ghost {
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.03));
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+}
+.reports-arena .confirm-modal__btn--ghost:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.06));
+  color: var(--text-primary);
+}
+.reports-arena .confirm-modal__btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+.reports-arena .confirm-modal__btn--danger:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+}
+.reports-arena .confirm-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+
+/* === src/features/spaces/pages/report/views/detail === */
+/* Page-scoped tokens & layout for the detail (edit) view. All
+   selectors live under `.report-detail` so they don't compete with
+   `.reports-arena` (list page) or other arena pages. */
+.report-detail {
+  --rd-bg-void: var(--dark, #06060e) var(--light, #f4f3ef);
+  --rd-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
+  --rd-border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --rd-border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(0, 0, 0, 0.14));
+  --rd-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --rd-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --rd-text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --rd-accent: #a855f7;
+  --rd-accent-bg: rgba(168, 85, 247, 0.10);
+  --rd-accent-border: rgba(168, 85, 247, 0.30);
+  --rd-poll: #06b6d4;
+  --rd-quiz: #a855f7;
+  --rd-discussion: #60a5fa;
+  --rd-follow: #f97316;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--rd-bg-void);
+  color: var(--rd-text-primary);
+  font-family: 'Outfit', sans-serif;
+}
+
+.report-detail__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--rd-border-subtle);
+  flex-shrink: 0;
+}
+.report-detail__topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.report-detail__back {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--rd-bg-glass);
+  border: 1px solid var(--rd-border-subtle);
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s, border-color 0.18s;
+}
+.report-detail__back:hover { color: var(--rd-accent); border-color: var(--rd-accent-border); }
+.report-detail__back svg { width: 14px; height: 14px; }
+.report-detail__breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rd-text-dim);
+  min-width: 0;
+}
+.report-detail__breadcrumb-current {
+  color: var(--rd-text-primary);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+.report-detail__autosave { font-size: 11px; color: var(--rd-text-dim); }
+.report-detail__topbar-right { display: flex; align-items: center; gap: 8px; }
+.report-detail__topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: var(--rd-bg-glass);
+  border: 1px solid var(--rd-border-subtle);
+  color: var(--rd-text-muted);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+}
+.report-detail__topbar-btn:hover { color: var(--rd-text-primary); border-color: var(--rd-border-strong); }
+.report-detail__topbar-btn svg { width: 13px; height: 13px; }
+.report-detail__topbar-btn--primary {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(168, 85, 247, 0.06));
+  border-color: var(--rd-accent-border);
+  color: var(--rd-accent);
+}
+.report-detail__topbar-btn--primary:hover { box-shadow: 0 0 18px rgba(168, 85, 247, 0.20); }
+
+.report-detail__banner { padding: 16px 24px 0; flex-shrink: 0; }
+.report-detail__banner-inner {
+  display: flex;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--rd-accent-bg);
+  border: 1px solid var(--rd-accent-border);
+}
+.report-detail__banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid var(--rd-accent-border);
+  color: var(--rd-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.report-detail__banner-icon svg { width: 18px; height: 18px; }
+.report-detail__banner-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.report-detail__banner-eyebrow {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rd-accent);
+}
+.report-detail__banner-title { font-size: 14px; font-weight: 700; color: var(--rd-text-primary); }
+.report-detail__banner-text { font-size: 12.5px; color: var(--rd-text-muted); line-height: 1.55; }
+
+.report-detail__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  overflow: hidden;
+}
+
+.report-detail__doc { overflow-y: auto; padding: 28px 28px 80px; }
+.report-detail__doc-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.report-detail__cover {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rd-accent);
+}
+.report-detail__cover svg { width: 13px; height: 13px; }
+.report-detail__title {
+  border: none;
+  background: transparent;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--rd-text-primary);
+  outline: none;
+  padding: 6px 0;
+}
+.report-detail__title::placeholder { color: var(--rd-text-dim); }
+.report-detail__subtitle {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--rd-text-muted);
+  outline: none;
+  padding: 4px 0 12px;
+}
+.report-detail__subtitle::placeholder { color: var(--rd-text-dim); }
+.report-detail__editor-shell { display: contents; }
+.report-detail .report-detail__editor { width: 100%; }
+
+/* ─── Editor styling parity with the post composer ───────
+   The shared `.ratel-editor` ships with a sticky top toolbar inside
+   a card frame. Both `composer-arena` (post composer) and this
+   surface repaint it the same way: editor becomes a transparent
+   flex column whose content (`.re-content`) takes the available
+   height and whose toolbar (`.re-toolbar`) is moved to the END of
+   the flex (order: 5) as a centered floating pill. Selection
+   bubble + block dropdown handlers continue to work unchanged.
+   ────────────────────────────────────────────────────── */
+
+/* Stop the doc itself from being the scroll container so the editor
+   inside can fill it and own the scroll. Title + subtitle stay as
+   non-flexing items at the top; the editor takes the remaining flex. */
+.report-detail .report-detail__doc {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.report-detail .report-detail__doc-inner {
+  flex: 1;
+  min-height: 0;
+}
+
+.report-detail .ratel-editor {
+  flex: 1;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+.report-detail .ratel-editor:focus-within {
+  background: transparent;
+  border: none;
+}
+.report-detail .ratel-editor .re-toolbar {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  order: 5;
+  align-self: center;
+  flex-shrink: 0;
+  width: min(1000px, 100%);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 4px;
+  margin: 8px auto 14px;
+  padding: 8px 10px;
+  gap: 4px;
+  border: 1px solid var(--re-border-strong);
+  border-radius: 14px;
+  background: var(--re-toolbar-bg);
+  backdrop-filter: blur(20px);
+}
+/* Strip the inter-group divider in this floating context — a leftover
+   border-left on the first group of a wrapped row creates an orphan
+   vertical line. The flex gap already separates groups visually. */
+.report-detail .ratel-editor .re-toolbar__group + .re-toolbar__group {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 4px;
+}
+.report-detail .ratel-editor .re-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  order: 1;
+  padding: 8px 0 12px;
+  /* Hide the editor's native scrollbar — the report doc surface keeps
+     its own visual rhythm and a chunky scrollbar clashes with the
+     glass aesthetic. Wheel / trackpad / keyboard scroll still works. */
+  scrollbar-width: none;
+}
+.report-detail .ratel-editor .re-content::-webkit-scrollbar {
+  display: none;
+}
+/* Hide the editor's built-in word/char statusbar — the report TopBar
+   already shows save state and we don't need counts here. */
+.report-detail .ratel-editor .re-statusbar {
+  display: none;
+}
+/* Toolbar sits at the bottom of the editor card → the Paragraph dropdown
+   must open UPWARD so it doesn't clip below the viewport. */
+.report-detail .ratel-editor .re-block__menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+@media (max-width: 980px) {
+  .report-detail .ratel-editor .re-toolbar {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .report-detail .ratel-editor .re-toolbar::-webkit-scrollbar {
+    height: 4px;
+  }
+  .report-detail .ratel-editor .re-toolbar::-webkit-scrollbar-thumb {
+    background: var(--re-border-strong);
+    border-radius: 2px;
+  }
+}
+
+.report-detail figure[data-block="chart"] {
+  margin: 20px 0;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid var(--rd-accent-border);
+  background: var(--rd-accent-bg);
+}
+.report-detail figure[data-block="chart"] figcaption {
+  font-size: 12px;
+  color: var(--rd-text-muted);
+  margin-bottom: 10px;
+}
+.report-detail .report-chart-placeholder {
+  height: 180px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.report-detail__outline {
+  border-left: 1px solid var(--rd-border-subtle);
+  background: var(--dark, rgba(0, 0, 0, 0.18)) var(--light, rgba(255, 255, 255, 0.45));
+  overflow-y: auto;
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.report-detail__outline-section { display: flex; flex-direction: column; gap: 10px; }
+.report-detail__outline-heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rd-text-dim);
+}
+.report-detail__outline-empty { font-size: 12px; color: var(--rd-text-dim); line-height: 1.55; padding: 8px 0; }
+.report-detail__outline-list { display: flex; flex-direction: column; gap: 2px; }
+.report-detail__outline-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  text-decoration: none;
+  /* The row is rendered as a <button> for click handling; browsers
+     center-align button text by default. Force left so multi-line
+     outline labels read as expected. */
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+.report-detail__outline-row > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.report-detail__outline-row:hover { background: rgba(255, 255, 255, 0.04); color: var(--rd-text-primary); }
+.report-detail__outline-row--h1 { font-weight: 700; color: var(--rd-text-primary); }
+.report-detail__outline-row--h2 { padding-left: 16px; }
+.report-detail__outline-row--h3 { padding-left: 24px; font-size: 11.5px; }
+.report-detail__outline-row--chart { padding-left: 16px; color: var(--rd-accent); font-size: 11.5px; }
+.report-detail__outline-meta { display: flex; flex-direction: column; gap: 8px; }
+.report-detail__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.report-detail__meta-key {
+  color: var(--rd-text-dim);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.report-detail__meta-val { color: var(--rd-text-muted); }
+
+.report-detail__picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 6, 14, 0.65);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+}
+.report-detail__picker-overlay[data-open="true"] { display: flex; }
+.report-detail__picker-panel {
+  width: 100%;
+  max-width: 640px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--dark, rgba(15, 15, 28, 0.96)) var(--light, rgba(255, 255, 255, 0.98));
+  border: 1px solid var(--rd-border-strong);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.report-detail__picker-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--rd-border-subtle);
+}
+.report-detail__picker-title-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.report-detail__picker-eyebrow {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rd-accent);
+}
+.report-detail__picker-title { font-size: 14px; font-weight: 700; color: var(--rd-text-primary); }
+.report-detail__picker-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--rd-border-subtle);
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.report-detail__picker-close:hover { color: var(--rd-text-primary); border-color: var(--rd-border-strong); }
+.report-detail__picker-close svg { width: 14px; height: 14px; }
+.report-detail__picker-analyze {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--rd-border-subtle);
+}
+.report-detail__picker-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rd-text-dim);
+}
+.report-detail__picker-analyze-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.report-detail__picker-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+  cursor: pointer;
+  color: var(--rd-text-muted);
+}
+.report-detail__picker-opt:hover { background: rgba(255, 255, 255, 0.04); color: var(--rd-text-primary); }
+.report-detail__picker-opt[aria-selected="true"] {
+  background: var(--rd-accent-bg);
+  border-color: var(--rd-accent-border);
+  color: var(--rd-accent);
+}
+.report-detail__picker-opt-name { font-size: 13px; font-weight: 700; color: inherit; }
+.report-detail__picker-opt-meta { font-size: 10.5px; color: var(--rd-text-dim); letter-spacing: 0.04em; }
+
+.report-detail__xf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.report-detail__xf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px 1px 1px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--rd-text-muted);
+  max-width: 100%;
+}
+.report-detail__xf-chip-src {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+.report-detail__xf-chip[data-source="poll"]       .report-detail__xf-chip-src { background: rgba(6, 182, 212, 0.12);   color: var(--rd-poll); }
+.report-detail__xf-chip[data-source="quiz"]       .report-detail__xf-chip-src { background: rgba(168, 85, 247, 0.12);  color: var(--rd-quiz); }
+.report-detail__xf-chip[data-source="discussion"] .report-detail__xf-chip-src { background: rgba(96, 165, 250, 0.12);  color: var(--rd-discussion); }
+.report-detail__xf-chip[data-source="follow"]     .report-detail__xf-chip-src { background: rgba(249, 115, 22, 0.12);  color: var(--rd-follow); }
+.report-detail__xf-chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.report-detail__picker-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 12px 20px 0;
+}
+.report-detail__picker-tab {
+  padding: 10px 8px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--rd-border-subtle);
+  color: var(--rd-text-muted);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.report-detail__picker-tab:disabled { opacity: 0.45; cursor: not-allowed; }
+.report-detail__picker-tab:not(:disabled):hover { color: var(--rd-text-primary); border-color: var(--rd-border-strong); }
+.report-detail__picker-tab[aria-selected="true"] {
+  color: var(--rd-accent);
+  border-color: var(--rd-accent-border);
+  background: var(--rd-accent-bg);
+}
+.report-detail__picker-tab-count { color: var(--rd-text-dim); font-weight: 600; margin-left: 4px; }
+
+.report-detail__picker-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.report-detail__picker-empty {
+  padding: 14px 8px;
+  font-size: 12px;
+  color: var(--rd-text-dim);
+  text-align: center;
+}
+.report-detail__picker-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--rd-border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+  cursor: pointer;
+  color: var(--rd-text-muted);
+}
+.report-detail__picker-item:hover {
+  background: var(--rd-accent-bg);
+  border-color: var(--rd-accent-border);
+  color: var(--rd-text-primary);
+}
+.report-detail__picker-item-title { font-size: 13px; font-weight: 600; color: inherit; }
+.report-detail__picker-item-meta { font-size: 11px; color: var(--rd-text-dim); }
+
+@media (max-width: 900px) {
+  .report-detail__grid { grid-template-columns: 1fr; }
+  .report-detail__outline { display: none; }
+}
+
+/* ─── Mobile responsiveness ───────────────────────
+   At narrow viewports the topbar action row needs to shed its labels
+   (icons survive), the doc gutters tighten up, the chart card stacks
+   its top strip and squeezes its viz canvases (pie/bar/table) into
+   the single column, and the format toolbar pill (already
+   horizontal-scroll on small screens via the global override) gets
+   pulled in even further so it doesn't escape the viewport. */
+@media (max-width: 768px) {
+  .report-detail__topbar {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  .report-detail__autosave {
+    display: none;
+  }
+  .report-detail__breadcrumb-current {
+    max-width: 110px;
+  }
+  .report-detail__topbar-btn {
+    padding: 0 9px;
+  }
+  .report-detail__topbar-btn span {
+    display: none;
+  }
+  .report-detail__topbar-btn svg {
+    margin: 0;
+  }
+
+  .report-detail__doc {
+    padding: 16px 14px;
+  }
+  .report-detail__doc-inner {
+    max-width: 100%;
+  }
+
+  /* Chart card — pad less, stack badge above title since both
+     compete for horizontal space, and let the chart-meta line wrap
+     cleanly instead of pushing off-screen. */
+  .report-detail__chart-block {
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+  .report-detail__chart-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .report-detail__chart-top .report-detail__chart-title {
+    width: 100%;
+    line-height: 1.3;
+  }
+  .report-detail__chart-actions {
+    margin-left: auto;
+  }
+  .report-detail__chart-meta {
+    font-size: 11px;
+  }
+
+  /* Pie viz — stack disc above legend so the disc gets the full
+     row width and the legend (right-aligned) wraps under it. */
+  .report-detail__chart-canvas--pie {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+  .report-detail__chart-pie {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+  }
+  .report-detail__chart-pie-legend {
+    justify-content: end;
+  }
+
+  /* Bar canvas — tighter gap + thinner labels so 5+ bars fit. */
+  .report-detail__chart-canvas--bar {
+    gap: 10px;
+    height: 200px;
+    padding: 14px 8px 44px;
+  }
+  .report-detail__chart-bar { max-width: 70px; }
+  .report-detail__chart-bar::after { font-size: 9.5px; }
+
+  /* Table — smaller font, narrower number columns. */
+  .report-detail__chart-table {
+    font-size: 11px;
+  }
+  .report-detail__chart-table th:nth-child(2),
+  .report-detail__chart-table td:nth-child(2),
+  .report-detail__chart-table th:nth-child(3),
+  .report-detail__chart-table td:nth-child(3) {
+    width: 64px;
+  }
+
+  /* LDA / TF-IDF / Network — pad less. */
+  .report-detail__chart-canvas--lda,
+  .report-detail__chart-canvas--network {
+    padding: 14px;
+  }
+  .report-detail__network-svg {
+    height: 220px;
+  }
+
+  /* Editor format toolbar (floating pill) already wraps to a single
+     scrollable row at ≤ 980px via the global rule; nothing extra
+     needed here. */
+}
+
+@media (max-width: 500px) {
+  .report-detail__breadcrumb-current { max-width: 80px; font-size: 12px; }
+  .report-detail__topbar-btn { height: 30px; padding: 0 8px; }
+  .report-detail__topbar-btn svg { width: 12px; height: 12px; }
+  .report-detail__title { font-size: 26px !important; }
+  .report-detail__doc { padding: 12px 10px; }
+  .report-detail__chart-canvas--bar { padding: 14px 6px 44px; gap: 6px; }
+}
+
+/* ── Viewer mode — non-admin members opening a published report.
+   The edit affordances (chart gear / trash buttons, format toolbar,
+   Insert Data button, slash bridge inputs, table action toolbar,
+   selection bubble) are all hidden so the page reads as a static
+   document. The PDF Download button in the topbar stays visible —
+   that's the whole point of viewer mode. */
+.report-detail--viewer .report-detail__chart-actions,
+.report-detail--viewer .ratel-editor .re-toolbar,
+.report-detail--viewer .ratel-editor .re-bubble,
+.report-detail--viewer .ratel-editor .re-table-actions,
+.report-detail--viewer .ratel-editor .re-statusbar {
+  display: none !important;
+}
+.report-detail--viewer .ratel-editor .re-content {
+  /* Belt-and-suspenders — the `editable` prop already wires
+     `contenteditable="false"`, but explicitly disabling caret affords
+     the user no chance to focus the body even via tab. */
+  caret-color: transparent;
+  user-select: text;
+}
+
+/* ── Publish confirm modal — identical arena-glass styling to the
+   list page's delete modal. Same panel background, same border, same
+   icon container, same button geometry. Only the eyebrow / icon /
+   primary-action colors are swapped from destructive red to the
+   publish purple, because publishing is a positive (not destructive)
+   action. All modal tokens are duplicated locally because the
+   originals live under `.reports-arena` and our scope is
+   `.report-detail`. */
+.report-detail .confirm-modal {
+  --rd-modal-scrim: var(--dark, rgba(4, 4, 12, 0.65)) var(--light, rgba(20, 20, 35, 0.45));
+  --rd-modal-panel: var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.97), rgba(10, 10, 20, 0.99))) var(--light, linear-gradient(160deg, #ffffff, #fafaf6));
+  --rd-card-shadow: var(--dark, rgba(0, 0, 0, 0.5)) var(--light, rgba(0, 0, 0, 0.10));
+  --rd-publish-fg: var(--dark, #c4a3f5) var(--light, #7c3aed);
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--rd-modal-scrim);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.report-detail .confirm-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  background: var(--rd-modal-panel);
+  border: 1px solid var(--rd-border-strong);
+  box-shadow: 0 30px 80px var(--rd-card-shadow), 0 0 60px rgba(168, 85, 247, 0.10);
+  padding: 32px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  overflow: hidden;
+}
+.report-detail .confirm-modal__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(168, 85, 247, 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.report-detail .confirm-modal__panel > * { position: relative; z-index: 1; }
+.report-detail .confirm-modal__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rd-publish-fg);
+  padding: 3px 11px;
+  border-radius: 99px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+}
+.report-detail .confirm-modal__eyebrow svg { width: 11px; height: 11px; }
+.report-detail .confirm-modal__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(168, 85, 247, 0.04));
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rd-publish-fg);
+  margin-top: 8px;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.report-detail .confirm-modal__icon svg { width: 26px; height: 26px; }
+.report-detail .confirm-modal__title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--rd-text-primary);
+  margin-top: 4px;
+}
+.report-detail .confirm-modal__body {
+  font-size: 13px;
+  color: var(--rd-text-muted);
+  line-height: 1.6;
+  padding: 0 4px;
+}
+.report-detail .confirm-modal__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+}
+.report-detail .confirm-modal__btn {
+  flex: 1;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s;
+  border: 1px solid transparent;
+}
+.report-detail .confirm-modal__btn--ghost {
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.03));
+  border-color: var(--rd-border-strong);
+  color: var(--rd-text-muted);
+}
+.report-detail .confirm-modal__btn--ghost:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.06));
+  color: var(--rd-text-primary);
+}
+.report-detail .confirm-modal__btn--primary {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.30);
+}
+.report-detail .confirm-modal__btn--primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.40);
+}
+.report-detail .confirm-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Print / Save-as-PDF view ──────────────────────────
+   When the user hits "PDF 다운로드" we call `window.print()`. The
+   browser's print pipeline rasterises a snapshot of the page using
+   only these styles. We strip every editor / app chrome (topbar,
+   outline rail, format toolbar, table-action toolbar, selection
+   bubble, chart settings/trash buttons) and reflow the doc body for
+   an A4-ish page. Backgrounds / colors are preserved via
+   `print-color-adjust: exact` so chart figures don't drop their
+   gradient fills. */
+@media print {
+  /* Real `@page` margins (so every page has the same gutter — body
+     padding only applies on page 1, which left pages 2+ glued to the
+     top edge), then explicitly empty out the six margin-box slots so
+     the browser has nowhere to inject its own header (timestamp + tab
+     title) / footer (URL + page number). Chrome 90+ / Edge support
+     these empty content() declarations as suppression hints. */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm;
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
+  }
+
+  html {
+    background: #ffffff !important;
+    color: #111 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #111 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Force light tokens for the print snapshot so the dark UI doesn't
+     bake into the PDF as a sea of dark grey. The `--dark` / `--light`
+     toggle (defined in dx-components-theme.css) flips based on
+     `data-theme`; we override here. */
+  html,
+  body,
+  .report-detail,
+  .report-detail .ratel-editor {
+    --dark: ;
+    --light: initial;
+    color-scheme: light;
+  }
+
+  /* Preserve gradient + background colors for charts. Default browser
+     print "economy" mode would otherwise drop them. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Strip every UI chrome that isn't the document body. */
+  .report-detail__topbar,
+  .report-detail__outline,
+  .report-detail__banner,
+  .report-detail__picker-overlay,
+  .report-detail__slash-pop,
+  .report-detail .confirm-modal,
+  .ratel-editor .re-toolbar,
+  .ratel-editor .re-bubble,
+  .ratel-editor .re-table-actions,
+  .ratel-editor .re-statusbar,
+  .ratel-editor .re-bridge,
+  .ratel-editor .re-slash-bridge,
+  .report-detail__cmd-bridge,
+  .report-detail__chart-actions,
+  /* Editor-page-only chrome that doesn't belong in the printed report:
+     the "ACTION · REPORT" eyebrow strip above the title, the
+     "{analyze_name} · {item_meta}" debug strip under each chart badge,
+     and the LDA topic weight + network stats are workflow hints
+     (filler percentages / debug counts), not document content. */
+  .report-detail__cover,
+  .report-detail__chart-meta,
+  .report-detail__lda-topic-weight,
+  .report-detail__lda-topic-bar,
+  .report-detail__network-stats,
+  /* Any other floating modals or overlays anywhere on the page. */
+  body > [class*="modal"],
+  body > [class*="overlay"],
+  body > [class*="toast"],
+  /* Global `Layover` (right-side drawer). It stays in the DOM with
+     `position: fixed; inset: 0; bg-black + translate-x-full` even when
+     closed, and the browser print engine renders that black backdrop
+     as a faint dark vertical bar along the right edge of every PDF
+     page. Drop the whole tree when printing. */
+  .fixed.inset-0.z-100 {
+    display: none !important;
+  }
+  /* Strip any leftover fixed-position element that would render at the
+     same viewport coords on every print page — those create the
+     "phantom vertical bar" along the right margin in print snapshots. */
+  .report-detail *[style*="position: fixed"],
+  .report-detail *[style*="position:fixed"] {
+    display: none !important;
+  }
+  .ratel-editor .re-bubble,
+  .ratel-editor .re-table-actions,
+  .report-detail__slash-pop {
+    position: static !important;
+  }
+
+  /* The doc surface drops scrolling so the printer can paginate the
+     full content. Width takes the printable area. */
+  .report-detail {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #111 !important;
+  }
+  .report-detail__grid {
+    /* The on-screen grid is two columns (body + 280px outline rail);
+       in print the outline is hidden, but the empty 280px column
+       still consumed space and left a vertical seam on the right
+       side of the page. Flatten the grid to a single column. */
+    display: block !important;
+    grid-template-columns: 1fr !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  /* Ensure no leftover element still renders a scrollbar gutter on
+     the right side of the printable area. Every scroll container in
+     the editor UI was hidden / unset above; this is a belt-and-
+     braces sweep that catches anything we missed. */
+  .report-detail,
+  .report-detail *,
+  .ratel-editor,
+  .ratel-editor * {
+    scrollbar-width: none !important;
+  }
+  .report-detail ::-webkit-scrollbar,
+  .ratel-editor ::-webkit-scrollbar,
+  .report-detail::-webkit-scrollbar,
+  .ratel-editor::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .report-detail__doc {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .report-detail__doc-inner {
+    max-width: 100% !important;
+  }
+  .report-detail .ratel-editor {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+  }
+  .report-detail .ratel-editor .re-content {
+    overflow: visible !important;
+    padding: 0 !important;
+    color: #111 !important;
+  }
+
+  /* Title + subtitle inputs render as readonly headings on paper. */
+  .report-detail__title,
+  .report-detail__subtitle {
+    background: transparent !important;
+    border: none !important;
+    color: #111 !important;
+    outline: none !important;
+  }
+  /* Hide subtitle row entirely when it's still showing its placeholder
+     (= no value entered). `:placeholder-shown` is supported in every
+     evergreen browser. */
+  .report-detail__subtitle:placeholder-shown {
+    display: none !important;
+  }
+
+  /* Network chart: tone down the saturated purple fills + edge strokes
+     so the densely-overlapping graph reads as a soft sketch on white
+     paper instead of an opaque purple blob. */
+  .report-detail__network-node {
+    fill: rgba(168, 85, 247, 0.20) !important;
+    stroke: rgba(168, 85, 247, 0.45) !important;
+    stroke-width: 0.8 !important;
+  }
+  .report-detail__network-edge {
+    stroke: rgba(120, 90, 180, 0.18) !important;
+    stroke-width: 0.6 !important;
+  }
+  .report-detail__network-label {
+    fill: #333 !important;
+    font-size: 9.5px !important;
+  }
+
+  /* Charts: keep the colored fills, but darken text contrast for
+     paper. */
+  .report-detail__chart-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #f7f6f3 !important;
+    color: #111 !important;
+    border-color: rgba(0, 0, 0, 0.10) !important;
+  }
+  .report-detail__chart-title,
+  .report-detail__chart-meta,
+  .report-detail__chart-meta-key,
+  .report-detail__chart-meta-val,
+  .report-detail__chart-table th,
+  .report-detail__chart-table td,
+  .report-detail__chart-pie-row,
+  .report-detail__chart-pie-row > span,
+  .report-detail__chart-pie-row > strong,
+  .report-detail__lda-topic-id,
+  .report-detail__lda-topic-weight,
+  .report-detail__lda-kw,
+  .report-detail__network-stats,
+  .report-detail__network-label {
+    color: #111 !important;
+  }
+  .report-detail__chart-table {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+  .report-detail__chart-table th,
+  .report-detail__chart-table td {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+  .report-detail__chart-table th {
+    background: rgba(0, 0, 0, 0.04) !important;
+  }
+  .report-detail__chart-canvas {
+    background: rgba(0, 0, 0, 0.02) !important;
+  }
+
+  /* Headings + paragraphs in the body editor: paper colors. */
+  .ratel-editor .re-content h1,
+  .ratel-editor .re-content h2,
+  .ratel-editor .re-content h3,
+  .ratel-editor .re-content p,
+  .ratel-editor .re-content li,
+  .ratel-editor .re-content td,
+  .ratel-editor .re-content th {
+    color: #111 !important;
+  }
+  .ratel-editor .re-content blockquote {
+    color: #333 !important;
+    border-color: rgba(0, 0, 0, 0.20) !important;
+  }
+  .ratel-editor .re-content a {
+    color: #1056d1 !important;
+  }
+  .ratel-editor .re-content table th,
+  .ratel-editor .re-content table td {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Page-break friendliness for figures + tables. */
+  figure,
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
+/* ── Block editor (Notion-style) ─────────────── */
+.report-detail__doc { padding: 28px 28px 120px; }
+.report-detail__blocks { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.report-detail__block { position: relative; }
+.report-detail__block-h1,
+.report-detail__block-h2,
+.report-detail__block-h3,
+.report-detail__block-text {
+  outline: none;
+  color: var(--rd-text-primary);
+  caret-color: var(--rd-accent);
+}
+.report-detail__block-h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  margin: 8px 0 6px;
+}
+.report-detail__block-h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  margin: 6px 0 4px;
+}
+.report-detail__block-h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  margin: 4px 0;
+}
+.report-detail__block-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--rd-text-primary);
+}
+.report-detail__block-text strong { color: var(--rd-text-primary); font-weight: 700; }
+.report-detail__block-text em { color: var(--rd-text-muted); }
+
+/* Chart block — bordered figure with bar canvas */
+.report-detail__chart-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid var(--rd-accent-border);
+  background: var(--rd-accent-bg);
+}
+.report-detail__chart-top { display: flex; align-items: flex-start; gap: 14px; }
+.report-detail__chart-top .report-detail__chart-badge { margin-top: 1px; flex-shrink: 0; }
+.report-detail__chart-top .report-detail__chart-title { flex: 1; min-width: 0; line-height: 1.4; }
+.report-detail__chart-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid var(--rd-accent-border);
+  color: var(--rd-accent);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.report-detail__chart-badge svg { width: 11px; height: 11px; }
+.report-detail__chart-block[data-source="poll"]       .report-detail__chart-badge { background: rgba(6, 182, 212, 0.15); color: var(--rd-poll); border-color: rgba(6, 182, 212, 0.32); }
+.report-detail__chart-block[data-source="discussion"] .report-detail__chart-badge { background: rgba(96, 165, 250, 0.15); color: var(--rd-discussion); border-color: rgba(96, 165, 250, 0.32); }
+.report-detail__chart-block[data-source="follow"]     .report-detail__chart-badge { background: rgba(249, 115, 22, 0.15); color: var(--rd-follow); border-color: rgba(249, 115, 22, 0.32); }
+.report-detail__chart-title { font-size: 13px; font-weight: 700; color: var(--rd-text-primary); }
+.report-detail__chart-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--rd-text-muted);
+}
+.report-detail__chart-meta-key {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--rd-text-dim);
+}
+.report-detail__chart-meta-val { color: var(--rd-text-primary); font-weight: 600; }
+.report-detail__chart-meta-sep { color: var(--rd-text-dim); }
+.report-detail__chart-canvas {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 24px;
+  height: 240px;
+  /* Extra bottom padding carves out space for the absolute `::after`
+     labels under each bar so they stay inside the canvas box. Sized
+     for up to 2 wrapped lines of 10px text. */
+  padding: 18px 18px 50px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.report-detail__chart-bar {
+  flex: 1 1 0;
+  max-width: 120px;
+  background: linear-gradient(180deg, var(--rd-accent), rgba(168, 85, 247, 0.35));
+  border-radius: 6px 6px 0 0;
+  min-height: 12%;
+  position: relative;
+}
+.report-detail__chart-bar::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 100%;
+  margin-top: 6px;
+  /* True center-under-bar regardless of bar width: anchor the
+     pseudo-element's center to the bar's center via translate. */
+  left: 50%;
+  transform: translateX(-50%);
+  width: max(100%, 60px);
+  font-size: 10px;
+  color: var(--rd-text-dim);
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  pointer-events: none;
+}
+.report-detail__chart-block[data-source="poll"] .report-detail__chart-bar {
+  background: linear-gradient(180deg, var(--rd-poll), rgba(6, 182, 212, 0.32));
+}
+.report-detail__chart-block[data-source="discussion"] .report-detail__chart-bar {
+  background: linear-gradient(180deg, var(--rd-discussion), rgba(96, 165, 250, 0.32));
+}
+.report-detail__chart-block[data-source="follow"] .report-detail__chart-bar {
+  background: linear-gradient(180deg, var(--rd-follow), rgba(249, 115, 22, 0.32));
+}
+
+/* ── Bottom format toolbar (fixed pill) ──────── */
+.report-detail__fmt-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--dark, rgba(15, 15, 28, 0.96)) var(--light, rgba(255, 255, 255, 0.98));
+  border: 1px solid var(--rd-border-strong);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+}
+.report-detail__fmt-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.18s, background 0.18s;
+}
+.report-detail__fmt-btn:hover { color: var(--rd-text-primary); background: rgba(255, 255, 255, 0.04); }
+.report-detail__fmt-btn svg { width: 15px; height: 15px; }
+.report-detail__fmt-sep { width: 1px; height: 18px; background: var(--rd-border-subtle); margin: 0 4px; }
+.report-detail__fmt-btn--insert {
+  width: auto;
+  padding: 0 12px;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(168, 85, 247, 0.10));
+  border-color: var(--rd-accent-border);
+  color: var(--rd-accent);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.report-detail__fmt-btn--insert:hover { box-shadow: 0 0 16px rgba(168, 85, 247, 0.30); background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(168, 85, 247, 0.14)); }
+.report-detail__fmt-btn[aria-pressed="true"] {
+  color: var(--rd-accent);
+  background: rgba(168, 85, 247, 0.16);
+}
+/* The bottom toolbar pill grew enough buttons to need horizontal
+   scrolling on narrow viewports — keep it on one line and let the
+   browser scroll inside the pill instead of clipping. */
+.report-detail__fmt-bar {
+  max-width: calc(100vw - 32px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.report-detail__fmt-bar::-webkit-scrollbar { display: none; }
+
+/* ── Floating selection toolbar (text-selection bubble) ─── */
+.report-detail__sel-bubble {
+  position: fixed;
+  z-index: 65;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: var(--dark, rgba(15, 15, 28, 0.98)) var(--light, rgba(255, 255, 255, 0.99));
+  border: 1px solid var(--rd-border-strong);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+  transform: translate(-50%, -100%);
+  /* Set by JS via top/left inline style; reserve a default placement
+     so the bubble doesn't flash at 0,0 before the first selection. */
+  top: -200px;
+  left: 0;
+}
+.report-detail__sel-bubble[data-open="true"] { display: inline-flex; }
+.report-detail__sel-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.report-detail__sel-btn:hover { color: var(--rd-text-primary); background: rgba(255, 255, 255, 0.06); }
+.report-detail__sel-btn svg { width: 13px; height: 13px; }
+.report-detail__sel-btn[aria-pressed="true"] {
+  color: var(--rd-accent);
+  background: rgba(168, 85, 247, 0.16);
+}
+
+/* ── Chart block actions (settings + trash) ──── */
+.report-detail__chart-top { position: relative; }
+.report-detail__chart-actions {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: inline-flex;
+  gap: 4px;
+}
+.report-detail__chart-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--rd-border-subtle);
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+}
+.report-detail__chart-action:hover { color: var(--rd-text-primary); background: rgba(255, 255, 255, 0.08); }
+.report-detail__chart-action svg { width: 13px; height: 13px; }
+.report-detail__chart-action--danger:hover { color: #ef4444; border-color: rgba(239, 68, 68, 0.32); background: rgba(239, 68, 68, 0.10); }
+
+/* ── Outline swap (chart-type picker) ────────── */
+.report-detail__outline-swap { gap: 14px; }
+.report-detail__outline-swap-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.report-detail__outline-swap-title-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.report-detail__outline-swap-eyebrow {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rd-accent);
+}
+.report-detail__outline-swap-title { font-size: 13px; font-weight: 700; color: var(--rd-text-primary); }
+.report-detail__outline-swap-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid var(--rd-border-subtle);
+  color: var(--rd-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.report-detail__outline-swap-close svg { width: 12px; height: 12px; }
+.report-detail__outline-swap-list { display: flex; flex-direction: column; gap: 6px; }
+.report-detail__swap-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--rd-border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--rd-text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+.report-detail__swap-opt:hover { background: rgba(255, 255, 255, 0.04); color: var(--rd-text-primary); }
+.report-detail__swap-opt[aria-selected="true"] {
+  background: var(--rd-accent-bg);
+  border-color: var(--rd-accent-border);
+  color: var(--rd-accent);
+}
+.report-detail__swap-opt-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(168, 85, 247, 0.10);
+  border: 1px solid rgba(168, 85, 247, 0.20);
+  color: var(--rd-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.report-detail__swap-opt-icon svg { width: 14px; height: 14px; }
+.report-detail__swap-opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.report-detail__swap-opt-label { font-size: 12px; font-weight: 700; color: inherit; }
+.report-detail__swap-opt-hint { font-size: 10.5px; color: var(--rd-text-dim); }
+
+/* ── Chart canvas variants ───────────────────── */
+.report-detail__chart-canvas--bar { /* default already styled above */ }
+.report-detail__chart-canvas--pie {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+.report-detail__chart-pie {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: conic-gradient(var(--rd-follow) 0 65%, rgba(255, 255, 255, 0.08) 65% 100%);
+  box-shadow: 0 0 24px rgba(249, 115, 22, 0.18);
+}
+/* Legend layout: a single 3-column grid spanning every row so the
+   swatch / label / percentage columns line up across rows (1, 2, 3
+   stack uniformly, percentages stack uniformly). `justify-content: end`
+   right-aligns the entire grid in the legend column so the swatch +
+   label + percent triad hugs the right side, never invading the pie
+   disc on the left. Each `.report-detail__chart-pie-row` is just a
+   visual grouping with `display: contents` so its children flow into
+   the grid as direct grid items. */
+.report-detail__chart-pie-legend {
+  display: grid;
+  grid-template-columns: 14px minmax(auto, 200px) auto;
+  column-gap: 8px;
+  row-gap: 10px;
+  justify-content: end;
+  align-items: center;
+}
+.report-detail__chart-pie-row {
+  display: contents;
+  font-size: 12px;
+  color: var(--rd-text-muted);
+}
+.report-detail__chart-pie-row > span:not(.report-detail__chart-pie-swatch) {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--rd-text-muted);
+}
+.report-detail__chart-pie-row > strong {
+  text-align: right;
+  font-weight: 700;
+  /* Extra padding on top of the 8px column-gap → ~20px visual gap
+     between the label and the percent. */
+  padding-left: 12px;
+  font-size: 12px;
+}
+.report-detail__chart-pie-row strong { color: var(--rd-text-primary); font-weight: 700; }
+.report-detail__chart-pie-swatch { width: 14px; height: 14px; border-radius: 4px; }
+.report-detail__chart-pie-swatch--a { background: var(--rd-follow); }
+.report-detail__chart-pie-swatch--b { background: rgba(255, 255, 255, 0.18); }
+
+/* LDA topic canvas — discussion-only chart type. Vertical stack of
+   topics, each row showing the weight % + a proportional bar + the
+   top-5 keywords with their TF scores. Mirrors the mockup's
+   `.block-lda` styling. */
+.report-detail__chart-canvas--lda {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 14px;
+  /* Reset the default bar-canvas fixed height — LDA stacks topics
+     vertically and must grow with the topic count instead of being
+     clipped (or overflowing into the next block) at 240px. No inset
+     background — same reasoning as the network canvas, the chart
+     card's own surface already gives the visual frame. */
+  height: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+.report-detail__lda-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.report-detail__lda-topic-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.report-detail__lda-topic-id {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rd-text-muted);
+}
+.report-detail__lda-topic-weight {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rd-discussion);
+  letter-spacing: 0.04em;
+}
+.report-detail__lda-topic-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.report-detail__lda-topic-bar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rd-discussion), rgba(168, 85, 247, 0.5));
+  border-radius: 3px;
+}
+.report-detail__lda-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.report-detail__lda-kw {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+  font-size: 12.5px;
+  color: var(--rd-text-primary);
+}
+.report-detail__lda-kw em {
+  font-style: normal;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  color: var(--rd-discussion);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* TF-IDF canvas — reuses the generic chart-table base. Right-aligned
+   rank/score columns differentiate it visually from the plain Table
+   variant. */
+.report-detail__chart-canvas--tfidf {
+  /* Reset the default bar-canvas flex layout — TF-IDF is a single
+     full-width <table>, not a row of vertical bars. */
+  display: block;
+  padding: 0;
+  background: transparent;
+  height: auto;
+}
+.report-detail__tfidf-rank-h { width: 60px; }
+.report-detail__tfidf-rank { font-variant-numeric: tabular-nums; color: var(--rd-text-dim); }
+.report-detail__tfidf-score-h { width: 90px; text-align: right; }
+.report-detail__tfidf-score {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  color: var(--rd-discussion);
+}
+
+/* Text-network canvas — SVG graph with co-occurrence nodes / edges.
+   No inner background; the SVG sits transparently inside the chart
+   card so the card's own color (light or dark themed) shows through
+   without a grey inset rectangle. */
+.report-detail__chart-canvas--network {
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: auto;
+}
+.report-detail__network-svg {
+  width: 100%;
+  height: 300px;
+  display: block;
+}
+/* Force-set network viz colors. The SVG generator writes inline
+   `style="fill: …; stroke: …"` on every node + edge, so the only way
+   to retro-fix figures already saved in a report body is with
+   `!important` here. Tuned for ON-SCREEN viewing — lines are visible
+   but not saturated. The PDF / print pipeline has its own further-
+   muted overrides inside `@media print`. */
+.report-detail svg line.report-detail__network-edge,
+.report-detail__network-edge {
+  stroke: rgba(168, 85, 247, 0.35) !important;
+  stroke-width: 1 !important;
+  stroke-linecap: round !important;
+}
+.report-detail svg circle.report-detail__network-node,
+.report-detail__network-node {
+  stroke-width: 1.2 !important;
+  fill: rgba(168, 85, 247, 0.55) !important;
+  stroke: rgba(168, 85, 247, 0.85) !important;
+}
+.report-detail__network-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--rd-text-primary);
+  text-anchor: middle;
+  pointer-events: none;
+}
+.report-detail__network-stats {
+  display: flex;
+  gap: 18px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rd-text-dim);
+  justify-content: center;
+}
+.report-detail__network-stats strong {
+  color: var(--rd-text-primary);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.report-detail__chart-canvas--table {
+  /* Reset the flex bar-canvas layout so the table is a single full-width
+     block child instead of being squeezed into a flex slot. */
+  display: block;
+  padding: 0;
+  background: transparent;
+  height: auto;
+}
+.report-detail__chart-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  /* Without `table-layout: fixed` the browser auto-sizes columns by
+     content — a very long option label can squeeze the count/percent
+     columns down to one character wide, and a very short label leaves
+     them with too much whitespace. Fix the data columns and let the
+     first column take the rest. */
+  table-layout: fixed;
+}
+.report-detail__chart-table th,
+.report-detail__chart-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--rd-border-subtle);
+  vertical-align: top;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.report-detail__chart-table th:nth-child(2),
+.report-detail__chart-table td:nth-child(2),
+.report-detail__chart-table th:nth-child(3),
+.report-detail__chart-table td:nth-child(3) {
+  width: 90px;
+  text-align: right;
+  white-space: nowrap;
+}
+/* TextList canvas — subjective-answer chart. Same base styling as
+   the TF-IDF table (rank + content), but the content column wraps. */
+.report-detail__chart-canvas--textlist {
+  display: block;
+  padding: 0;
+  background: transparent;
+  height: auto;
+}
+.report-detail__chart-canvas--textlist .report-detail__chart-table {
+  table-layout: auto;
+}
+.report-detail__chart-canvas--textlist .report-detail__chart-table th:nth-child(2),
+.report-detail__chart-canvas--textlist .report-detail__chart-table td:nth-child(2) {
+  width: auto;
+  text-align: left;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.report-detail__textlist-rank-h,
+.report-detail__textlist-rank {
+  width: 48px !important;
+  text-align: right !important;
+  color: var(--rd-text-dim);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10.5px;
+}
+.report-detail__textlist-cell {
+  line-height: 1.55;
+}
+
+/* TF-IDF table has its own column shape (Rank / Term / Score). */
+.report-detail__chart-canvas--tfidf .report-detail__chart-table {
+  table-layout: auto;
+}
+.report-detail__chart-canvas--tfidf .report-detail__chart-table th:nth-child(2),
+.report-detail__chart-canvas--tfidf .report-detail__chart-table td:nth-child(2),
+.report-detail__chart-canvas--tfidf .report-detail__chart-table th:nth-child(3),
+.report-detail__chart-canvas--tfidf .report-detail__chart-table td:nth-child(3) {
+  width: auto;
+  text-align: left;
+  white-space: normal;
+}
+.report-detail__chart-table th {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--rd-text-dim);
+}
+.report-detail__chart-table td { color: var(--rd-text-primary); }
+.report-detail__chart-table tbody tr:last-child th,
+.report-detail__chart-table tbody tr:last-child td { border-bottom: none; }
+.report-detail__outline-swap-hint { font-size: 10.5px; color: var(--rd-text-dim); padding-top: 4px; }
+
+/* ── Slash autocomplete popup ────────────────── */
+/* Doc area needs `position: relative` so the slash popup inside it
+   uses doc-scroll-relative absolute positioning (and scrolls with the
+   content as the user types beyond the viewport). */
+.report-detail__doc { position: relative; }
+.report-detail__slash-pop {
+  position: absolute;
+  z-index: 70;
+  min-width: 280px;
+  max-width: 360px;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--dark, rgba(15, 15, 28, 0.98)) var(--light, rgba(255, 255, 255, 0.98));
+  border: 1px solid var(--rd-border-strong);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.report-detail__slash-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rd-border-subtle);
+}
+.report-detail__slash-pop-heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rd-accent);
+}
+.report-detail__slash-pop-hint { font-size: 10px; color: var(--rd-text-dim); }
+.report-detail__slash-pop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  overflow-y: auto;
+}
+.report-detail__slash-pop-empty {
+  padding: 10px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--rd-text-dim);
+}
+.report-detail__slash-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--rd-text-muted);
+}
+.report-detail__slash-item:hover,
+.report-detail__slash-item[aria-selected="true"] {
+  background: var(--rd-accent-bg);
+  color: var(--rd-text-primary);
+}
+.report-detail__slash-item-title { font-size: 13px; font-weight: 600; color: var(--rd-text-primary); }
+.report-detail__slash-item-meta { font-size: 10.5px; color: var(--rd-text-dim); }
+.report-detail__xf-chips--slash { margin-top: 4px; }
 
 /* === src/features/social/pages/reward/user/components/reward_history_section === */
 .rewards-arena .reward-history {
@@ -50885,4 +53182,101 @@ html[data-theme="light"] .ff-home .featured-title {
   .rewards-arena .reward-history__cell--date {
     text-align: left;
   }
+}
+
+
+
+
+/* === src/features/spaces/pages/report/views/detail/figure-caption === */
+/* Per-figure caption — editable label in the style of a publishable
+   "그림 1. ..." / "표 1. ..." line. Lives inside each `<figure>` (charts)
+   or each `<table>` (via the native `<caption>` element).
+   The figure / table itself is contenteditable=false; the caption
+   element overrides to true so it's the only editable surface. */
+.report-detail__chart-caption {
+  margin: 14px auto 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--rd-text-muted);
+  text-align: center;
+  outline: none;
+  caret-color: var(--rd-accent);
+  transition: color 0.18s;
+  /* Keep the element clickable even when empty so the placeholder
+     hint is reachable on hover/tap. Without this an empty `<figcaption>`
+     collapses to 0 height. */
+  min-height: 1.6em;
+  display: block;
+}
+.report-detail__chart-caption:focus { color: var(--rd-text-primary); }
+.report-detail__chart-caption:empty::before,
+.report-detail__chart-caption:has(>br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--rd-text-dim);
+  font-style: italic;
+}
+.report-detail__chart-caption:focus:empty::before { color: var(--rd-text-dim); }
+
+/* Native <caption> on report tables — top-left aligned per the
+   spec/mockup. The placeholder pattern is the same as the figcaption. */
+.report-detail .ratel-editor .re-content table > caption.re-table-caption {
+  caption-side: top;
+  text-align: left;
+  padding: 6px 4px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--rd-text-muted);
+  outline: none;
+  caret-color: var(--rd-accent);
+  font-weight: 500;
+  /* Same min-height trick — empty <caption> would collapse to 0px
+     and never get a click target for the placeholder. */
+  min-height: 1.6em;
+}
+.report-detail .ratel-editor .re-content table > caption.re-table-caption:focus {
+  color: var(--rd-text-primary);
+}
+.report-detail .ratel-editor .re-content table > caption.re-table-caption:empty::before,
+.report-detail .ratel-editor .re-content table > caption.re-table-caption:has(>br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--rd-text-dim);
+  font-style: italic;
+}
+
+@media print {
+  .report-detail__chart-caption {
+    color: #222;
+    font-size: 11px;
+    padding: 6px 0 0;
+    margin-top: 8px;
+  }
+  /* Hide the placeholder in print when the user didn't fill it in. */
+  .report-detail__chart-caption:empty,
+  .report-detail__chart-caption:has(>br:only-child) { display: none; }
+  .report-detail .ratel-editor .re-content table > caption.re-table-caption {
+    color: #222;
+    font-size: 11px;
+  }
+  .report-detail .ratel-editor .re-content table > caption.re-table-caption:empty,
+  .report-detail .ratel-editor .re-content table > caption.re-table-caption:has(>br:only-child) {
+    display: none;
+  }
+}
+
+
+/* === src/features/spaces/pages/report/views/detail/table-layout === */
+/* Stable column widths inside report tables. Default `table-layout:
+   auto` lets browsers size columns by content width, which leaves
+   irregular column boundaries when cells are sparse (mostly &nbsp;).
+   `table-layout: fixed` distributes columns evenly so drag-selecting
+   cells aligns to visible rectangles. */
+.report-detail .ratel-editor .re-content table {
+  table-layout: fixed;
+  width: 100%;
+}
+.report-detail .ratel-editor .re-content table td,
+.report-detail .ratel-editor .re-content table th {
+  word-break: break-word;
+  vertical-align: top;
 }

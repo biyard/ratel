@@ -37,6 +37,15 @@ pub struct FactFoldUserStats {
     /// Millis-since-epoch of the last settled round.
     #[serde(default)]
     pub last_played_at: i64,
+
+    /// `Some(round_id)` while the user is bound into an in-flight
+    /// round (any non-Settled stage). Set on `lobby/join`, cleared
+    /// on `lobby/leave` (waiting only) or in `settle_round_internal`
+    /// per participant. lobby/join uses its presence to short-circuit
+    /// with [`FactOrFoldError::RoundInProgress`] so a disconnected
+    /// player cannot start a second round before their first finishes.
+    #[serde(default)]
+    pub current_round_id: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -64,6 +73,7 @@ impl FactFoldUserStats {
             correct_count: 0,
             lifetime_delta_chips: 0,
             last_played_at: 0,
+            current_round_id: None,
         }))
     }
 }

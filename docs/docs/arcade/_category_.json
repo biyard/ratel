@@ -1,0 +1,8 @@
+{
+  "label": "Arcade",
+  "position": 10,
+  "link": {
+    "type": "doc",
+    "id": "arcade/index"
+  }
+}

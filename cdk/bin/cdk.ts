@@ -25,11 +25,21 @@ const host = process.env.DOMAIN || "dev.ratel.foundation";
 const webDomain = host;
 const apiDomain = `api.${host}`;
 const baseDomain = "ratel.foundation";
-const publicBiyardApiUrl =
-  process.env.BIYARD_PUBLIC_API_URL || "https://api.biyard.co";
-const privateBiyardApiUrl =
-  process.env.BIYARD_PRIVATE_API_URL ||
-  "http://api.biyard-prod-svc.local:8080";
+
+// Launchpad point-integration partner config — injected as RUNTIME Lambda env
+// (read via `std::env::var` in `features/launchpad_partner/config.rs`, which
+// prefers runtime over the compile-time `option_env!` fallback). Sourced from
+// CI secrets in the CDK deploy step. Only set keys that are present so an unset
+// secret falls back to ratel's built-in default instead of overriding it with "".
+const launchpadEnv: { [key: string]: string } = {};
+if (process.env.LAUNCHPAD_BASE_URL)
+  launchpadEnv.LAUNCHPAD_BASE_URL = process.env.LAUNCHPAD_BASE_URL;
+if (process.env.LAUNCHPAD_PROJECT_ID)
+  launchpadEnv.LAUNCHPAD_PROJECT_ID = process.env.LAUNCHPAD_PROJECT_ID;
+if (process.env.LAUNCHPAD_PARTNER_SECRET)
+  launchpadEnv.LAUNCHPAD_PARTNER_SECRET = process.env.LAUNCHPAD_PARTNER_SECRET;
+if (process.env.LAUNCHPAD_POINT_SYMBOL)
+  launchpadEnv.LAUNCHPAD_POINT_SYMBOL = process.env.LAUNCHPAD_POINT_SYMBOL;
 
 // Shared VPC endpoints (singleton, not stage-scoped — VPC endpoints can only
 // exist once per VPC, so dev and prod share this stack).
@@ -91,7 +101,7 @@ const ap_northeast_2_svc = new RegionalLambdaStack(
     apiDomain,
     webOrigin: `https://${webDomain}`,
     runtimeEnvironment: {
-      BIYARD_API_URL: publicBiyardApiUrl,
+      ...launchpadEnv,
     },
   },
 );
@@ -133,7 +143,7 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     apiDomain: `lambda-${apiDomain}`,
     webOrigin: `https://${webDomain}`,
     runtimeEnvironment: {
-      BIYARD_API_URL: privateBiyardApiUrl,
+      ...launchpadEnv,
     },
     // Place Lambda in the same VPC as Qdrant so CloudMap private DNS resolves.
     vpc: escStack.vpc,
@@ -152,7 +162,7 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-eu-central-1`, {
   apiDomain,
   webOrigin: `https://${webDomain}`,
   runtimeEnvironment: {
-    BIYARD_API_URL: publicBiyardApiUrl,
+    ...launchpadEnv,
   },
 });
 
@@ -167,7 +177,7 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-us-east-1`, {
   apiDomain,
   webOrigin: `https://${webDomain}`,
   runtimeEnvironment: {
-    BIYARD_API_URL: publicBiyardApiUrl,
+    ...launchpadEnv,
   },
 });
 

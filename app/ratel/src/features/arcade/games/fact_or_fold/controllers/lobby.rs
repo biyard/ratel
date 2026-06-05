@@ -27,7 +27,8 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldSubject, FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings,
+    FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings, FactFoldSubject,
+    FactFoldSubjectPlay, FactFoldUserStats,
 };
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::stage_machine;
@@ -50,43 +51,57 @@ async fn load_settings_or_default(cli: &aws_sdk_dynamodb::Client) -> FactOrFoldS
         .unwrap_or_default()
 }
 
-/// Pick the next eligible subject for a new round.
+/// True iff `now` is inside the subject's `[pick_at, expires_at]`
+/// window. `expires_at == 0` is treated as "no expiry" (legacy rows
+/// authored before the time-window model — they fall back to the
+/// pre-existing "active until manually retired" behaviour).
+#[cfg(feature = "server")]
+fn is_subject_active(row: &FactFoldSubject, now: i64) -> bool {
+    if row.pick_at > now {
+        return false;
+    }
+    row.expires_at == 0 || row.expires_at > now
+}
+
+/// Find the subject whose active window currently covers `now`. By
+/// design (operator responsibility) at most one Live/Scheduled
+/// subject's window contains any given instant; if multiple match
+/// we deterministically pick the one with the latest `pick_at` so
+/// later-published "now" subjects win over an already-running one.
 ///
-/// Uses the GSI3 (status, pick_at) index so the DB hands back already-sorted
-/// FIFO order — no in-memory scan or sort. Two limit-1 queries:
-///
-/// 1. `Live` partition — any already-activated subject not yet bound to a
-///    round wins immediately (oldest by `pick_at`).
-/// 2. `Scheduled` partition — the oldest scheduled row is usable only when
-///    its `pick_at` (= `scheduled_at`) is past-due. Because the GSI hands
-///    back rows ASC, the first row's `pick_at` is the minimum: if it's still
-///    in the future, every other Scheduled row is too.
+/// Both `Live` and `Scheduled` partitions are queried because the
+/// activation transition is now time-based — a `Scheduled` row whose
+/// `pick_at` is in the past is just as active as a `Live` row.
 #[cfg(feature = "server")]
 async fn pick_next_subject(
     cli: &aws_sdk_dynamodb::Client,
 ) -> crate::common::Result<Option<FactFoldSubject>> {
-    let live_opts = FactFoldSubject::opt().limit(1).oldest();
-    let (live, _) =
-        FactFoldSubject::find_by_status(cli, SubjectStatus::Live, live_opts)
-            .await
-            .map_err(|e| {
-                crate::error!("pick_next_subject live query failed: {e}");
-                FactOrFoldError::StorageFailure
-            })?;
-    if let Some(row) = live.into_iter().next() {
-        return Ok(Some(row));
-    }
-
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    let sched_opts = FactFoldSubject::opt().limit(1).oldest();
-    let (sched, _) =
-        FactFoldSubject::find_by_status(cli, SubjectStatus::Scheduled, sched_opts)
-            .await
-            .map_err(|e| {
-                crate::error!("pick_next_subject scheduled query failed: {e}");
-                FactOrFoldError::StorageFailure
-            })?;
-    Ok(sched.into_iter().find(|row| row.pick_at <= now))
+
+    // Status partitions live in different GSI3 buckets; run both
+    // queries in parallel and pick the best window match in memory.
+    let live_opts = FactFoldSubject::opt().limit(50).oldest();
+    let sched_opts = FactFoldSubject::opt().limit(50).oldest();
+    let (live_res, sched_res) = tokio::join!(
+        FactFoldSubject::find_by_status(cli, SubjectStatus::Live, live_opts),
+        FactFoldSubject::find_by_status(cli, SubjectStatus::Scheduled, sched_opts),
+    );
+    let (live, _) = live_res.map_err(|e| {
+        crate::error!("pick_next_subject live query failed: {e}");
+        FactOrFoldError::StorageFailure
+    })?;
+    let (sched, _) = sched_res.map_err(|e| {
+        crate::error!("pick_next_subject scheduled query failed: {e}");
+        FactOrFoldError::StorageFailure
+    })?;
+
+    let candidate = live
+        .into_iter()
+        .chain(sched.into_iter())
+        .filter(|row| is_subject_active(row, now))
+        .max_by_key(|row| row.pick_at);
+
+    Ok(candidate)
 }
 
 #[cfg(feature = "server")]
@@ -114,6 +129,32 @@ async fn upsert_lobby_pointer(
 fn pick_insider_index(n: usize) -> usize {
     use rand::RngExt;
     rand::rng().random_range(0..n)
+}
+
+/// Stamp the user's stats with the round they're currently in.
+/// `None` clears the pointer (settle / leave-while-waiting).
+/// Best-effort: an error here is logged but doesn't fail the join —
+/// the marker is a safety net against double-rounds, not a correctness
+/// gate for the join itself.
+#[cfg(feature = "server")]
+async fn set_user_active_round(
+    cli: &aws_sdk_dynamodb::Client,
+    user_id: &str,
+    round_id: Option<String>,
+) {
+    let mut stats = match FactFoldUserStats::get_or_default(cli, user_id).await {
+        Ok(s) => s,
+        Err(e) => {
+            crate::error!("set_user_active_round get failed for {user_id}: {e}");
+            return;
+        }
+    };
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    stats.current_round_id = round_id;
+    stats.updated_at = now;
+    if let Err(e) = stats.upsert(cli).await {
+        crate::error!("set_user_active_round upsert failed for {user_id}: {e}");
+    }
 }
 
 /// Materialize FactFoldParticipant rows for every player in a
@@ -145,9 +186,11 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    // Independent reads — kick them off in parallel so the four DDB
+    // Independent reads — kick them off in parallel so all five DDB
     // round-trips collapse to one. `current_round` depends on
-    // `lobby.current_round_id` so it's loaded after this join.
+    // `lobby.current_round_id` and `already_played_current` depends
+    // on the round's subject, so those load sequentially after.
+    let user_id_inner = user_inner_id(&user);
     let settings_fut = async { Ok::<_, crate::common::Error>(load_settings_or_default(cli).await) };
     let lobby_fut = async {
         FactFoldLobby::get_or_default(cli).await.map_err(|e| {
@@ -163,11 +206,19 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         )
     };
     let pick_fut = async { pick_next_subject(cli).await.map(|s| s.is_some()) };
-    let (settings, lobby, arcade_settings, subject_available) =
-        tokio::try_join!(settings_fut, lobby_fut, arcade_fut, pick_fut)?;
+    let stats_fut = async {
+        Ok::<_, crate::common::Error>(
+            FactFoldUserStats::get_or_default(cli, &user_id_inner)
+                .await
+                .unwrap_or_default(),
+        )
+    };
+    let (settings, lobby, arcade_settings, subject_available, user_stats) =
+        tokio::try_join!(settings_fut, lobby_fut, arcade_fut, pick_fut, stats_fut)?;
 
     let mut current_round: Option<RoundResponse> = None;
     let mut already_joined = false;
+    let mut active_subject_id: Option<String> = None;
 
     if let Some(round_id) = lobby.current_round_id.as_deref() {
         let (pk, sk) = FactFoldRound::keys(round_id);
@@ -176,17 +227,31 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
             FactOrFoldError::StorageFailure
         })? {
             already_joined = round.participant_pks.iter().any(|p| p == &user.pk);
+            active_subject_id = Some(round.subject_id.clone());
             current_round = Some(RoundResponse::from(&round));
         }
     }
 
+    // Block matchmaking for users who are already committed elsewhere:
+    //   - in-flight round on any subject  → user_stats.current_round_id
+    //   - already settled this subject    → FactFoldSubjectPlay marker
+    // Both surface into `can_join` so the UI can disable the button
+    // before the user discovers the error mid-flow.
+    let has_in_flight_round = user_stats.current_round_id.is_some();
+    let already_played_current = match active_subject_id.as_deref() {
+        Some(sid) => FactFoldSubjectPlay::exists(cli, &user_id_inner, sid).await?,
+        None => false,
+    };
+
     let can_join = match &current_round {
         Some(r) => {
             !already_joined
+                && !already_played_current
+                && !has_in_flight_round
                 && (r.participant_pks.len() as i32) < settings.round_capacity
                 && matches!(r.status, RoundStatus::Waiting)
         }
-        None => subject_available,
+        None => subject_available && !has_in_flight_round,
     };
 
     Ok(LobbyResponse {
@@ -228,12 +293,27 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
             crate::common::Error::from(FactOrFoldError::StorageFailure)
         })
     };
-    let (settings, arcade_settings, chip_balance, mut lobby) =
-        tokio::try_join!(settings_fut, arcade_fut, balance_fut, lobby_fut)?;
+    let stats_fut = async {
+        Ok::<_, crate::common::Error>(
+            FactFoldUserStats::get_or_default(cli, &user_id)
+                .await
+                .unwrap_or_default(),
+        )
+    };
+    let (settings, arcade_settings, chip_balance, mut lobby, user_stats) =
+        tokio::try_join!(settings_fut, arcade_fut, balance_fut, lobby_fut, stats_fut)?;
 
     let buy_in_chips = arcade_settings.default_buy_in_chips;
     if chip_balance < buy_in_chips {
         return Err(crate::features::arcade::ArcadeError::WalletInsufficientChip.into());
+    }
+
+    // Block users who already hold an in-flight round — independent
+    // of which subject the lobby would pick next. Covers both the
+    // "same subject" and "windowed-out mid-round" edge cases that the
+    // post-settlement marker alone can't see.
+    if user_stats.current_round_id.is_some() {
+        return Err(FactOrFoldError::RoundInProgress.into());
     }
 
     // Try to attach to an existing waiting round.
@@ -256,6 +336,13 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                 }
                 if (round.participant_pks.len() as i32) >= settings.round_capacity {
                     return Err(FactOrFoldError::LobbyFull.into());
+                }
+                // §"1 game per active subject" — if the user already
+                // finished a round for this subject (marker written at
+                // settlement), reject. Mid-flight rejection is handled
+                // by the user_stats.current_round_id gate above.
+                if FactFoldSubjectPlay::exists(cli, &user_id, &round.subject_id).await? {
+                    return Err(FactOrFoldError::SubjectAlreadyPlayed.into());
                 }
                 round.participant_pks.push(user.pk.clone());
                 let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -283,6 +370,9 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                 wallet
                     .buy_in(&user_id, &attached_round_id, buy_in_chips)
                     .await?;
+                // Record the in-flight round on the user so a parallel
+                // join attempt is rejected with RoundInProgress.
+                set_user_active_round(cli, &user_id, Some(attached_round_id.clone())).await;
                 return Ok(RoundResponse::from(&round));
             }
         } else {
@@ -298,6 +388,13 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     let subject_id = subject
         .id()
         .ok_or(FactOrFoldError::LobbyNoSubjectAvailable)?;
+
+    // §"1 game per active subject" — block users who already
+    // finished a round for this subject. Marker is written by
+    // settlement; mid-flight protection sits on user_stats above.
+    if FactFoldSubjectPlay::exists(cli, &user_id, &subject_id).await? {
+        return Err(FactOrFoldError::SubjectAlreadyPlayed.into());
+    }
 
     // Promote Scheduled → Live so the subject is bound to this
     // round and won't be picked again by a parallel matching call.
@@ -352,6 +449,10 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     // Lock chips on the table for this round.
     wallet.buy_in(&user_id, &round_id, buy_in_chips).await?;
 
+    // Record the in-flight round on the user so subsequent joins
+    // are rejected with RoundInProgress. See `set_user_active_round`.
+    set_user_active_round(cli, &user_id, Some(round_id.clone())).await;
+
     Ok(RoundResponse::from(&round))
 }
 
@@ -403,6 +504,11 @@ pub async fn leave_lobby_handler() -> Result<RoundResponse> {
     wallet
         .settle(&user_id, &round_id, arcade_settings.default_buy_in_chips)
         .await?;
+
+    // Free the user's in-flight slot so they can join again. The
+    // `FactFoldSubjectPlay` marker isn't written until settlement,
+    // so leave-while-waiting doesn't need to clean it up.
+    set_user_active_round(cli, &user_id, None).await;
 
     Ok(RoundResponse::from(&round))
 }

@@ -14,7 +14,13 @@ source ~/.cargo/env
 rustup toolchain install stable
 rustup target add wasm32-unknown-unknown
 
-cargo install dioxus-cli
+# `--locked` honors the Cargo.lock published with dioxus-cli, avoiding the
+# clean-cache `cargo install` fallback that resolves `git2 0.21` and fails
+# with E0599 (auth-git2 0.5.8 calls a removed API). Same fix already applied
+# to the workflow `cargo binstall dioxus-cli --locked` calls (commit 41c41f228);
+# this docker-internal build path was missed, so the lambda build silently
+# failed and left `target/dx/app-shell/release/web/public` uncreated.
+cargo install dioxus-cli --locked
 
 # Install node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash

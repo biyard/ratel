@@ -18,7 +18,11 @@ use crate::features::arcade::games::fact_or_fold::models::FactFoldSettings;
 
 #[cfg(feature = "server")]
 fn validate_settings(s: &FactOrFoldSettingsResponse) -> Result<()> {
-    let ranges_ok = s.round_capacity >= 2
+    // round_capacity == 1 is allowed for solo / dev modes — the
+    // insider role just becomes the lone player. Admin UI surfaces
+    // a warning when 1 is chosen so the operator knows it bypasses
+    // the regular mafia-style dynamic.
+    let ranges_ok = s.round_capacity >= 1
         && s.round_capacity <= 8
         && s.stage_news_reveal_sec > 0
         && s.stage_bet_sec > 0

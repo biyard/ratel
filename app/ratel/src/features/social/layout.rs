@@ -37,6 +37,12 @@ pub fn UserLayout(username: ReadSignal<String>) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let logged_in = user_ctx().user.is_some();
 
+    // Provide wall context so the sidemenu can tell user pages from team
+    // pages and skip the `/api/teams/find` round-trip on user routes.
+    // Without this, `TeamSidemenu` always fires a team-find that 404s
+    // for usernames that belong to a user account.
+    let _wall = use_wall_context_provider(username)?;
+
     // Provide selected category context shared with child routes
     use_context_provider(|| Signal::new(Option::<String>::None));
 
@@ -68,18 +74,31 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
     let tr: TeamMenuTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = crate::common::contexts::use_team_context();
+    let wall_ctx = use_wall_context();
     let current_route = use_route::<Route>();
     let user = user_ctx().user.clone().unwrap_or_default();
 
     // Selected category context (shared with child routes)
     let mut selected_category = use_context::<Signal<Option<String>>>();
 
-    // Load team info
-    let resource = use_loader(use_reactive((&username,), |(name,)| async move {
-        Ok::<_, crate::features::social::Error>(
-            find_team_handler(name).await.map_err(|e| e.to_string()),
-        )
-    }))?;
+    // Load team info — but only when the route's wall is actually a team.
+    // On user routes (UserLayout) the username belongs to a user account,
+    // so `find_team_handler` would 404; gate on `wall_ctx.is_team()` and
+    // return an empty error string in the user case so the existing
+    // fallback render path (line 405+) renders with username only.
+    let name_for_loader = username.clone();
+    let resource = use_loader(move || {
+        let is_team = wall_ctx.is_team();
+        let name = name_for_loader.clone();
+        async move {
+            if !is_team {
+                return Ok::<_, crate::features::social::Error>(Err(
+                    "not a team route".to_string()
+                ));
+            }
+            Ok(find_team_handler(name).await.map_err(|e| e.to_string()))
+        }
+    })?;
 
     // Load categories
     let categories = use_resource(|| async move {

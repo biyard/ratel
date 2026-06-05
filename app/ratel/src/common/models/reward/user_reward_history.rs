@@ -37,6 +37,24 @@ impl UserRewardHistory {
     ) -> Self {
         let now = get_now_timestamp_millis();
         let time_key = period.to_time_key(now);
+        Self::from_params_with_time_key(target_pk, reward_key, time_key, amount)
+    }
+
+    /// Variant that lets the caller supply an explicit `time_key` instead
+    /// of deriving it from a `RewardPeriod`. Used by the owner-bonus
+    /// branch in `SpaceReward::award`, where the time-key needs to be
+    /// per-actor (`OWNER#{actor_user_id}`) so the team accumulates one
+    /// history row per distinct actor — every claim by a new user adds a
+    /// row, while a re-claim by the same user is correctly deduped by
+    /// the `attribute_not_exists(pk)` guard on
+    /// `create_transact_write_item`.
+    pub fn from_params_with_time_key(
+        target_pk: Partition,
+        reward_key: RewardKey,
+        time_key: crate::common::types::TimeKey,
+        amount: i64,
+    ) -> Self {
+        let now = get_now_timestamp_millis();
         let pk = CompositePartition(target_pk, Partition::Reward);
         let sk = UserRewardHistoryKey(reward_key, time_key);
 

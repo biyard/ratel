@@ -34,6 +34,7 @@ This guide walks you through the platform from your first sign-in to running you
 | 7. Essence | Inspect what activity has fed your Essence, manage sources, and connect your AI to it via MCP. |
 | 8. Rewards | The five reward primitives — XP, Points, Credits, Tokens, and Incentive Pools — and how they flow. |
 | 9. Credentials | Verify attributes about yourself — KYC + offline codes — and gate Spaces with what you've proven. |
+| 10. Arcade | Real-time skill games that turn 3 minutes of judgment + writing into a chip payout and an Essence entry. Starts with **Fact or Fold**. |
 
 ## A note on what's live today
 

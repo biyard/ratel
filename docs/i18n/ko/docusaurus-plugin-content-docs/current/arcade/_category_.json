@@ -1,0 +1,8 @@
+{
+  "label": "아케이드",
+  "position": 10,
+  "link": {
+    "type": "doc",
+    "id": "arcade/index"
+  }
+}

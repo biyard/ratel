@@ -52,13 +52,26 @@ pub async fn participate_space(
     let user: Option<User> = user.into();
     let user = user.ok_or(Error::NoSessionFound)?;
 
-    let invitation_allowed = if space.visibility != SpaceVisibility::Public {
-        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
-        let member = SpaceInvitationMember::get(dynamo, &pk, Some(&sk)).await?;
-        matches!(
-            member.as_ref().map(|member| member.status),
-            Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
+    // Sub-team broadcast audience members (parent + recognized
+    // sub-teams) are auto-invited — same bypass used by `get_space` and
+    // the `SpaceUserRole` extractor so all three gates agree.
+    let is_broadcast_audience =
+        crate::features::sub_team::services::broadcast_access::is_broadcast_audience(
+            dynamo, &post, &user.pk,
         )
+        .await;
+
+    let invitation_allowed = if space.visibility != SpaceVisibility::Public {
+        if is_broadcast_audience {
+            true
+        } else {
+            let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+            let member = SpaceInvitationMember::get(dynamo, &pk, Some(&sk)).await?;
+            matches!(
+                member.as_ref().map(|member| member.status),
+                Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
+            )
+        }
     } else {
         false
     };
@@ -82,7 +95,11 @@ pub async fn participate_space(
     let (score_pk, score_sk) = SpaceScore::keys(&space_id, &author);
     let existing_score = SpaceScore::get(dynamo, &score_pk, Some(score_sk.clone())).await?;
 
-    if space.visibility != SpaceVisibility::Public {
+    // Broadcast audience members fall through to the fresh-participate
+    // path below, which creates both `SpaceParticipant` and an `Accepted`
+    // `SpaceInvitationMember` row in one transaction — same effect as
+    // an explicit invitation, no extra branch needed here.
+    if space.visibility != SpaceVisibility::Public && !is_broadcast_audience {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let member = SpaceInvitationMember::get(dynamo, &pk, Some(&sk)).await?;
         let Some(member) = member else {

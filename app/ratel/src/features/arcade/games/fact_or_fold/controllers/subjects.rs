@@ -58,6 +58,22 @@ fn validate_scheduled_at(scheduled_at: Option<i64>) -> Result<()> {
     Ok(())
 }
 
+/// `expires_at` must be strictly after the window's start. We accept
+/// `0` to keep legacy "indefinite" rows valid; any positive value
+/// must be greater than `scheduled_at` (or `now`, whichever applies).
+#[cfg(feature = "server")]
+fn validate_expires_at(scheduled_at: Option<i64>, expires_at: i64) -> Result<()> {
+    if expires_at == 0 {
+        return Ok(());
+    }
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let start = scheduled_at.unwrap_or(now);
+    if expires_at <= start {
+        return Err(FactOrFoldError::PublishInvariantViolation.into());
+    }
+    Ok(())
+}
+
 #[cfg(feature = "server")]
 fn to_response(row: FactFoldSubject) -> SubjectResponse {
     let id = row.id().unwrap_or_default();
@@ -74,6 +90,7 @@ fn to_response(row: FactFoldSubject) -> SubjectResponse {
         reveal_summary: row.reveal_summary,
         reveal_sources: row.reveal_sources,
         scheduled_at: row.scheduled_at,
+        expires_at: row.expires_at,
         created_at: row.created_at,
         updated_at: row.updated_at,
     }
@@ -92,6 +109,7 @@ pub async fn create_subject_handler(
         req.reveal_sources.len(),
     )?;
     validate_scheduled_at(req.scheduled_at)?;
+    validate_expires_at(req.scheduled_at, req.expires_at)?;
 
     if req.insider_statement.trim().is_empty() || req.source_label.trim().is_empty() {
         return Err(FactOrFoldError::SubjectInvalid.into());
@@ -114,6 +132,7 @@ pub async fn create_subject_handler(
         req.reveal_summary,
         req.reveal_sources,
         req.scheduled_at,
+        req.expires_at,
     );
 
     row.create(cli).await.map_err(|e| {
@@ -224,7 +243,8 @@ pub async fn update_subject_handler(
             && req.source_label.is_none()
             && req.insider_statement.is_none()
             && req.reveal_summary.is_none()
-            && req.scheduled_at.is_none();
+            && req.scheduled_at.is_none()
+            && req.expires_at.is_none();
         if !only_reveal_sources_change {
             return Err(FactOrFoldError::SubjectLocked.into());
         }
@@ -232,6 +252,10 @@ pub async fn update_subject_handler(
 
     if let Some(ts) = req.scheduled_at {
         validate_scheduled_at(Some(ts))?;
+    }
+    if let Some(exp) = req.expires_at {
+        let start = req.scheduled_at.or(existing.scheduled_at);
+        validate_expires_at(start, exp)?;
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -311,6 +335,11 @@ pub async fn update_subject_handler(
             updater = updater.with_status(SubjectStatus::Scheduled);
             existing.status = SubjectStatus::Scheduled;
         }
+        changed = true;
+    }
+    if let Some(v) = req.expires_at {
+        updater = updater.with_expires_at(v);
+        existing.expires_at = v;
         changed = true;
     }
 
@@ -422,6 +451,11 @@ pub async fn publish_subject_handler(
         None => (SubjectStatus::Live, None, now),
     };
 
+    let next_expires_at = req.expires_at.unwrap_or(existing.expires_at);
+    if let Some(exp) = req.expires_at {
+        validate_expires_at(next_scheduled_at, exp)?;
+    }
+
     let updater = FactFoldSubject::updater(&pk, &sk)
         .with_status(next_status)
         .with_pick_at(next_pick_at)
@@ -432,6 +466,10 @@ pub async fn publish_subject_handler(
         // surfaces in queue/upcoming queries.
         None => updater.remove_scheduled_at(),
     };
+    let updater = match req.expires_at {
+        Some(exp) => updater.with_expires_at(exp),
+        None => updater,
+    };
     updater.execute(cli).await.map_err(|e| {
         crate::error!("publish_subject_handler execute failed: {e}");
         FactOrFoldError::StorageFailure
@@ -440,6 +478,7 @@ pub async fn publish_subject_handler(
     existing.status = next_status;
     existing.scheduled_at = next_scheduled_at;
     existing.pick_at = next_pick_at;
+    existing.expires_at = next_expires_at;
     existing.updated_at = now;
     Ok(to_response(existing))
 }

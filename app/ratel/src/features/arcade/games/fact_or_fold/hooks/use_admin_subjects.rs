@@ -58,8 +58,14 @@ impl UseFactFoldAdminSubjects {
         &mut self,
         subject_id: crate::FactFoldSubjectEntityType,
     ) -> crate::common::Result<SubjectResponse> {
-        let res = publish_subject_handler(subject_id, PublishSubjectRequest { scheduled_at: None })
-            .await?;
+        let res = publish_subject_handler(
+            subject_id,
+            PublishSubjectRequest {
+                scheduled_at: None,
+                expires_at: None,
+            },
+        )
+        .await?;
         self.subjects_refresh.with_mut(|n| *n += 1);
         Ok(res)
     }

@@ -29,15 +29,14 @@ pub async fn run_migrations(cli: &aws_sdk_dynamodb::Client) -> crate::common::Re
         tracing::info!("migration 001 complete; version advanced to 1");
     }
 
-    if stored < 2 {
-        tracing::info!("running migration 002: backfill_pending_rewards");
-        super::m002_backfill_pending_rewards::run(cli).await?;
-        LastBackfillVersion::advance_to(cli, 1, 2).await?;
-        tracing::info!("migration 002 complete; version advanced to 2");
-    }
+    // m002 (Biyard PendingReward backfill) was deleted alongside the
+    // BiyardService removal. Prod already ran it (version >= 2 stored),
+    // and there's nothing for new environments to back-fill anymore.
+    // Skip the gate; the version monotonically advances from whatever
+    // prod has, and future migrations stack from `if stored < 3`.
 
     // Future migrations stack additively here:
-    //   if stored < 3 { ... advance_to(cli, 2, 3) ... }
+    //   if stored < 3 { ... advance_to(cli, stored.max(2), 3) ... }
 
     tracing::info!("migration runner finished");
     Ok(())

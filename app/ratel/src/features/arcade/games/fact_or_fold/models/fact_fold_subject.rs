@@ -75,6 +75,15 @@ pub struct FactFoldSubject {
         dynamo(prefix = "PICK", index = "gsi3", sk)
     )]
     pub pick_at: i64,
+
+    /// Millis since epoch when the subject's active window ends.
+    /// `pick_next_subject` filters by `now ∈ [scheduled_at, expires_at]`
+    /// — a subject past `expires_at` is auto-retired and never picked
+    /// again. `0` means "not yet set" (legacy rows or drafts without a
+    /// window); pick logic treats `0` as an indefinite/no-expiry value
+    /// so existing data keeps the prior "until manually settled" semantics.
+    #[serde(default)]
+    pub expires_at: i64,
 }
 
 #[cfg(feature = "server")]
@@ -105,6 +114,7 @@ impl FactFoldSubject {
         reveal_summary: String,
         reveal_sources: Vec<RevealSource>,
         scheduled_at: Option<i64>,
+        expires_at: i64,
     ) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let status = if scheduled_at.is_some() {
@@ -131,6 +141,7 @@ impl FactFoldSubject {
             reveal_sources,
             scheduled_at,
             pick_at,
+            expires_at,
         }
     }
 

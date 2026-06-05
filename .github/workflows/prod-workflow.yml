@@ -58,8 +58,13 @@ jobs:
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
           HIGH_TRAFFIC_REGION: ap-northeast-2
-          BIYARD_PUBLIC_API_URL: https://api.biyard.co
-          BIYARD_PRIVATE_API_URL: http://api.biyard-prod-svc.local:8080
+
+          # Launchpad partner config → injected into the Lambda RUNTIME env by
+          # cdk/bin/cdk.ts (read via std::env::var at runtime, no rebuild needed).
+          LAUNCHPAD_BASE_URL: ${{ secrets.DEV_LAUNCHPAD_BASE_URL }}
+          LAUNCHPAD_PROJECT_ID: ${{ secrets.DEV_LAUNCHPAD_PROJECT_ID }}
+          LAUNCHPAD_PARTNER_SECRET: ${{ secrets.DEV_LAUNCHPAD_PARTNER_SECRET }}
+          LAUNCHPAD_POINT_SYMBOL: RT
         run: |
           npm i -g aws-cdk
           make cdk-deploy-v2
@@ -137,13 +142,6 @@ jobs:
           # RUST_FLAG: "--features lambda --release"
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
 
-          BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
-          BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
-          # Use the in-VPC CloudMap A-record (added by biyard app-cluster
-          # stack) so VPC-attached Lambdas reach the console API directly,
-          # avoiding the missing NAT path to `api.biyard.co`.
-          BIYARD_API_URL: http://api.biyard-prod-svc.local:8080
-
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -186,6 +184,10 @@ jobs:
           # the token-exchange POST.
           LINKEDIN_CLIENT_ID: ${{ secrets.PROD_LINKEDIN_CLIENT_ID }}
           LINKEDIN_CLIENT_SECRET: ${{ secrets.PROD_LINKEDIN_CLIENT_SECRET }}
+          LAUNCHPAD_BASE_URL: ${{ secrets.LAUNCHPAD_BASE_URL }}
+          LAUNCHPAD_PROJECT_ID: ${{ secrets.LAUNCHPAD_PROJECT_ID }}
+          LAUNCHPAD_PARTNER_SECRET: ${{ secrets.LAUNCHPAD_PARTNER_SECRET }}
+          LAUNCHPAD_POINT_SYMBOL: RT
         run: |
           rm -rf target/dx
 
