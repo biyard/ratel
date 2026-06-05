@@ -173,6 +173,26 @@ pub async fn is_team_member_public(
     is_team_member(cli, team_pk, viewer).await
 }
 
+/// One-shot: "is `viewer` in this Post's broadcast audience?"
+///
+/// Combines the two pure checks every private-space gate (`get_space`,
+/// `participate_space`, `SpaceUserRole` extractor) duplicated inline.
+/// Returns `false` for non-broadcast posts (so callers can chain it
+/// behind an explicit-invitation lookup without changing semantics) and
+/// swallows transient lookup errors as `false` to fail-closed.
+pub async fn is_broadcast_audience(
+    cli: &aws_sdk_dynamodb::Client,
+    post: &Post,
+    viewer: &Partition,
+) -> bool {
+    if !is_broadcast_post(post) {
+        return false;
+    }
+    can_view_broadcast_post(cli, post, Some(viewer))
+        .await
+        .unwrap_or(false)
+}
+
 /// `true` if `viewer` is the owner of `team_pk` (TeamOwner row) or a
 /// UserTeam member of it. Stops at the first hit so the broadcast-fanout
 /// path doesn't quadratically scan every child's roster.

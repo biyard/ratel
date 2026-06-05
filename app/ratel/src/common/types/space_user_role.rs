@@ -418,6 +418,30 @@ where
                 parts.extensions.insert(SpaceUserRole::Viewer);
                 return Ok(SpaceUserRole::Viewer);
             }
+
+            // Sub-team broadcast / direct-message escape hatch. Audience
+            // members (parent + recognized sub-teams) reach the Space
+            // without an explicit `SpaceInvitationMember` row; without
+            // this, `/user-role` returns 401 even though `get_space`
+            // already let them through.
+            if let Ok(post_pk) = space.pk.clone().to_post_key() {
+                if let Ok(Some(post)) = crate::features::posts::models::Post::get(
+                    cli,
+                    &post_pk,
+                    Some(EntityType::Post),
+                )
+                .await
+                {
+                    if crate::features::sub_team::services::broadcast_access::is_broadcast_audience(
+                        cli, &post, &user.pk,
+                    )
+                    .await
+                    {
+                        parts.extensions.insert(SpaceUserRole::Viewer);
+                        return Ok(SpaceUserRole::Viewer);
+                    }
+                }
+            }
         }
 
         // For public spaces, unauthenticated users are Viewers (handled above),
