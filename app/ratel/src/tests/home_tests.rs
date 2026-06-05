@@ -176,6 +176,62 @@ async fn test_my_spaces_sorts_by_last_activity() {
     );
 }
 
+// Creators must see their own Draft spaces here so they can finish
+// designing — `create_space_handler` writes a participant row for the
+// author but leaves `publish_state = Draft` until publish, and this list
+// is how the home carousel surfaces work-in-progress.
+#[tokio::test]
+async fn test_my_spaces_includes_draft_owned_by_creator() {
+    let ctx = TestContext::setup().await;
+    let user = ctx.test_user.0.clone();
+
+    let id = uuid::Uuid::now_v7().to_string();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let space_pk = Partition::Space(id.clone());
+    let post_pk = Partition::Feed(id);
+
+    let mut draft = SpaceCommon::default();
+    draft.pk = space_pk.clone();
+    draft.sk = EntityType::SpaceCommon;
+    draft.created_at = now;
+    draft.updated_at = now;
+    draft.status = None;
+    draft.publish_state = SpacePublishState::Draft;
+    draft.visibility = SpaceVisibility::Private;
+    draft.post_pk = post_pk.clone();
+    draft.user_pk = user.pk.clone();
+    draft.author_display_name = user.display_name.clone();
+    draft.author_username = user.username.clone();
+    draft.participants = 1;
+    draft.create(&ctx.ddb).await.unwrap();
+
+    let post = Post {
+        pk: post_pk,
+        sk: EntityType::Post,
+        title: "Draft Space".to_string(),
+        space_pk: Some(space_pk.clone()),
+        ..Default::default()
+    };
+    post.create(&ctx.ddb).await.unwrap();
+    seed_participant(&ctx, &space_pk, &user, Some(now)).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/home/my-spaces",
+        headers: ctx.test_user.1.clone(),
+        response_type: crate::common::types::ListResponse<HotSpaceResponse>,
+    };
+    assert_eq!(status, 200, "my-spaces: {:?}", body);
+
+    let draft_id = space_id_str(&space_pk);
+    let returned: Vec<String> = body.items.iter().map(|i| i.space_id.to_string()).collect();
+    assert!(
+        returned.contains(&draft_id),
+        "Draft space owned by the requester must appear: {:?}",
+        returned
+    );
+}
+
 #[tokio::test]
 async fn test_my_spaces_requires_auth() {
     let ctx = TestContext::setup().await;

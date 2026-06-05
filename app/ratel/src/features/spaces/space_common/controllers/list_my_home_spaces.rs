@@ -50,13 +50,15 @@ pub async fn list_my_home_spaces_handler(
     };
 
     // Active (Ongoing/Open) spaces come first so the carousel leads with
-    // what the user can still engage with; Finished/Designing still surface
-    // below for history access (result review, archive revisit, notification
-    // deep-links). Within each bucket, sort by last participant activity.
-    let mut spaces: Vec<SpaceCommon> = fetched
-        .into_iter()
-        .filter(|s| s.is_published())
-        .collect();
+    // what the user can still engage with; Finished/Designing/Draft still
+    // surface below for history access (result review, archive revisit,
+    // notification deep-links) AND so creators see their own in-progress
+    // designs — `create_space_handler` writes a participant row for the
+    // author at creation time, but the space starts in `publish_state =
+    // Draft`, so filtering on `is_published()` would hide the creator's
+    // own brand-new space from this list. Within each bucket, sort by
+    // last participant activity.
+    let mut spaces: Vec<SpaceCommon> = fetched;
     spaces.sort_by(|a, b| {
         b.is_active().cmp(&a.is_active()).then_with(|| {
             let a_act = activity_map.get(&a.pk.to_string()).copied().unwrap_or(0);

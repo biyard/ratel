@@ -38181,17 +38181,34 @@ body.comments-panel-resizing {
 }
 
 /* ── Teams dropdown ──────────────────────────────── */
+/* `.hud-teams` is `static` (not `relative`) so the dropdown's
+ * `position: absolute` anchors to the nearest positioned
+ * ancestor instead — which is `.arena-topbar` (also
+ * `position: relative`). That makes the dropdown align to
+ * the header's right edge rather than the trigger icon's
+ * right edge. The trigger sits mid-header on mobile, so
+ * anchoring to it pushed the box's left edge off-viewport;
+ * anchoring to the header keeps the box always within the
+ * visible width and reads as "below the icon row" because
+ * `top: 100%` lands it just under the topbar.
+ */
 .home-arena .hud-teams {
-  position: relative;
+  position: static;
   display: inline-flex;
 }
 .home-arena .team-dd {
   --ha-dd-bg: var(--dark, #0f0f1f) var(--light, #ffffff);
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  top: 100%;
+  right: 16px;
   z-index: 40;
-  width: 280px;
+  /* `clamp(min, preferred, max)` covers every viewport in
+   * one rule (no media query, no hot-reload edge cases):
+   * phones get nearly full width (viewport - 32px); narrow
+   * desktops cap at 420px; sub-280 viewports clamp up so
+   * content never compresses.
+   */
+  width: clamp(280px, calc(100vw - 32px), 420px);
   max-height: 320px;
   background: var(--ha-dd-bg);
   border: 1px solid var(--ha-border-subtle);
