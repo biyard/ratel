@@ -61,9 +61,9 @@ jobs:
 
           # Launchpad partner config → injected into the Lambda RUNTIME env by
           # cdk/bin/cdk.ts (read via std::env::var at runtime, no rebuild needed).
-          LAUNCHPAD_BASE_URL: ${{ secrets.DEV_LAUNCHPAD_BASE_URL }}
-          LAUNCHPAD_PROJECT_ID: ${{ secrets.DEV_LAUNCHPAD_PROJECT_ID }}
-          LAUNCHPAD_PARTNER_SECRET: ${{ secrets.DEV_LAUNCHPAD_PARTNER_SECRET }}
+          LAUNCHPAD_BASE_URL: ${{ secrets.LAUNCHPAD_BASE_URL }}
+          LAUNCHPAD_PROJECT_ID: ${{ secrets.LAUNCHPAD_PROJECT_ID }}
+          LAUNCHPAD_PARTNER_SECRET: ${{ secrets.LAUNCHPAD_PARTNER_SECRET }}
           LAUNCHPAD_POINT_SYMBOL: RT
         run: |
           npm i -g aws-cdk
