@@ -3,7 +3,8 @@ mod i18n;
 use super::controllers::{get_team_reward_permission_handler, get_team_rewards_handler};
 use super::*;
 use crate::common::*;
-use crate::features::launchpad_partner::views::RewardHero;
+use crate::features::launchpad_partner::views::{LaunchpadTokenCard, RewardHero};
+use crate::features::social::pages::reward::user::components::RewardHistorySection;
 use crate::features::social::pages::team_arena::{TeamArenaTab, use_team_arena};
 
 pub use i18n::TeamRewardsTranslate;
@@ -30,9 +31,14 @@ pub fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
     }
 }
 
-/// Team rewards page (scope-A): the balance is the local `Team.points`.
-/// Shows only the team's point balance — no console-fed charts / monthly
-/// pool / token estimates.
+/// Team rewards page. Mirrors the user rewards layout 1:1:
+/// - **Hero**: share-of-pool card using `Team.points`.
+/// - **Token card**: signed-in user's launchpad token holdings
+///   (intentionally user-scoped — teams don't have wallets yet, and the
+///   widget is the same regardless of the page you're on).
+/// - **Reward history**: per-event `UserRewardHistory` rows for this team.
+///   The endpoint resolves user-or-team off the username, so the same
+///   `RewardHistorySection` component renders both walls.
 #[component]
 pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: TeamRewardsTranslate = use_translate();
@@ -72,6 +78,14 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                 SuspenseBoundary {
                     RewardHero { points: team_points }
                 }
+
+                // Token holdings (launchpad-backed on-chain balance),
+                // isolated so the lookup doesn't block the page.
+                SuspenseBoundary { LaunchpadTokenCard {} }
+
+                // Per-event reward history. The endpoint sniffs the
+                // username for User OR Team — same component, same wire.
+                RewardHistorySection { username }
             }
         }
     }
