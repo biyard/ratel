@@ -81,11 +81,15 @@ pub async fn get_space(
                 let invitation =
                     SpaceInvitationMember::get(dynamo, &invitation_pk, Some(&invitation_sk))
                         .await?;
-
-                matches!(
+                let explicit = matches!(
                     invitation.as_ref().map(|member| member.status),
                     Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
-                )
+                );
+                explicit
+                    || crate::features::sub_team::services::broadcast_access::is_broadcast_audience(
+                        dynamo, &post, &user.pk,
+                    )
+                    .await
             } else {
                 true
             };

@@ -397,6 +397,7 @@ fn DirectAnnouncementCard(username: String, sub_team_id: String) -> Element {
                         DirectAnnouncementRow {
                             key: "{ann.id}",
                             target_post_pk: ann.target_post_pk.clone(),
+                            space_pk: ann.space_pk.clone(),
                             title: ann.title.clone(),
                             body: ann.html_contents.clone(),
                             created_at: ann.created_at,
@@ -411,6 +412,7 @@ fn DirectAnnouncementCard(username: String, sub_team_id: String) -> Element {
 #[component]
 fn DirectAnnouncementRow(
     target_post_pk: Option<String>,
+    space_pk: Option<String>,
     title: String,
     body: String,
     created_at: i64,
@@ -422,13 +424,25 @@ fn DirectAnnouncementRow(
     // (`target_post_pk`); we strip the optional `FEED#` prefix before
     // parsing into a `FeedPartition` because the route segment is the
     // raw uuid only.
-    let parsed_pk: Option<FeedPartition> = target_post_pk.and_then(|s| {
+    let parsed_post_pk: Option<FeedPartition> = target_post_pk.and_then(|s| {
         s.strip_prefix("FEED#")
             .unwrap_or(s.as_str())
             .parse::<FeedPartition>()
             .ok()
     });
-    let clickable = parsed_pk.is_some();
+    // When the announcement has an attached Space, that's the canonical
+    // destination — the Post is the anchor, but viewers expect to land
+    // in the Space arena (poll/quiz/discussion etc.). `space_pk` on the
+    // announcement row is set at publish time only when
+    // `space_enabled = true`; absence means there's no Space and the
+    // Post detail page is the right target.
+    let parsed_space_pk: Option<SpacePartition> = space_pk.and_then(|s| {
+        s.strip_prefix("SPACE#")
+            .unwrap_or(s.as_str())
+            .parse::<SpacePartition>()
+            .ok()
+    });
+    let clickable = parsed_space_pk.is_some() || parsed_post_pk.is_some();
     rsx! {
         a {
             class: "direct-msg__row",
@@ -436,8 +450,10 @@ fn DirectAnnouncementRow(
             r#type: "button",
             "data-clickable": "{clickable}",
             onclick: move |_| {
-                if let Some(pk) = parsed_pk.clone() {
-                    nav.push(Route::PostDetail { post_id: pk });
+                if let Some(space_id) = parsed_space_pk.clone() {
+                    nav.push(Route::SpaceIndexPage { space_id });
+                } else if let Some(post_id) = parsed_post_pk.clone() {
+                    nav.push(Route::PostDetail { post_id });
                 }
             },
             div { class: "direct-msg__row-head",
