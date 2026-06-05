@@ -94,6 +94,7 @@ impl SpaceCommon {
             author_display_name,
             author_profile_url,
             author_username,
+            join_anytime: true,
             ..Default::default()
         }
     }
@@ -149,8 +150,7 @@ where
                 break;
             }
         }
-        let space_id_str = space_id_str
-            .ok_or(Error::MissingSpaceId)?;
+        let space_id_str = space_id_str.ok_or(Error::MissingSpaceId)?;
 
         let space_id: SpacePartition = space_id_str.parse()?;
         let space_pk: Partition = space_id.into();
