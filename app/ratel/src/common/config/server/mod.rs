@@ -4,7 +4,6 @@ pub mod aws_s3;
 pub mod aws_ses;
 pub mod aws_sns;
 pub mod bedrock_embeddings_config;
-pub mod biyard;
 pub mod dynamodb;
 pub mod icp;
 pub mod qdrant_config;
@@ -37,9 +36,6 @@ impl ServerConfig {
     }
     pub fn bedrock_embeddings(&self) -> &crate::common::utils::aws::BedrockEmbeddingsClient {
         &bedrock_embeddings_config::BEDROCK_EMBEDDINGS
-    }
-    pub fn biyard(&self) -> &crate::common::services::BiyardService {
-        &biyard::BIYARD_SERVICE
     }
     pub fn canister(&self) -> &crate::common::services::icp::CanisterService {
         &icp::CANISTER_SERVICE
