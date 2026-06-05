@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::common::hooks::use_infinite_query;
 use crate::common::*;
 use crate::features::social::pages::team_arena::create_team_popup::ArenaTeamCreationPopup;
@@ -103,9 +104,9 @@ pub fn ArenaTopbar(
         }
     };
 
-    // Build the dropdown list. Always include the current team so the list never
-    // toggles between empty/populated branches (which breaks Dioxus's element
-    // reconciler and causes "cannot reclaim ElementId" errors).
+    // // Build the dropdown list. Always include the current team so the list never
+    // // toggles between empty/populated branches (which breaks Dioxus's element
+    // // reconciler and causes "cannot reclaim ElementId" errors).
     let dd_entries: Vec<DdEntry> = {
         let mut entries: Vec<DdEntry> = all_teams
             .iter()
@@ -213,7 +214,7 @@ pub fn ArenaTopbar(
                         onclick: move |e: Event<MouseData>| e.stop_propagation(),
                         div { class: "team-dd__header", "Switch Team" }
                         div { class: "team-dd__list", id: "arena-teams-dd-list",
-                            for (idx, entry) in dd_entries.iter().cloned().enumerate() {
+                            for (idx , entry) in dd_entries.iter().cloned().enumerate() {
                                 TeamDdItem {
                                     key: "{entry.username}",
                                     username: entry.username.clone(),
@@ -392,27 +393,8 @@ pub fn ArenaTopbar(
                 // action buttons (leave / edit application / cancel)
                 // inside — that filter happens inside ParentHudPanel.
                 if is_member {
-                    crate::features::sub_team::ParentHudPanel {}
+                    SuspenseBoundary { crate::features::sub_team::ParentHudPanel {} }
                 }
-
-                // Sub-teams icon — routes based on the viewer's relationship
-                // with this team:
-                //   • Team admin/owner   → management dashboard
-                //   • Viewer's other team has an in-flight application
-                //                        → that application's status page
-                //   • Parent-eligible team, viewer logged in, AND the
-                //     viewer admins at least one independent team
-                //                        → apply page
-                //   • Otherwise          → icon hidden
-                //
-                // The independence gate (`viewer_has_eligible_applicant_team`)
-                // enforces the single-parent policy in the UI: when
-                // every team the viewer admins is already locked into
-                // a parent / pending application, the apply icon is
-                // suppressed on unrelated parent-eligible teams. The
-                // viewer's parent / status-page route is still
-                // reachable via `pending_applicant_username`, so
-                // dropping the apply icon doesn't strand them.
                 {
                     let sub_team_route: Option<Route> = if can_edit {
                         Some(Route::TeamSubTeamManagementPage {

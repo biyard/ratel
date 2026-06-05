@@ -307,8 +307,7 @@ impl SpaceReward {
         // payout on transient space metadata issues.
         let description =
             crate::common::models::reward::resolve_reward_description(cli, &space_reward.sk).await;
-        let action_name =
-            crate::common::models::reward::resolve_action_name(&space_reward.sk);
+        let action_name = crate::common::models::reward::resolve_action_name(&space_reward.sk);
         let mut history = UserRewardHistory::from_params(
             target_pk.clone(),
             space_reward.sk.clone(),

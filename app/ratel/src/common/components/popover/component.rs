@@ -5,9 +5,18 @@ use dioxus_primitives::popover::{
 
 #[component]
 pub fn PopoverRoot(props: PopoverRootProps) -> Element {
+    // Use the bare `.popover` class only — its CSS sets
+    // `position: relative; display: inline-block`, which is the
+    // anchoring context the `[data-side="bottom"]` content rule needs
+    // (`left: 50%` is interpreted relative to the trigger column, not
+    // the page). The previous `flex flex-1 w-full grow` made the root
+    // stretch to the parent's full width, so the popover landed in the
+    // middle of the page instead of below the trigger button — that
+    // was the "선행 액션" selector visual bug. Callers that need a
+    // flex/full-width root can wrap PopoverRoot in their own element.
     rsx! {
         popover::PopoverRoot {
-            class: "flex flex-1 w-full popover grow",
+            class: "popover",
             is_modal: props.is_modal,
             open: props.open,
             default_open: props.default_open,

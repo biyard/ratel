@@ -118,7 +118,13 @@ pub fn ActionDependencySelector(
                             PopoverTrigger { class: "inline-flex gap-1 items-center py-1 px-2.5 font-medium rounded-full border border-separator text-[12px]/[16px] text-foreground-muted hover:bg-hover",
                                 "{tr.add_dependency}"
                             }
+                            // `align: Start` anchors the popover's LEFT
+                            // edge to the trigger's left edge. The
+                            // default (Center) leaves half the dropdown
+                            // hanging off to the left of the "+ Add
+                            // dependency" pill, which read as misaligned.
                             PopoverContent {
+                                align: dioxus_primitives::ContentAlign::Start,
                                 div { class: "flex flex-col gap-1 p-2 min-w-[220px] border rounded-[10px] border-separator bg-popover shadow-lg",
                                     for action in available.iter() {
                                         button {
