@@ -438,19 +438,29 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   test("Enable anonymous participation and join anytime", async ({ page }) => {
     await goto(page, spaceUrl + "/apps/general");
 
-    // Toggle "Anonymous Participation" switch
-    const anonCard = page
-      .locator("text=Anonymous Participation")
-      .locator("../..");
-    const anonSwitch = anonCard.locator("button").first();
-    await anonSwitch.click();
-    await page.waitForLoadState("load");
+    // Settings card has a Headless-UI / aria-pressed style switch. Read
+    // the current state and only click when we need to flip it ON —
+    // raw `.click()` was a bug: when the backend default for the field
+    // changed (e.g. SpaceCommon::new now sets join_anytime=true), the
+    // unconditional click silently TOGGLED IT OFF and broke the
+    // "after-start participation" path further down the suite.
+    const ensureOn = async (label) => {
+      const card = page.locator(`text=${label}`).locator("../..");
+      const sw = card.locator("button").first();
+      // Switches in this UI report state via either `aria-pressed`
+      // (legacy) or `aria-checked` (current). Treat absence-of-true as
+      // "off" so we still flip uninitialised switches.
+      const pressed = await sw.getAttribute("aria-pressed");
+      const checked = await sw.getAttribute("aria-checked");
+      const isOn = pressed === "true" || checked === "true";
+      if (!isOn) {
+        await sw.click();
+        await page.waitForLoadState("load");
+      }
+    };
 
-    // Toggle "Join Anytime" switch
-    const joinCard = page.locator("text=Join Anytime").locator("../..");
-    const joinSwitch = joinCard.locator("button").first();
-    await joinSwitch.click();
-    await page.waitForLoadState("load");
+    await ensureOn("Anonymous Participation");
+    await ensureOn("Join Anytime");
   });
 
   // ─── 8. Publish space ────────────────────────────────────────────────────
