@@ -47,6 +47,12 @@ pub fn ContentCard() -> Element {
     let mut html_status = use_signal(|| SaveStatus::Idle);
     let mut files = use_signal(|| initial_files);
 
+    // Bumped when overview is imported, to force the RichEditor to remount
+    // (it snapshots `content` once at mount and ignores later prop changes —
+    // see common/components/editor/component.rs). Used as the editor `key`.
+    let mut editor_epoch = use_signal(|| 0u64);
+    let space_loader = crate::features::spaces::space_common::hooks::use_space();
+
     let mut save_html = move || {
         let current = html_contents();
         if current == last_saved_html() {
@@ -133,6 +139,59 @@ pub fn ContentCard() -> Element {
         });
     });
 
+    // Import from overview — the topbar button bumps `ctx.import_request`.
+    // On each increment, copy the space overview's title/content into the
+    // editor fields (always overwrite) and persist in a single PATCH.
+    //
+    // The ONLY reactive read in this effect's synchronous body is
+    // `ctx.import_request()` — the intended trigger. Everything else is a
+    // `set` (write-only), a `peek()` (non-subscribing), or happens inside the
+    // spawned async block (polled outside the reactive scope, so its reads
+    // aren't tracked). This is critical: subscribing to a signal the effect
+    // also writes (`editor_epoch`, `last_saved_*`) would self-trigger an
+    // infinite loop.
+    use_effect(move || {
+        let req = ctx.import_request();
+        if req == 0 {
+            return;
+        }
+        let (ov_title, ov_content) = {
+            let ov = space_loader.peek();
+            (ov.title.clone(), ov.content.clone())
+        };
+        title.set(ov_title.clone());
+        html_contents.set(ov_content.clone());
+        // Bump via peek (not a tracked read) to remount the RichEditor so it
+        // picks up the new content — it ignores later `content` prop changes.
+        let next_epoch = *editor_epoch.peek() + 1;
+        editor_epoch.set(next_epoch);
+        title_status.set(SaveStatus::Saving);
+        html_status.set(SaveStatus::Saving);
+        spawn(async move {
+            let req = UpdateDiscussionRequest {
+                title: Some(ov_title.clone()),
+                html_contents: Some(ov_content.clone()),
+                category_name: None,
+                files: None,
+            };
+            match update_discussion(space_id(), discussion_id(), req).await {
+                Ok(_) => {
+                    last_saved_title.set(ov_title);
+                    last_saved_html.set(ov_content);
+                    title_status.set(SaveStatus::Saved);
+                    html_status.set(SaveStatus::Saved);
+                    ctx.discussion.restart();
+                }
+                Err(err) => {
+                    error!("Failed to import overview into discussion: {:?}", err);
+                    title_status.set(SaveStatus::Unsaved);
+                    html_status.set(SaveStatus::Unsaved);
+                    toast.error(err);
+                }
+            }
+        });
+    });
+
     let save_files_after_upload = move |next_files: Vec<File>| {
         spawn(async move {
             let req = UpdateDiscussionRequest {
@@ -187,18 +246,28 @@ pub fn ContentCard() -> Element {
                         }
                     }
                     div { class: "editor",
-                        RichEditor {
-                            class: "[&_.re-toolbar]:border-b [&_.re-toolbar]:border-[rgba(255,255,255,0.06)] [&_.re-content]:min-h-[220px] [&_.re-content]:px-[22px] [&_.re-content]:py-[20px] [&_.re-content]:outline-none",
-                            content: html_contents(),
-                            editable: true,
-                            placeholder: "",
-                            on_content_change: move |html: String| {
-                                html_contents.set(html.clone());
-                                if html != last_saved_html() {
-                                    html_status.set(SaveStatus::Unsaved);
-                                    html_version.set(html_version() + 1);
-                                }
-                            },
+                        // Wrapped in a keyed single-item `for` so bumping
+                        // `editor_epoch` (on overview import) recreates the
+                        // RichEditor. A `key` directly on the lone component
+                        // child is NOT honored as a remount by Dioxus here, but
+                        // a keyed list item is — and the editor snapshots its
+                        // `content` only at mount (see editor/component.rs), so
+                        // a real remount is the only way to push new content in.
+                        for epoch in [editor_epoch()] {
+                            RichEditor {
+                                key: "{epoch}",
+                                class: "[&_.re-toolbar]:border-b [&_.re-toolbar]:border-[rgba(255,255,255,0.06)] [&_.re-content]:min-h-[220px] [&_.re-content]:px-[22px] [&_.re-content]:py-[20px] [&_.re-content]:outline-none",
+                                content: html_contents(),
+                                editable: true,
+                                placeholder: "",
+                                on_content_change: move |html: String| {
+                                    html_contents.set(html.clone());
+                                    if html != last_saved_html() {
+                                        html_status.set(SaveStatus::Unsaved);
+                                        html_version.set(html_version() + 1);
+                                    }
+                                },
+                            }
                         }
                         div { class: "editor__footer",
                             AutosaveStatusBadge { status: html_status() }
