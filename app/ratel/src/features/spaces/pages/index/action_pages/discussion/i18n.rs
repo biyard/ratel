@@ -7,6 +7,18 @@ translate! {
         en: "Discussion",
         ko: "토론",
     },
+    subscribe_btn: {
+        en: "Subscribe",
+        ko: "구독하기",
+    },
+    subscribed_btn: {
+        en: "Subscribed",
+        ko: "구독중",
+    },
+    subscribe_tooltip: {
+        en: "Get notified by alert and email when new comments are posted on this discussion.",
+        ko: "이 토론에 새 댓글이 올라오면 알림과 이메일로 받아봅니다.",
+    },
     comments_title: {
         en: "Comments",
         ko: "댓글",

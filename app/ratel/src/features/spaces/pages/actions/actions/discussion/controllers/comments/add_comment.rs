@@ -60,7 +60,7 @@ pub async fn add_comment(
         _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
     };
     let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);
-    let _post = SpacePost::get(cli, &post_pk, Some(post_sk))
+    let post = SpacePost::get(cli, &post_pk, Some(post_sk))
         .await?
         .ok_or(SpaceActionDiscussionError::NotFound)?;
 
@@ -119,6 +119,39 @@ pub async fn add_comment(
             &cta_url,
         )
         .await;
+    }
+
+    // Fan out to discussion subscribers. Recipient resolution (one notification
+    // per recipient per comment; mention > reply-target > subscriber) runs off
+    // the DynamoDB stream — we only enqueue one notification row here.
+    {
+        let comment_id_str = match &comment.sk {
+            EntityType::SpacePostComment(id) => id.clone(),
+            _ => String::new(),
+        };
+        let cta_url = format!(
+            "{}/spaces/{}/discussions/{}/comments/{}",
+            crate::common::config::site_base_url(),
+            space_id,
+            discussion_sk,
+            comment_id_str,
+        );
+        let notification = crate::common::models::notification::Notification::new(
+            crate::common::types::NotificationData::DiscussionCommentPosted {
+                space_id: space_id.clone(),
+                discussion_id: discussion_sk.to_string(),
+                discussion_title: post.title.clone(),
+                comment_sk: comment.sk.to_string(),
+                parent_comment_sk: None,
+                commenter_pk: member.pk.to_string(),
+                commenter_name: member.display_name.clone(),
+                comment_content: comment.content.clone(),
+                cta_url,
+            },
+        );
+        if let Err(e) = notification.create(cli).await {
+            tracing::error!("Failed to enqueue discussion comment notification: {e}");
+        }
     }
 
     Ok(comment.into())

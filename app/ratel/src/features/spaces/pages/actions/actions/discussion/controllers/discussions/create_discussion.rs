@@ -26,6 +26,7 @@ pub async fn create_discussion(
         SpacePostEntityType::from(post.sk.clone()).to_string(),
         crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
     );
+    let space_id_for_sub = space_id.clone();
     let space_pk: Partition = space_id.into();
     let _ =
         crate::features::spaces::space_common::models::aggregate::DashboardAggregate::get_or_create(cli, &space_pk).await?;
@@ -39,6 +40,16 @@ pub async fn create_discussion(
             &space_pk, 1,
         ),
     );
+
+    // Auto-subscribe the author to their own discussion so they receive a
+    // notification for every comment/reply.
+    let author_discussion_id = SpacePostEntityType::from(post.sk.clone()).to_string();
+    let author_subscription = SpacePostSubscription::new(
+        SpacePostPartition(author_discussion_id),
+        space_id_for_sub,
+        &member.pk,
+    );
+    items.push(author_subscription.create_transact_write_item());
     crate::transact_write_items!(cli, items).map_err(|e| {
         crate::error!("Failed to create discussion: {e}");
         SpaceActionDiscussionError::CreateFailed

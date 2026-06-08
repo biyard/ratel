@@ -1,4 +1,5 @@
 mod error;
+pub mod discussion_notification;
 pub mod format;
 pub mod html;
 pub mod mention;

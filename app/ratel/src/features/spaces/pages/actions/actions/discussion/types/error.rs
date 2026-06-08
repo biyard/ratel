@@ -39,6 +39,13 @@ pub enum SpaceActionDiscussionError {
     #[error("comment too short")]
     #[translate(en = "Comment is too short", ko = "댓글이 너무 짧습니다.")]
     CommentTooShort,
+
+    #[error("author cannot unsubscribe")]
+    #[translate(
+        en = "You are the author and always stay subscribed to your own discussion.",
+        ko = "작성자는 자신의 토론 구독을 해제할 수 없습니다."
+    )]
+    CannotUnsubscribeOwnDiscussion,
 }
 
 #[cfg(feature = "server")]

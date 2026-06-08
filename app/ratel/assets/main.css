@@ -24860,6 +24860,36 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   align-items: center;
   gap: 10px;
 }
+/* discussion subscribe toggle (top bar) */
+.topbar__subscribe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--dark, rgba(255, 255, 255, 0.14)) var(--light, rgba(0, 0, 0, 0.12));
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.03));
+  color: var(--dark, #f0f0f5) var(--light, #12121a);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+.topbar__subscribe:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.06));
+}
+.topbar__subscribe[aria-pressed="true"] {
+  border-color: #fcb300;
+  color: #fcb300;
+  background: rgba(252, 179, 0, 0.12);
+}
+.topbar__subscribe:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 .topbar__status {
   display: inline-flex;
   align-items: center;

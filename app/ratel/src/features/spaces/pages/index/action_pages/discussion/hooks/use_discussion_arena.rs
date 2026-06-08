@@ -3,8 +3,8 @@ use crate::common::hooks::{use_infinite_query, use_interval, InfiniteQuery};
 use crate::common::*;
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
     add_comment, delete_comment, get_comment, get_discussion_detail, like_comment, list_comments,
-    list_replies, reply_comment, update_comment, AddCommentRequest, LikeCommentRequest,
-    ReplyCommentRequest, UpdateCommentRequest,
+    list_replies, reply_comment, subscribe_discussion, unsubscribe_discussion, update_comment,
+    AddCommentRequest, LikeCommentRequest, ReplyCommentRequest, UpdateCommentRequest,
 };
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionResponse, SpacePostCommentTargetEntityType,
@@ -77,6 +77,11 @@ pub struct UseDiscussionArena {
     pub active_reply_thread: Signal<Option<String>>,
     pub sheet_expanded: Signal<bool>,
     pub disc_loader: Loader<DiscussionResponse>,
+    /// Whether the current user subscribes to this discussion. Seeded from
+    /// `disc_loader`'s `subscribed` field; flipped optimistically by
+    /// `handle_toggle_subscription`.
+    pub subscribed: Signal<bool>,
+    pub handle_toggle_subscription: Action<(), ()>,
     pub comments_query:
         InfiniteQuery<String, DiscussionCommentResponse, ListResponse<DiscussionCommentResponse>>,
     pub parent_loader: Loader<DiscussionCommentResponse>,
@@ -193,6 +198,29 @@ pub fn use_discussion_arena(
         use_loader(
             move || async move { get_discussion_detail(space_id(), discussion_id()).await },
         )?;
+
+    // Subscribe-toggle state, seeded from the detail loader. The effect reads
+    // disc_loader (tracked) and writes `subscribed` (a different signal), so it
+    // does not self-trigger.
+    let mut subscribed = use_signal(|| false);
+    use_effect(move || {
+        subscribed.set(disc_loader().subscribed);
+    });
+    let mut subscribe_toast = use_toast();
+    let handle_toggle_subscription = use_action(move || async move {
+        let was = subscribed();
+        subscribed.set(!was); // optimistic
+        let res = if was {
+            unsubscribe_discussion(space_id(), discussion_id()).await
+        } else {
+            subscribe_discussion(space_id(), discussion_id()).await
+        };
+        if let Err(e) = res {
+            subscribed.set(was); // rollback
+            subscribe_toast.error(e);
+        }
+        Ok::<(), crate::common::Error>(())
+    });
 
     let mut comments_query = use_infinite_query(move |bookmark: Option<String>| async move {
         list_comments(space_id(), discussion_id(), bookmark, None).await
@@ -575,6 +603,8 @@ pub fn use_discussion_arena(
         active_reply_thread,
         sheet_expanded,
         disc_loader,
+        subscribed,
+        handle_toggle_subscription,
         comments_query,
         parent_loader,
         replies_loader,

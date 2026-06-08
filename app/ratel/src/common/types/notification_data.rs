@@ -55,6 +55,21 @@ pub enum NotificationData {
         action_type_label: String,
         cta_url: String,
     },
+    /// A comment/reply was posted on a discussion. Recipient resolution
+    /// (mention > reply-target > subscriber, deduped to one per recipient)
+    /// happens at send time in
+    /// `crate::common::utils::discussion_notification::send_discussion_comment_posted`.
+    DiscussionCommentPosted {
+        space_id: SpacePartition,
+        discussion_id: String,
+        discussion_title: String,
+        comment_sk: String,
+        parent_comment_sk: Option<String>,
+        commenter_pk: String,
+        commenter_name: String,
+        comment_content: String,
+        cta_url: String,
+    },
 }
 
 #[cfg(feature = "server")]
@@ -186,6 +201,30 @@ impl NotificationData {
                     operation,
                 };
                 template.send_email(ses).await?;
+            }
+            NotificationData::DiscussionCommentPosted {
+                space_id,
+                discussion_id,
+                discussion_title,
+                comment_sk,
+                parent_comment_sk,
+                commenter_pk,
+                commenter_name,
+                comment_content,
+                cta_url,
+            } => {
+                crate::common::utils::discussion_notification::send_discussion_comment_posted(
+                    space_id,
+                    discussion_id,
+                    discussion_title,
+                    comment_sk,
+                    parent_comment_sk.as_deref(),
+                    commenter_pk,
+                    commenter_name,
+                    comment_content,
+                    cta_url,
+                )
+                .await?;
             }
             NotificationData::None => {
                 tracing::warn!("Received notification with no data, skipping");
