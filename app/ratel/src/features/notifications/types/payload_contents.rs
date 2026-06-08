@@ -164,6 +164,19 @@ impl InboxPayload {
                 let body = body_template.replace("{platform}", platform_display);
                 (title, body, None)
             }
+            InboxPayload::DiscussionCommentPosted {
+                discussion_title,
+                commenter_name,
+                commenter_profile_url,
+                comment_preview,
+                ..
+            } => (
+                tr.discussion_comment_title
+                    .replace("{name}", commenter_name)
+                    .replace("{discussion}", discussion_title),
+                comment_preview.clone(),
+                Some(commenter_profile_url.clone()),
+            ),
         }
     }
 }

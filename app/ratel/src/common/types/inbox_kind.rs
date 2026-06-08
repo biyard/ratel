@@ -28,6 +28,9 @@ pub enum InboxKind {
     /// can click through to the post-detail page and hit "Retry now".
     /// `auth_expired` failures route to Settings → Connections instead.
     CrossPostingFailed,
+    /// A new comment/reply was posted on a discussion the recipient subscribes
+    /// to (and they are not the author, a mentionee, or a direct reply target).
+    DiscussionCommentPosted,
 }
 
 impl Default for InboxKind {
@@ -54,6 +57,7 @@ impl InboxKind {
             InboxKind::SubTeamLeftParent => "STTERM_LEAVE",
             InboxKind::SubTeamParentDeleted => "STTERM_PDEL",
             InboxKind::CrossPostingFailed => "XPOST_FAIL",
+            InboxKind::DiscussionCommentPosted => "DISC_CMT",
         }
     }
 }
@@ -170,6 +174,15 @@ pub enum InboxPayload {
         error_message: Option<String>,
         cta_url: String,
     },
+    DiscussionCommentPosted {
+        space_id: SpacePartition,
+        discussion_id: String,
+        discussion_title: String,
+        commenter_name: String,
+        commenter_profile_url: String,
+        comment_preview: String,
+        cta_url: String,
+    },
 }
 
 impl InboxPayload {
@@ -190,6 +203,7 @@ impl InboxPayload {
             InboxPayload::SubTeamLeftParent { cta_url, .. } => cta_url,
             InboxPayload::SubTeamParentDeleted { cta_url, .. } => cta_url,
             InboxPayload::CrossPostingFailed { cta_url, .. } => cta_url,
+            InboxPayload::DiscussionCommentPosted { cta_url, .. } => cta_url,
         }
     }
 }
@@ -237,6 +251,7 @@ impl InboxPayload {
             InboxPayload::SubTeamLeftParent { .. } => InboxKind::SubTeamLeftParent,
             InboxPayload::SubTeamParentDeleted { .. } => InboxKind::SubTeamParentDeleted,
             InboxPayload::CrossPostingFailed { .. } => InboxKind::CrossPostingFailed,
+            InboxPayload::DiscussionCommentPosted { .. } => InboxKind::DiscussionCommentPosted,
         }
     }
 }

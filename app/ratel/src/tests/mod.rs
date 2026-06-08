@@ -8,6 +8,7 @@ pub use crate::axum;
 mod arcade_tests;
 mod cors_tests;
 mod cross_posting_tests;
+mod discussion_subscription_tests;
 mod discussion_tests;
 mod fact_or_fold_tests;
 mod get_space_admin_tests;

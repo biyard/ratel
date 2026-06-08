@@ -226,7 +226,7 @@ async fn fetch_post_comment_thread(
 }
 
 #[cfg(feature = "server")]
-async fn fetch_space_discussion_thread(
+pub(crate) async fn fetch_space_discussion_thread(
     cli: &aws_sdk_dynamodb::Client,
     pk: &crate::common::types::Partition,
     sk: &crate::common::types::EntityType,
