@@ -167,7 +167,7 @@ pub fn Index() -> Element {
 
         document::Script { defer: true, src: asset!("./script.js") }
 
-        div { class: "home-arena",
+        div { class: "home-arena home-arena--standalone",
             // TOP BAR
             div { class: "arena-topbar",
                 div { class: "arena-topbar__brand",
@@ -420,158 +420,167 @@ pub fn Index() -> Element {
                 }
             }
 
-            // SECTION LABEL
-            div { class: "section-label",
-                span { class: "section-label__dash" }
-                span { class: "section-label__title",
-                    strong { "{t.section_hot}" }
-                    " {t.section_spaces}"
-                }
-                span { class: "section-label__dash" }
-            }
+            // Scrollable body — the topbar above stays fixed; this region
+            // scrolls vertically when content overflows a short viewport
+            // instead of being clipped.
+            div { class: "home-arena__scroll",
 
-            // TABS (only visible when logged in)
-            if has_user {
-                div { class: "section-tabs",
-                    button {
-                        class: "section-tab",
-                        aria_selected: current_tab == HomeTab::Hot,
-                        "data-testid": "home-tab-hot",
-                        onclick: move |_| active_tab.set(HomeTab::Hot),
-                        "{t.tab_hot}"
+                // SECTION LABEL
+                div { class: "section-label",
+                    span { class: "section-label__dash" }
+                    span { class: "section-label__title",
+                        strong { "{t.section_hot}" }
+                        " {t.section_spaces}"
                     }
-                    button {
-                        class: "section-tab",
-                        aria_selected: current_tab == HomeTab::Mine,
-                        "data-testid": "home-tab-mine",
-                        onclick: move |_| active_tab.set(HomeTab::Mine),
-                        "{t.tab_mine}"
-                    }
+                    span { class: "section-label__dash" }
                 }
-            }
 
-            // CAROUSEL
-            if cards.is_empty() {
-                div { class: "home-arena__empty",
-                    if current_tab == HomeTab::Mine {
-                        "{t.empty_mine}"
-                    } else {
-                        "{t.empty_hot}"
+                // TABS (only visible when logged in)
+                if has_user {
+                    div { class: "section-tabs",
+                        button {
+                            class: "section-tab",
+                            aria_selected: current_tab == HomeTab::Hot,
+                            "data-testid": "home-tab-hot",
+                            onclick: move |_| active_tab.set(HomeTab::Hot),
+                            "{t.tab_hot}"
+                        }
+                        button {
+                            class: "section-tab",
+                            aria_selected: current_tab == HomeTab::Mine,
+                            "data-testid": "home-tab-mine",
+                            onclick: move |_| active_tab.set(HomeTab::Mine),
+                            "{t.tab_mine}"
+                        }
                     }
                 }
-            } else {
-                div { class: "carousel-wrapper",
-                    div { class: "carousel-track", id: "home-carousel-track",
+
+                // CAROUSEL
+                if cards.is_empty() {
+                    div { class: "home-arena__empty",
+                        if current_tab == HomeTab::Mine {
+                            "{t.empty_mine}"
+                        } else {
+                            "{t.empty_hot}"
+                        }
+                    }
+                } else {
+                    div { class: "carousel-wrapper",
+                        div {
+                            class: "carousel-track",
+                            id: "home-carousel-track",
+                            for card in cards.iter() {
+                                ArenaSpaceCard {
+                                    key: "{card.space_id.clone().to_string()}",
+                                    heat: heat_from_response(card.heat),
+                                    rank: card.rank as u32,
+                                    logo: card_logo(card, &brand_logo),
+                                    category: card_category(card),
+                                    title: card_title(card),
+                                    description: card.description.clone(),
+                                    members: format_count(card.participants),
+                                    quests: card.total_actions.to_string(),
+                                    heat_delta: heat_label(card.total_actions),
+                                    chips: chips_for(card),
+                                    reward_amount: format_thousands(card.rewards),
+                                    onenter: {
+                                        let space_id = card.space_id.clone();
+                                        EventHandler::new(move |_| {
+                                            nav.push(Route::SpaceIndexPage {
+                                                space_id: space_id.clone(),
+                                            });
+                                        })
+                                    },
+                                }
+                            }
+                        }
+                    }
+
+                    div { class: "carousel-dots", id: "home-carousel-dots",
                         for card in cards.iter() {
-                            ArenaSpaceCard {
+                            button {
                                 key: "{card.space_id.clone().to_string()}",
-                                heat: heat_from_response(card.heat),
-                                rank: card.rank as u32,
-                                logo: card_logo(card, &brand_logo),
-                                category: card_category(card),
-                                title: card_title(card),
-                                description: card.description.clone(),
-                                members: format_count(card.participants),
-                                quests: card.total_actions.to_string(),
-                                heat_delta: heat_label(card.total_actions),
-                                chips: chips_for(card),
-                                reward_amount: format_thousands(card.rewards),
-                                onenter: {
-                                    let space_id = card.space_id.clone();
-                                    EventHandler::new(move |_| {
-                                        nav.push(Route::SpaceIndexPage {
-                                            space_id: space_id.clone(),
-                                        });
-                                    })
-                                },
+                                class: "carousel-dot",
+                                "data-heat": heat_css_name(card.heat),
                             }
                         }
                     }
                 }
 
-                div { class: "carousel-dots", id: "home-carousel-dots",
-                    for card in cards.iter() {
-                        button {
-                            key: "{card.space_id.clone().to_string()}",
-                            class: "carousel-dot",
-                            "data-heat": heat_css_name(card.heat),
+                // BOTTOM HUD
+                div { class: "bottom-bar",
+                    div { class: "hud-stat",
+                        div { class: "hud-stat__icon",
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                circle { cx: "12", cy: "12", r: "10" }
+                                path { d: "M12 6v12" }
+                                path { d: "M16 10H8" }
+                            }
+                        }
+                        div { class: "hud-stat__body",
+                            span { class: "hud-stat__label", "{t.hud_your_balance}" }
+                            span { class: "hud-stat__value",
+                                strong { {balance_text(has_user)} }
+                                " "
+                                small { "CR" }
+                            }
                         }
                     }
+                    div { class: "hud-stat hud-stat--rising",
+                        div { class: "hud-stat__icon",
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                polyline { points: "23 6 13.5 15.5 8.5 10.5 1 18" }
+                                polyline { points: "17 6 23 6 23 12" }
+                            }
+                        }
+                        div { class: "hud-stat__body",
+                            span { class: "hud-stat__label", "{t.hud_hot_right_now}" }
+                            span { class: "hud-stat__value",
+                                strong { "{active_spaces}" }
+                                " "
+                                small { "{t.hud_active_spaces}" }
+                            }
+                        }
+                    }
+                    // button {
+                    //     class: "browse-btn",
+                    //     "data-testid": "home-btn-browse",
+                    //     onclick: go_browse_all,
+                    //     svg {
+                    //         fill: "none",
+                    //         stroke: "currentColor",
+                    //         stroke_linecap: "round",
+                    //         stroke_linejoin: "round",
+                    //         stroke_width: "2",
+                    //         view_box: "0 0 24 24",
+                    //         xmlns: "http://www.w3.org/2000/svg",
+                    //         circle { cx: "11", cy: "11", r: "8" }
+                    //         line {
+                    //             x1: "21",
+                    //             y1: "21",
+                    //             x2: "16.65",
+                    //             y2: "16.65",
+                    //         }
+                    //     }
+                    //     "{t.browse_all}"
+                    // }
                 }
-            }
 
-            // BOTTOM HUD
-            div { class: "bottom-bar",
-                div { class: "hud-stat",
-                    div { class: "hud-stat__icon",
-                        svg {
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            stroke_width: "2",
-                            view_box: "0 0 24 24",
-                            xmlns: "http://www.w3.org/2000/svg",
-                            circle { cx: "12", cy: "12", r: "10" }
-                            path { d: "M12 6v12" }
-                            path { d: "M16 10H8" }
-                        }
-                    }
-                    div { class: "hud-stat__body",
-                        span { class: "hud-stat__label", "{t.hud_your_balance}" }
-                        span { class: "hud-stat__value",
-                            strong { {balance_text(has_user)} }
-                            " "
-                            small { "CR" }
-                        }
-                    }
-                }
-                div { class: "hud-stat hud-stat--rising",
-                    div { class: "hud-stat__icon",
-                        svg {
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            stroke_width: "2",
-                            view_box: "0 0 24 24",
-                            xmlns: "http://www.w3.org/2000/svg",
-                            polyline { points: "23 6 13.5 15.5 8.5 10.5 1 18" }
-                            polyline { points: "17 6 23 6 23 12" }
-                        }
-                    }
-                    div { class: "hud-stat__body",
-                        span { class: "hud-stat__label", "{t.hud_hot_right_now}" }
-                        span { class: "hud-stat__value",
-                            strong { "{active_spaces}" }
-                            " "
-                            small { "{t.hud_active_spaces}" }
-                        }
-                    }
-                }
-                // button {
-                //     class: "browse-btn",
-                //     "data-testid": "home-btn-browse",
-                //     onclick: go_browse_all,
-                //     svg {
-                //         fill: "none",
-                //         stroke: "currentColor",
-                //         stroke_linecap: "round",
-                //         stroke_linejoin: "round",
-                //         stroke_width: "2",
-                //         view_box: "0 0 24 24",
-                //         xmlns: "http://www.w3.org/2000/svg",
-                //         circle { cx: "11", cy: "11", r: "8" }
-                //         line {
-                //             x1: "21",
-                //             y1: "21",
-                //             x2: "16.65",
-                //             y2: "16.65",
-                //         }
-                //     }
-                //     "{t.browse_all}"
-                // }
-            }
+            } // .home-arena__scroll
 
             // SETTINGS PANEL — same component as Space Arena
             SettingsPanel {
