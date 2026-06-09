@@ -37913,6 +37913,37 @@ body.comments-panel-resizing {
   flex: 0 0 auto;
 }
 
+/* === src/views/index/pull_to_refresh (mobile only) === */
+.ptr-indicator {
+  flex-shrink: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.ptr-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(252, 179, 0, 0.22);
+  border-top-color: #fcb300;
+  transition: transform 0.2s ease;
+}
+.ptr-indicator.ptr-ready .ptr-spinner {
+  transform: rotate(180deg);
+}
+.ptr-indicator.ptr-refreshing .ptr-spinner {
+  animation: ptr-spin 0.7s linear infinite;
+}
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .home-arena::before {
   content: "";
   position: absolute;

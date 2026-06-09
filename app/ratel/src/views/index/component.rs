@@ -73,6 +73,27 @@ pub fn Index() -> Element {
 
     let my_spaces = use_my_spaces()?.my_spaces;
 
+    // Pull-to-refresh — Tauri WebView (mobile) only. The web/SSR build
+    // (`fullstack`) never compiles this, so desktop browsers are unaffected.
+    // The JS driver attaches touch handlers to `.home-arena__scroll` and
+    // signals via `dioxus.send` when the user pulls past the threshold; we
+    // re-run the home loaders and tell the JS to retract the spinner.
+    #[cfg(all(feature = "tauri-web", not(feature = "fullstack")))]
+    {
+        let mut hot = hot_spaces;
+        let mut mine = my_spaces;
+        use_effect(move || {
+            let mut runner = document::eval(include_str!("pull_to_refresh.js"));
+            spawn(async move {
+                while runner.recv::<bool>().await.is_ok() {
+                    hot.restart();
+                    mine.restart();
+                    document::eval("window.__ratelPtrDone && window.__ratelPtrDone();");
+                }
+            });
+        });
+    }
+
     let hot_cards = hot_spaces().items;
     let mine_cards = my_spaces().items;
 
