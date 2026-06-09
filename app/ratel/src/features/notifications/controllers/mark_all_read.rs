@@ -6,8 +6,10 @@ use crate::features::notifications::types::{MarkAllReadResponse, NotificationsEr
 const MAX_PAGES: usize = 5;
 const PAGE_LIMIT: i32 = 30;
 
-#[post("/api/inbox/read-all", user: User)]
-pub async fn mark_all_read_handler() -> Result<MarkAllReadResponse> {
+#[post("/api/inbox/read-all?space_id", user: User)]
+pub async fn mark_all_read_handler(
+    space_id: Option<SpacePartition>,
+) -> Result<MarkAllReadResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
@@ -30,6 +32,13 @@ pub async fn mark_all_read_handler() -> Result<MarkAllReadResponse> {
                 })?;
 
         for item in items {
+            // When scoping to a space, skip notifications that don't belong
+            // to it — they stay unread in the global inbox.
+            if let Some(sid) = &space_id {
+                if item.payload.space_id().as_ref() != Some(sid) {
+                    continue;
+                }
+            }
             if let Err(e) = UserInboxNotification::updater(item.pk, item.sk)
                 .with_is_read(true)
                 .with_unread_created_at(UNREAD_SENTINEL.to_string())
