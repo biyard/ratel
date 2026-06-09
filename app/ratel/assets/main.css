@@ -37904,7 +37904,12 @@ body.comments-panel-resizing {
 /* Inside the scroll region the carousel keeps its natural height (no flex
    stretch) so the whole column scrolls as one, rather than the carousel
    collapsing to zero. */
-.home-arena__scroll > .carousel-wrapper {
+/* Higher specificity (3 classes) so it beats `.home-arena .carousel-wrapper
+   { flex: 1 }` which is declared later in the file — otherwise the carousel
+   stays flex:1, gets squeezed inside the scroll body, and its `overflow:hidden`
+   clips tall cards (RISING badge / ENTER ARENA button cut off). With natural
+   height the whole card shows and the column scrolls instead. */
+.home-arena .home-arena__scroll > .carousel-wrapper {
   flex: 0 0 auto;
 }
 
