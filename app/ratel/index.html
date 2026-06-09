@@ -5,6 +5,27 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta charset="UTF-8" />
+    <!-- Set `data-theme` synchronously, before first paint, so theme-scoped
+         CSS (`[data-theme="light"] .team-arena …`, 120+ rules) resolves
+         correctly from the very first render. ThemeService applies the theme
+         later from an async `use_future`, which lands AFTER first paint — so
+         without this, pages that key off `[data-theme]` (e.g. team-arena,
+         which hardcodes its dark palette and only flips on an explicit
+         `data-theme="light"`) flash/stick dark until the user toggles. Must
+         mirror theme.js: same storage key + same `system` resolution. -->
+    <script>
+      (function () {
+        try {
+          var t = window.localStorage.getItem("ratel-common-theme");
+          if (!t || t === "system") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="main"></div>

@@ -1,13 +1,15 @@
-// Pull-to-refresh gesture driver for the home arena (mobile / Tauri WebView
-// only — the Rust side that runs this is cfg-gated to `tauri-web`).
+// Pull-to-refresh gesture driver (mobile / Tauri WebView only — the Rust
+// hook that runs this is cfg-gated to `tauri-web`). The scroll-container
+// selector is interpolated by `use_pull_to_refresh` (replaces the
+// __PTR_SCROLL_SEL__ placeholder).
 //
-// Attaches touch handlers to `.home-arena__scroll`. When the user drags down
-// while the list is already scrolled to the top, an arena-tone spinner is
-// revealed; releasing past the threshold sends a signal to Rust via
-// `dioxus.send(...)`, which re-runs the page loaders. Rust calls
-// `window.__ratelPtrDone()` afterwards to retract the spinner.
+// Attaches touch handlers to the target scroll container. When the user drags
+// down while already scrolled to the top, an arena-tone spinner is revealed;
+// releasing past the threshold signals Rust via `dioxus.send(true)`, which
+// re-runs the page loaders. Rust then calls `window.__ratelPtrDone()` to
+// retract the spinner.
 (function () {
-  var SCROLL_SEL = ".home-arena__scroll";
+  var SCROLL_SEL = "__PTR_SCROLL_SEL__";
   var THRESHOLD = 64; // px of pull (after damping) needed to trigger
   var MAX = 96; // max visual pull
   var DAMP = 0.5; // finger travel → visual pull ratio

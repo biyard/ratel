@@ -14,8 +14,8 @@ translate! {
     },
 
     posts_loaded: {
-        en: "Posts Loaded",
-        ko: "로드된 게시글",
+        en: "Posts",
+        ko: "게시글",
     },
 
     likes_label: {

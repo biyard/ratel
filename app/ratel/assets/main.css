@@ -14375,11 +14375,13 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   min-height: 0;
   /* Reserve room for the fixed topbar here (not on `.team-arena`) so
      the arena's ::before fade and decorative layers extend under the
-     topbar — eliminates the header/body two-tone. */
-  padding-top: 110px;
+     topbar — eliminates the header/body two-tone. The topbar now adds
+     `env(safe-area-inset-top)` to its own height, so mirror it here or
+     content slides under the status bar (0 on desktop). */
+  padding-top: calc(110px + env(safe-area-inset-top));
 }
 @media (max-width: 540px) {
-  .team-arena__content { padding-top: 84px; }
+  .team-arena__content { padding-top: calc(84px + env(safe-area-inset-top)); }
 }
 
 @media (max-width: 1024px) {
@@ -14402,7 +14404,9 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px;
+  /* `position: fixed` escapes the `:root` safe-area padding, so add the
+     top inset here to keep the header below the status bar (0 on desktop). */
+  padding: calc(20px + env(safe-area-inset-top)) 28px 20px;
   flex-shrink: 0;
   gap: 12px;
   /* Transparent so the `.team-arena::before` radial gradient (the one
@@ -14821,7 +14825,11 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 /* ── Responsive ── */
 @media (max-width: 720px) {
   .team-arena .arena-topbar {
-    padding: 12px 14px;
+    /* `position: fixed; top: 0` sits at the true viewport top, BEHIND the
+       status bar / notch — the `:root` safe-area padding doesn't push a
+       fixed element. Add the inset to the top padding so the icon row clears
+       the status bar (0 on desktop). */
+    padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
     gap: 8px;
     flex-wrap: nowrap;
   }
@@ -38545,11 +38553,6 @@ body.comments-panel-resizing {
   position: relative;
   z-index: 10;
   flex: 1;
-  /* Without min-height:0 a flex child won't shrink below its content's
-     intrinsic height (cards + carousel-track padding). On short mobile
-     viewports that pushes the bottom-bar past the screen and the whole
-     page scrolls instead of staying a fixed single-screen arena. */
-  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -38592,10 +38595,10 @@ body.comments-panel-resizing {
    fixed arena (topbar + carousel + bottom-bar) fits within the screen and
    doesn't force the page to scroll. */
 @media (max-height: 760px) {
-  .home-arena .carousel-track { padding-top: 32px; padding-bottom: 32px; }
+  .home-arena__scroll .carousel-track { padding-top: 32px; padding-bottom: 32px; }
 }
 @media (max-height: 620px) {
-  .home-arena .carousel-track { padding-top: 18px; padding-bottom: 18px; }
+  .home-arena__scroll .carousel-track { padding-top: 18px; padding-bottom: 18px; }
 }
 
 /* ── Dots ────────────────────────────────────────── */
