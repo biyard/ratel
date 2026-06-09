@@ -186,6 +186,21 @@ pub enum InboxPayload {
 }
 
 impl InboxPayload {
+    /// The space this notification belongs to, if any. Used to scope the
+    /// in-space notification bell/panel to a single space. Variants that
+    /// are not space-related (sub-team, cross-posting, bare mention) return
+    /// `None`.
+    pub fn space_id(&self) -> Option<SpacePartition> {
+        match self {
+            InboxPayload::SpaceStatusChanged { space_id, .. }
+            | InboxPayload::SpaceInvitation { space_id, .. }
+            | InboxPayload::SpaceActionOngoing { space_id, .. }
+            | InboxPayload::DiscussionCommentPosted { space_id, .. } => Some(space_id.clone()),
+            InboxPayload::ReplyOnComment { space_id, .. } => space_id.clone(),
+            _ => None,
+        }
+    }
+
     pub fn url(&self) -> &str {
         match self {
             InboxPayload::ReplyOnComment { cta_url, .. } => cta_url,
