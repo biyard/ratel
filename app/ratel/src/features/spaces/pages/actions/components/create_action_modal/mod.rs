@@ -53,8 +53,11 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
     rsx! {
 
         div { class: "flex flex-col flex-1 min-h-0 bg-action-modal-bg",
-            // Scrollable content area
-            div { class: "flex overflow-y-auto flex-col gap-5 p-[1.875rem] grow",
+            // Scrollable content area. `min-h-0` is required so this flex child
+            // can shrink below its content height inside the column — without it
+            // `overflow-y-auto` never engages and the cards overflow the modal
+            // instead of scrolling within the (height-limited) layover panel.
+            div { class: "flex overflow-y-auto flex-col gap-5 p-[1.875rem] grow min-h-0",
                 // 2x2 grid of action type options
                 div { class: "grid grid-cols-2 gap-2.5",
                     ActionTypeOption {

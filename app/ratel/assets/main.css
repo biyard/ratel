@@ -17211,7 +17211,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -17603,7 +17603,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -18799,7 +18799,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -19513,7 +19513,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -19854,6 +19854,37 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   font-weight: 600;
 }
 
+/* Hide the action-editor topbar breadcrumb (space name › Actions) AND the
+   topbar title input on mobile — the small phone topbar only needs the back
+   button + type badge. The title is redundant on mobile (it's edited again in
+   the body's "제목" field), and removing it frees the cramped topbar. Desktop
+   keeps both. Scoped to the `--ae-topbar` marker so the analyze views' shared
+   `.breadcrumb` is unaffected; `.topbar-title-input` is unique to the action
+   editor topbar. */
+@media (max-width: 720px) {
+  .breadcrumb--ae-topbar {
+    display: none;
+  }
+  /* `.arena-topbar` descendant selector bumps specificity above the bare
+     `.topbar-title-input { flex: 1 }` base rule (defined later in source), so
+     the hide wins regardless of cascade order. */
+  .arena-topbar .topbar-title-input {
+    display: none;
+  }
+}
+
+/* Action editor safe areas — the layout is `position:fixed; inset:0` (it fills
+   the whole viewport, under the status bar and the bottom gesture bar), so the
+   topbar must be pushed below the status bar and the footer above the gesture
+   bar. `env()` is 0 on desktop, so this is a no-op there. Scoped via `:has`
+   so only the action-editor `.arena` is affected. */
+.arena:has(> .action-edit-footer) > .arena-topbar {
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+.arena:has(> .action-edit-footer) > .action-edit-footer {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
 .type-badge {
   display: inline-flex;
   align-items: center;
@@ -19867,6 +19898,10 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   background: var(--aet-surface-soft);
   color: var(--aet-accent-gold);
   border: 1px solid var(--aet-border-subtle);
+  /* Keep the label on one line — in the cramped mobile topbar the 2-char
+     label ("투표") was wrapping to two stacked characters. */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .type-badge svg {
   width: 13px;
@@ -20118,6 +20153,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* Grid items default to `min-width: auto`, which refuses to shrink below the
+     column's min-content width. On narrow/mobile the "10,000" reward value and
+     the credit-usage input push that min-content past the single 1fr track, so
+     the column (and its cards) overflow ~22px to the right and look shoved off
+     to the side instead of aligning with the full-width `__head` toggle above.
+     `min-width: 0` lets the column honor the track width. */
+  min-width: 0;
 }
 .arena-reward__column-label {
   font-family: var(--font-display, 'Orbitron', sans-serif);
@@ -20139,6 +20181,8 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   border: 1px solid var(--ars-tile-border);
   position: relative;
   overflow: hidden;
+  /* Honor the column track width instead of growing to content min-content. */
+  min-width: 0;
 }
 .arena-reward__display::after {
   content: '';
@@ -20210,6 +20254,44 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   color: var(--qc-text-muted);
 }
 
+@media (max-width: 720px) {
+  /* On mobile the reward card is narrow and the value is right-aligned flush
+     to the 20px padding, so "10,000 / 액션 포인트 보상" reads as stuck to the
+     right edge. Give it a touch more breathing room. */
+  .arena-reward__display {
+    padding-right: 30px;
+  }
+  /* Hide the "Markdown 지원" content hint on mobile — the small phone editor
+     header only needs the section label. Marker class so the attachment/date
+     hints (`.section__hint` without the modifier) stay visible. */
+  .section__hint--markdown {
+    display: none;
+  }
+}
+
+/* Mobile plain-textarea fallback for the action description editors
+   (ActionDescriptionEditor). It lives inside the `.editor` box, so it stays
+   transparent/borderless and just fills the full width with a comfortable
+   height. */
+.action-desc-textarea {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  resize: vertical;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--qc-text-primary);
+  font-family: "Outfit", "Inter", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+.action-desc-textarea::placeholder {
+  color: var(--qc-text-muted);
+}
+
 /* Boost Multiplier tile */
 .arena-reward__boost-tile {
   padding: 16px 18px;
@@ -20219,6 +20301,8 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Honor the column track width instead of growing to content min-content. */
+  min-width: 0;
 }
 .arena-reward__boost-row {
   display: flex;
@@ -24712,6 +24796,11 @@ html[data-theme="light"] .sga-modal__confirm-danger,
 
 .type-sheet__panel {
   width: min(560px, 100%);
+  /* Cap the panel to the (safe-area-trimmed) viewport so it never overflows
+     the screen — without this the panel grew to its content height (≈844px,
+     taller than the viewport) and the action cards spilled off the top and
+     bottom. The card grid below scrolls within this height. */
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);
   background: var(--sheet-bg);
   border: 1px solid var(--sheet-border);
   border-radius: 20px;
@@ -24731,6 +24820,7 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 .type-sheet__title {
   font-family: 'Orbitron', sans-serif;
@@ -24763,6 +24853,11 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  /* Scroll the action cards inside the height-capped panel instead of letting
+     them overflow the screen. `min-height: 0` lets this flex child shrink
+     below its content height so the overflow actually engages. */
+  overflow-y: auto;
+  min-height: 0;
 }
 .type-option {
   padding: 18px 16px;

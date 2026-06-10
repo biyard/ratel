@@ -7,12 +7,17 @@ pub fn Switch(
     #[props(default)] label: String,
     #[props(default)] disabled: bool,
 ) -> Element {
+    // `shrink-0`: the switch is a fixed-size control (w-11 h-6). In a flex row
+    // with a long sibling label (e.g. the prerequisite tile), the default
+    // `flex-shrink:1` lets it collapse below 44px on narrow/mobile widths,
+    // which clips the track under the absolutely-positioned knob and makes the
+    // toggle look broken. Never let it shrink.
     let container_class = if disabled {
-        "relative inline-flex items-center w-11 h-6 rounded-full transition-colors bg-switch-track opacity-40 cursor-not-allowed"
+        "relative inline-flex items-center shrink-0 w-11 h-6 rounded-full transition-colors bg-switch-track opacity-40 cursor-not-allowed"
     } else if active {
-        "relative inline-flex items-center w-11 h-6 rounded-full transition-colors bg-primary cursor-pointer"
+        "relative inline-flex items-center shrink-0 w-11 h-6 rounded-full transition-colors bg-primary cursor-pointer"
     } else {
-        "relative inline-flex items-center w-11 h-6 rounded-full transition-colors bg-switch-track cursor-pointer"
+        "relative inline-flex items-center shrink-0 w-11 h-6 rounded-full transition-colors bg-switch-track cursor-pointer"
     };
     let knob_class = if active && !disabled {
         "absolute left-[2px] top-[2px] w-5 h-5 rounded-full bg-switch-knob transition-transform translate-x-5"
@@ -33,7 +38,7 @@ pub fn Switch(
             class: container_class,
             role: "switch",
             aria_checked: "{active}",
-            aria_label: aria_label,
+            aria_label,
             disabled,
             onclick: on_toggle,
             span { class: knob_class }

@@ -37,4 +37,7 @@ pub use action_dependency_selector::ActionDependencySelector;
 mod prerequisite_tile;
 pub use prerequisite_tile::PrerequisiteTile;
 
+mod action_description_editor;
+pub use action_description_editor::ActionDescriptionEditor;
+
 use super::*;
