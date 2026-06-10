@@ -7711,6 +7711,24 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   color: var(--pd-text-primary);
 }
 
+/* The post-detail comments sheet reuses the `.comments-panel` class, which the
+   space-discussion arena (≈line 26004, inside a `max-width:720px` block) also
+   styles as a translateY-collapsed bottom sheet:
+   `position: fixed; transform: translateY(calc(100% - 64px))`. That GLOBAL
+   rule leaked onto this sheet — it pushed the panel mostly below the viewport
+   (only a ~64px "Comments" peek showed, the comment input fell off-screen) and
+   its collapse/expand is driven by the discussion arena's JS, not the
+   post-detail drag handler, so dragging up did nothing and snapped back.
+   The `#post-comments-sheet` id (higher specificity than the leaked class)
+   resets it so `.pd-drawer-wrap` owns the layout; `padding-bottom` keeps the
+   content above the home indicator. The drag JS still sets an inline
+   `transform` while dragging, which overrides this. */
+#post-comments-sheet {
+  position: relative;
+  transform: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 .comments-panel .sheet-handle { display: none; }
 .comments-panel__header {
   display: flex;
