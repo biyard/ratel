@@ -13560,8 +13560,19 @@ body:has(.ts-sub-page) .bg-popup-background button:not([type]) {
 }
 @media (max-width: 720px) {
     .ts-sub-page .hero {
-        margin-bottom: 20px;
-        padding: 0 14px;
+        /* Collapse the 2-column (title | desc) grid to a single column on
+           mobile so the description stacks BELOW the title and wraps within
+           the viewport instead of overflowing off the right edge (the grid
+           was ~546px wide, clipped by `overflow: hidden`).
+           `margin: 0 14px` insets the hero box so its left/right edges line
+           up with the tier cards below (which sit at 14px via `.page`'s
+           padding); `padding: 18px 16px` gives inner breathing room and
+           aligns the text with the card content; `gap: 4px` tightens the
+           previously oversized (32px) title↔description gap. */
+        grid-template-columns: 1fr;
+        gap: 4px;
+        margin: 0 14px 20px;
+        padding: 18px 16px;
     }
     .ts-sub-page .hero__title {
         font-size: 24px;
@@ -13943,7 +13954,9 @@ html[data-theme="light"] .team-arena .ta-settings-panel,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 28px 20px;
+  /* Panel is `position: fixed; top: 0` so it doesn't get `:root`'s
+     safe-area padding — clear the status bar / notch here (0 on desktop). */
+  padding: calc(24px + env(safe-area-inset-top)) 28px 20px;
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
@@ -13986,7 +13999,9 @@ html[data-theme="light"] .team-arena .ta-settings-panel__close:hover,
 .team-arena .ta-settings-panel__body {
   flex: 1;
   overflow-y: auto;
-  padding: 28px;
+  /* Extra bottom inset so the last action (Log out) clears the home
+     indicator / bottom safe area instead of being buried under it. */
+  padding: 28px 28px calc(28px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -14404,13 +14419,17 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   min-height: 0;
   /* Reserve room for the fixed topbar here (not on `.team-arena`) so
      the arena's ::before fade and decorative layers extend under the
-     topbar — eliminates the header/body two-tone. The topbar now adds
-     `env(safe-area-inset-top)` to its own height, so mirror it here or
-     content slides under the status bar (0 on desktop). */
-  padding-top: calc(110px + env(safe-area-inset-top));
+     topbar — eliminates the header/body two-tone.
+     NOTE: do NOT add `env(safe-area-inset-top)` here. This content box is
+     already pushed down by `:root`'s safe-area padding, and the fixed
+     topbar's own safe-area padding grows its height by the same amount —
+     the two cancel, so adding it here double-counts and leaves a big gap
+     under the icon row. The value is just the topbar's non-safe height +
+     a small gap. */
+  padding-top: 96px;
 }
 @media (max-width: 540px) {
-  .team-arena__content { padding-top: calc(84px + env(safe-area-inset-top)); }
+  .team-arena__content { padding-top: 68px; }
 }
 
 @media (max-width: 1024px) {
@@ -15510,6 +15529,19 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
     }
 }
 @media (max-width: 720px) {
+    .tm-status-page .hero {
+        /* Same fix as `.ts-sub-page .hero`: the 2-column (title | desc) grid
+           is ~574px wide and overflows the phone viewport, clipping the
+           description ("Your current plan…") off the right edge. Collapse to
+           a single column so the description stacks below the title, inset
+           the box (margin 14px) to line up with the cards below, align the
+           inner text (padding 16px), and tighten the oversized title↔desc
+           gap. */
+        grid-template-columns: 1fr;
+        gap: 4px;
+        margin: 0 14px 20px;
+        padding: 18px 16px;
+    }
     .tm-status-page .hero__title {
         font-size: 24px;
     }
