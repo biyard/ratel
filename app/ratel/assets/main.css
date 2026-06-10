@@ -8077,9 +8077,15 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   position: relative;
   /* Use dynamic viewport height so the layout doesn't extend below
      the visible area when the mobile browser's URL bar is showing.
-     Fallback to 100vh for older browsers. */
+     Fallback to 100vh for older browsers.
+     Subtract the safe-area insets: the arena sits inside `:root`'s
+     safe-area padding (pushed down by `safe-area-inset-top`), so a full
+     `100dvh` overflowed the bottom by that amount and buried the static
+     `.bottom-bar` (Publish / Options) under the home indicator. Trimming
+     both insets keeps the whole arena — topbar to bottom-bar — inside the
+     safe area (0 on desktop). */
   height: 100vh;
-  height: 100dvh;
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow: hidden;
   display: flex;
   flex-direction: column;
