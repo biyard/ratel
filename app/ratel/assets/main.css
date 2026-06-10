@@ -9539,13 +9539,17 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 .proof__row--ok span:last-child { color: var(--accent-green); }
 .proof__sig {
-  display: flex; gap: 10px; align-items: center;
+  display: flex; gap: 10px; align-items: flex-start;
   padding: 10px 12px; border-radius: 10px;
   background: rgba(34, 197, 94, 0.04); border: 1px solid rgba(34, 197, 94, 0.15);
   font-size: 12px; color: var(--accent-green); line-height: 1.45;
 }
-.proof__sig svg { width: 14px; height: 14px; flex-shrink: 0; }
-.proof__sig strong { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; }
+.proof__sig svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+/* `min-width: 0` lets the text column shrink below the long DID's intrinsic
+   width; `overflow-wrap: anywhere` breaks the unbreakable
+   `did:web:…#key-1` string instead of overflowing the card. */
+.proof__sig > span { min-width: 0; overflow-wrap: anywhere; }
+.proof__sig strong { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; overflow-wrap: anywhere; }
 
 /* Privacy */
 .credentials-arena .privacy {
@@ -14857,6 +14861,12 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
     padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
     gap: 8px;
     flex-wrap: nowrap;
+  }
+  /* Hide the parent-team (graduation-cap) and sub-team (hierarchy) HUD icons
+     on mobile — the icon row is too cramped on a phone. */
+  .team-arena .parent-panel-wrap,
+  .team-arena .arena-topbar__hud--mobile-hide {
+    display: none;
   }
   .team-arena .arena-topbar__logo {
     width: 30px;

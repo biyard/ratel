@@ -420,6 +420,8 @@ pub fn ArenaTopbar(
                                 label: tr.sub_teams.to_string(),
                                 active: active == TeamArenaTab::SubTeams,
                                 to: route,
+                                // Hidden on mobile (declutters the cramped phone topbar).
+                                class: "arena-topbar__hud--mobile-hide",
                                 icon: rsx! {
                                     svg {
                                         view_box: "0 0 24 24",
@@ -548,15 +550,24 @@ fn TeamDdItem(
 }
 
 #[component]
-fn HudButton(label: String, active: bool, to: Route, icon: Element) -> Element {
-    let class = if active {
-        "arena-topbar__hud arena-topbar__hud--active"
+fn HudButton(
+    label: String,
+    active: bool,
+    to: Route,
+    icon: Element,
+    #[props(default)] class: String,
+) -> Element {
+    let active_class = if active {
+        "arena-topbar__hud--active"
     } else {
-        "arena-topbar__hud"
+        ""
     };
 
     rsx! {
-        Link { to, class: "{class}", aria_label: "{label}",
+        Link {
+            to,
+            class: "arena-topbar__hud {active_class} {class}",
+            aria_label: "{label}",
             {icon}
             span { class: "arena-topbar__hud-label", "{label}" }
         }
