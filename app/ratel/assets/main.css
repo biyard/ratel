@@ -6081,6 +6081,10 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   display: flex;
   gap: 6px;
   align-items: center;
+  /* Wrap the page buttons (WINDOW_SIZE = 10 numbers + prev/next) onto more
+     than one row when they can't fit the width — otherwise the trailing
+     buttons (incl. the next `›`) overflow off-screen on mobile. */
+  flex-wrap: wrap;
 }
 .essence-page-btn {
   min-width: 32px;
@@ -6119,6 +6123,17 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 .essence-page-btn svg {
   width: 12px;
   height: 12px;
+}
+@media (max-width: 600px) {
+  /* Stack info above the controls and give the buttons the full row width so
+     they wrap centered instead of overflowing past the screen edge. */
+  .essence-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .essence-pagination__actions {
+    justify-content: center;
+  }
 }
 
 /* ── Empty state ── */
@@ -6203,13 +6218,16 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 768px) {
-  /* On mobile body uses `overflow: auto` (tailwind.css max-tablet) so the
-     document already scrolls — let the arena grow naturally instead of
-     trapping scroll inside it. */
+  /* Keep the arena as its OWN scroll container on mobile too (same as
+     desktop) so the `position: sticky` topbar has a scrolling ancestor to
+     anchor to. With `overflow: visible` the document body scrolled instead,
+     and a sticky element whose scroll ancestor is the body drifted up with
+     the content — the `SOURCES` header scrolled away instead of staying
+     pinned. */
   .essence-arena {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 .essence-arena::before {
@@ -6384,12 +6402,14 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 768px) {
-  /* On mobile `body` falls back to `overflow: auto` — let the page grow
-     naturally so the document handles scroll instead of trapping it. */
+  /* Keep the page as its OWN scroll container on mobile (same as desktop) so
+     the `position: sticky` `.my-ai__topbar` has a scrolling ancestor to
+     anchor to. With `overflow: visible` the body scrolled and the header
+     drifted up with the content instead of staying pinned. */
   .my-ai {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
@@ -6782,6 +6802,9 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 /* ─── Responsive ───────────────────────────────────── */
 @media (max-width: 600px) {
+  /* Hide the "MCP ONLINE/OFFLINE" status pill on mobile — too cramped next
+     to the title on a phone topbar. */
+  .my-ai__status { display: none; }
   .my-ai__topbar { padding: 14px 16px; }
   .my-ai__title-main { font-size: 13px; }
   .my-ai__page { padding: 18px 16px 60px; }
@@ -9085,12 +9108,14 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   font-family: var(--font-body);
 }
 @media (max-width: 768px) {
-  /* On mobile `body` falls back to `overflow: auto`; let the page grow
-     naturally so the document handles scroll instead of trapping it. */
+  /* Keep the arena as its OWN scroll container on mobile (same as desktop)
+     so the `position: sticky` topbar has a scrolling ancestor to anchor to.
+     With `overflow: visible` the body scrolled and the header drifted up
+     with the content instead of staying pinned. */
   .credentials-arena {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 .credentials-arena::before {
@@ -37950,6 +37975,19 @@ body.comments-panel-resizing {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* `UserLayout`/`SocialLayout` wrap their outlet in `.social-scroll` with
+   `p-5` (→ `p-2` on mobile) padding. Full-bleed arena pages (their own
+   background + topbar reach the edges) must NOT get that frame, or a gap
+   appears above the sticky header. Strip the padding only when the scroll
+   container directly holds an arena — other (non-arena) outlet pages keep
+   their padding. */
+.social-scroll:has(> .rewards-arena),
+.social-scroll:has(> .drafts-arena),
+.social-scroll:has(> .essence-arena),
+.social-scroll:has(> .my-ai) {
+  padding: 0;
 }
 
 .home-arena::before {

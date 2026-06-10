@@ -17,12 +17,46 @@
   function bind() {
     var el = document.querySelector(SCROLL_SEL);
     if (!el || el.dataset.ptrBound) return;
+    // Wait until the container has rendered its children so the indicator can
+    // be placed AFTER any pinned header (binding before children exist would
+    // force it to the very top, above the header).
+    if (!el.firstElementChild) return;
     el.dataset.ptrBound = "true";
 
     var indicator = document.createElement("div");
     indicator.className = "ptr-indicator";
     indicator.innerHTML = '<div class="ptr-spinner" aria-hidden="true"></div>';
-    el.insertBefore(indicator, el.firstChild);
+    // Place the indicator so it reveals BELOW any pinned (sticky/fixed)
+    // header rather than above it. The scroll container either holds the
+    // header directly (arena IS the scroll container) or wraps a single
+    // "arena" whose leading child is the pinned header — handle both: skip
+    // leading pinned elements, then descend one level if the first child is
+    // such a wrapper. When the first child is ordinary content (header lives
+    // outside the scroll container) this lands at the very top, as before.
+    function firstUnpinned(parent) {
+      var n = parent.firstElementChild;
+      while (n) {
+        var pos = window.getComputedStyle(n).position;
+        if (pos === "sticky" || pos === "fixed") {
+          n = n.nextElementSibling;
+        } else {
+          break;
+        }
+      }
+      return n;
+    }
+    var host = el;
+    var ref = firstUnpinned(el);
+    if (ref && ref === el.firstElementChild) {
+      // Nothing pinned at the top level — if this first child is a wrapper
+      // whose own leading child is pinned (arena + sticky header), descend.
+      var innerRef = firstUnpinned(ref);
+      if (innerRef !== ref.firstElementChild) {
+        host = ref;
+        ref = innerRef;
+      }
+    }
+    host.insertBefore(indicator, ref);
 
     var startY = null;
     var pulling = false;
