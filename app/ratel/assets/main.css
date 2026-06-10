@@ -7056,9 +7056,15 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   --accent-violet: #818cf8;
 
   position: relative;
-  /* Body has `overflow: hidden` on desktop (tailwind.css), so this
-     arena owns its own scroll container. */
-  height: 100%;
+  /* This arena owns its own scroll container so the sticky topbar pins.
+     `height: 100%` only works when an ancestor has a definite height — on
+     mobile `body` is content-driven (overflow:auto), so `100%` resolved to
+     the *content* height and the arena grew instead of scrolling, which made
+     the document body scroll and the sticky `상세` topbar drift away. A
+     viewport-relative height (minus safe-area + keyboard insets) is always
+     definite, so the arena scrolls internally and the header stays pinned. */
+  height: 100vh;
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--kb-inset, 0px));
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -42151,8 +42157,13 @@ body.comments-panel-resizing {
    Below releases the lock on tablet+mobile so the document scrolls
    naturally — matches the existing `.essence-arena` mobile override. */
 @media (max-width: 768px) {
+  /* NOTE: `.post-arena` is intentionally NOT in this list. It uses a fixed
+     viewport-height internal scroll (see its base rule) so its sticky `상세`
+     topbar stays pinned — `height: auto` here let it grow to content height,
+     which moved scrolling to the document body and dragged the header away.
+     Because the arena is sized to exactly the (safe-area-trimmed) viewport,
+     the body doesn't overflow, so there's no competing-scroll-root problem. */
   .arena,
-  .post-arena,
   .home-arena,
   .connections-arena,
   .onboarding-arena,
