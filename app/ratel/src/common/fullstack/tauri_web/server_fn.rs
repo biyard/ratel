@@ -85,6 +85,16 @@ pub async fn delete<R: DeserializeOwned>(path: &str) -> crate::common::Result<R>
     send::<(), R>(Method::DELETE, path, None).await
 }
 
+/// DELETE with a JSON body. Some delete endpoints take a request payload (e.g.
+/// the keys to delete), which the dioxus server decoder expects keyed by the
+/// handler arg name — same shape as POST/PUT/PATCH.
+pub async fn delete_with_body<B: Serialize + ?Sized, R: DeserializeOwned>(
+    path: &str,
+    body: &B,
+) -> crate::common::Result<R> {
+    send::<B, R>(Method::DELETE, path, Some(body)).await
+}
+
 async fn send<B: Serialize + ?Sized, R: DeserializeOwned>(
     method: Method,
     path: &str,

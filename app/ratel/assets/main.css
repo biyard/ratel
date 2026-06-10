@@ -38923,6 +38923,13 @@ body.comments-panel-resizing {
   gap: 12px;
   padding: 14px 28px 22px;
   flex-shrink: 0;
+  /* Pin to the bottom of the scroll column. The carousel keeps its natural
+     height (`flex: 0 0 auto`, so tall cards aren't clipped), which leaves the
+     footer floating right under a short MY-SPACES card. `margin-top: auto`
+     pushes it to the bottom when content is short, and collapses (scrolls
+     normally) when content is tall. The empty state uses `flex: 1` and already
+     reached the bottom — this keeps that working too. */
+  margin-top: auto;
 }
 .home-arena .hud-stat {
   flex: 1;
