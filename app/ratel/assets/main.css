@@ -18690,9 +18690,21 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   min-height: 44px;
 }
 @media (max-width: 640px) {
-  .q-linear-row { flex-wrap: wrap; }
-  .q-linear-row .field { flex: 1 1 100px; }
-  .q-linear-preview { flex-basis: 100%; }
+  /* Stack min / max vertically and move the 1…5 scale preview BELOW the max
+     field (it was sandwiched between min and max). `order: 1` pushes the
+     preview after both order-0 fields. */
+  .q-linear-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .q-linear-row .field {
+    flex: none;
+    width: 100%;
+  }
+  .q-linear-preview {
+    order: 1;
+    flex-basis: auto;
+  }
 }
 .q-linear-preview__dot {
   width: 10px;
@@ -19404,9 +19416,21 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   min-height: 44px;
 }
 @media (max-width: 640px) {
-  .q-linear-row { flex-wrap: wrap; }
-  .q-linear-row .field { flex: 1 1 100px; }
-  .q-linear-preview { flex-basis: 100%; }
+  /* Stack min / max vertically and move the 1…5 scale preview BELOW the max
+     field (it was sandwiched between min and max). `order: 1` pushes the
+     preview after both order-0 fields. */
+  .q-linear-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .q-linear-row .field {
+    flex: none;
+    width: 100%;
+  }
+  .q-linear-preview {
+    order: 1;
+    flex-basis: auto;
+  }
 }
 .q-linear-preview__dot {
   width: 10px;
@@ -20290,6 +20314,42 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 .action-desc-textarea::placeholder {
   color: var(--qc-text-muted);
+}
+
+/* Action participation/viewer pages (poll / quiz / discussion) — their
+   header and fixed footer fill a full-viewport arena (rendered under the
+   status bar and bottom gesture bar), so push the header below the status bar
+   and the footer above the gesture bar. Scoped with the `*-arena` ancestor so
+   the specificity beats the bare per-element mobile padding overrides; `env()`
+   is 0 on desktop, so this is a no-op there. */
+.poll-arena .poll-header {
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.poll-arena .poll-footer {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.quiz-arena .quiz-topbar {
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.quiz-arena .quiz-bottom {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+/* NOTE: the discussion participant page (`/discussions/:id`) is a normal-flow
+   route, NOT a fixed full-viewport layover like the poll/quiz arenas, so the
+   `:root` safe-area padding already clears the status bar for it. Adding
+   `env(safe-area-inset-top)` to its topbar would double-count and push the
+   header too far down — so it deliberately has NO safe-area rule here. */
+
+/* Poll question editor header on mobile — keep the Q-number and the delete (×)
+   button on the first line (× pinned to the far right by the flex:1 spacer),
+   and push the type segmented control (단일/다중/주관식/선형) onto its own line
+   below. `order:1; flex-basis:100%` makes the segmented wrap after the order-0
+   items (Q-num, spacer, ×). Desktop keeps everything on one line. */
+@media (max-width: 768px) {
+  .q-block__head .segmented {
+    order: 1;
+    flex-basis: 100%;
+  }
 }
 
 /* Boost Multiplier tile */
@@ -25272,6 +25332,10 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   font-size: 15px;
   line-height: 1.8;
   color: var(--text);
+  /* Break long unbroken strings (e.g. a single huge word) so user content
+     can't overflow the card horizontally. */
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .disc-body__content p {
   margin-bottom: 16px;
@@ -26065,7 +26129,9 @@ body.comments-panel-resizing {
 .disc-banner {
   position: relative;
   z-index: 10;
-  margin: 0 28px;
+  /* Top margin so the "not started / ended" banner isn't flush against the
+     header. */
+  margin: 14px 28px 0;
   padding: 10px 18px;
   border-radius: 10px;
   font-size: 13px;
