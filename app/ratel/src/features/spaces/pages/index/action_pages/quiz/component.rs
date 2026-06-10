@@ -78,6 +78,15 @@ pub fn QuizArenaPage(
         && is_in_progress
         && !has_passed
         && quiz.attempt_count < total_allowed;
+    // "Not started yet" — same condition that drives the `quiz_not_started`
+    // banner. The begin/review button must be disabled in this state (nothing
+    // to start or review yet); it stays enabled when ended/passed so users can
+    // still review a completed quiz.
+    let is_not_started = !is_in_progress
+        && !matches!(
+            quiz.space_action.status,
+            Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish)
+        );
     let pass_pct = if total_questions > 0 {
         (quiz.pass_score as f64 / total_questions as f64 * 100.0) as i64
     } else {
@@ -359,7 +368,7 @@ pub fn QuizArenaPage(
                         button {
                             class: "quiz-begin-btn",
                             "data-testid": "quiz-arena-begin",
-                            disabled: total_questions == 0,
+                            disabled: total_questions == 0 || is_not_started,
                             onclick: move |_| {
                                 question_index.set(0);
                                 step.set(QuizStep::Quiz);
@@ -531,7 +540,7 @@ fn QuestionCardView(
             }
 
             div { class: if use_single_col { "option-grid option-grid--single" } else { "option-grid" },
-                for (opt_idx , option_text) in options.iter().enumerate() {
+                for (opt_idx, option_text) in options.iter().enumerate() {
                     {
                         let is_selected = check_selected(&answer, opt_idx as i32, is_multi);
                         let is_correct = check_correct(

@@ -325,12 +325,34 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
     };
 
     let send_call = match method {
-        "GET" | "DELETE" => {
-            let fn_name = format_ident!("{}", method.to_lowercase());
+        "GET" => {
             quote! {
-                crate::common::fullstack::server_fn::#fn_name(&__url)
+                crate::common::fullstack::server_fn::get(&__url)
                 .await
                 .map_err(::std::convert::Into::into)
+            }
+        }
+        // DELETE may or may not carry a body. Without a body arg it's a plain
+        // `delete(path)`; WITH one (e.g. the keys to delete) it must send the
+        // JSON payload keyed by the arg name, like POST/PUT/PATCH — otherwise
+        // the server decoder fails with "missing field `<arg>`".
+        "DELETE" => {
+            if let Some(body) = body_idents.first() {
+                let body_name = LitStr::new(&body.to_string(), body.span());
+                quote! {
+                    crate::common::fullstack::server_fn::delete_with_body(
+                        &__url,
+                        &::serde_json::json!({ #body_name: &#body }),
+                    )
+                    .await
+                    .map_err(::std::convert::Into::into)
+                }
+            } else {
+                quote! {
+                    crate::common::fullstack::server_fn::delete(&__url)
+                    .await
+                    .map_err(::std::convert::Into::into)
+                }
             }
         }
         "POST" | "PUT" | "PATCH" => {

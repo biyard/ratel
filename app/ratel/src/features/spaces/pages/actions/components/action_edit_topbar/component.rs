@@ -42,7 +42,10 @@ pub fn ActionEditTopbar(
                         path { d: "M19 12H5M12 19l-7-7 7-7" }
                     }
                 }
-                nav { class: "breadcrumb",
+                // `breadcrumb--ae-topbar` marker so we can hide just this
+                // breadcrumb on mobile (the `.breadcrumb` class is shared with
+                // the analyze views, which keep theirs).
+                nav { class: "breadcrumb breadcrumb--ae-topbar",
                     span { class: "breadcrumb__item", "{space_name}" }
                     span { class: "breadcrumb__sep", "\u{203A}" }
                     span { class: "breadcrumb__item breadcrumb__current", "{tr.actions_breadcrumb}" }
