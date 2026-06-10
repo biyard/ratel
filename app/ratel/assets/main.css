@@ -42356,6 +42356,75 @@ body.comments-panel-resizing {
   }
 }
 
+/* Space app pages (settings/general, analyze, panels, files) must OWN their
+   scroll on mobile so their sticky topbar actually pins (the page would
+   otherwise grow to content height under the global `body { overflow: hidden }`
+   and the header would scroll out of view). The generic `height: auto` group
+   above breaks that for the ones listed there, and `.space-panels-arena` never
+   set an overflow at all — re-assert the scroll-container model here. Status-bar
+   safe area is already handled by the `:root` padding, so the pinned header
+   lands just below the status bar with `top: 0`. Desktop is untouched. */
+@media (max-width: 768px) {
+  .space-general-arena,
+  .space-panels-arena,
+  .space-files-arena,
+  .analyze-arena {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  /* Analyze pages (home / create / report / poll·discussion detail) nest the
+     real content + its sticky `.arena-topbar` inside an inner `.arena` that was
+     `overflow: hidden` — so tall content got clipped with no scroll and the
+     header couldn't pin. Make the inner `.arena` own the scroll. */
+  .analyze-arena > .arena {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  /* The analyze report/detail variant (`--detail`, e.g. the cross-filter report
+     view) kept `height: 100vh` — taller than the safe-area-constrained body — so
+     it overflowed instead of scrolling, and its topbar was `position: relative`.
+     Bind it to the parent height, own the scroll, and pin the header. (`--create`
+     already scrolls with a sticky topbar.) `body` prefix raises specificity above
+     the variant's own (0,2,0)/(0,3,0) rules. */
+  body .analyze-arena.analyze-arena--detail {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  body .analyze-arena.analyze-arena--detail .arena-topbar {
+    position: sticky;
+    top: 0;
+  }
+  /* Hide the "사용된 데이터 확인하기" (view raw data) CTA on mobile — desktop
+     keeps it. `body .analyze-arena--detail` prefix beats the variant's own
+     (0,3,0) `display: inline-flex` rule. */
+  body .analyze-arena.analyze-arena--detail .builder-result__records-btn {
+    display: none;
+  }
+  /* Reports use `overflow: hidden` expecting an inner scroller that doesn't
+     exist, so long reports get clipped with no way to scroll. Make the arena
+     own the scroll and pin its (relative) topbar so the header stays put.
+     `body` prefix bumps specificity above the bare `.reports-arena` base rule,
+     which is defined LATER in the source and would otherwise win. */
+  body .reports-arena {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  body .reports-arena .reports-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+}
+
 /* === src/features/admin/views/main === */
 /* Admin arena — list-style chrome shared by every admin page.
    Token names mirror the analyze / space arena style.css family so

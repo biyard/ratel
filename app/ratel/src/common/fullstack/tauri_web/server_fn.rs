@@ -30,7 +30,11 @@ use crate::common::Error;
 
 /// Compile-time backend base URL. Baked from `MOBILE_API_URL` by the Makefile.
 /// Falls back to dev.ratel.foundation when unset (matches `mobile_endpoint`).
-fn base_url() -> &'static str {
+///
+/// Public so UI that must surface a real, externally-reachable URL (e.g. the
+/// MCP `claude mcp add` command, post share links) can use it instead of the
+/// WebView's internal `tauri.localhost` origin. See `use_origin`.
+pub fn api_base_url() -> &'static str {
     option_env!("MOBILE_API_URL").unwrap_or("https://dev.ratel.foundation")
 }
 
@@ -86,7 +90,7 @@ async fn send<B: Serialize + ?Sized, R: DeserializeOwned>(
     path: &str,
     body: Option<&B>,
 ) -> crate::common::Result<R> {
-    let url = format!("{}{}", base_url(), path);
+    let url = format!("{}{}", api_base_url(), path);
 
     // A fresh client per call is fine — reqwest's wasm backend reuses the
     // browser's fetch internals and the builder-level config (cookie_store,

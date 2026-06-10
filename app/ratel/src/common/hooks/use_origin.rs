@@ -2,7 +2,16 @@ use crate::*;
 
 pub fn use_origin() -> Signal<String> {
     use_signal(|| {
-        #[cfg(not(feature = "server"))]
+        // Tauri WebView: the page origin is the internal `tauri.localhost`
+        // scheme, which is NOT a real, externally-reachable host. Anything we
+        // surface to the user as a URL (the MCP `claude mcp add` endpoint, post
+        // share links) must use the configured backend base URL instead.
+        #[cfg(feature = "tauri-web")]
+        {
+            crate::common::fullstack::server_fn::api_base_url().to_string()
+        }
+
+        #[cfg(all(not(feature = "server"), not(feature = "tauri-web")))]
         {
             let origin = web_sys::window()
                 .and_then(|w| w.location().origin().ok())
@@ -10,7 +19,7 @@ pub fn use_origin() -> Signal<String> {
             origin.to_string()
         }
 
-        #[cfg(feature = "server")]
+        #[cfg(all(feature = "server", not(feature = "tauri-web")))]
         {
             use dioxus::fullstack::FullstackContext;
             let Some(ctx) = FullstackContext::current() else {
