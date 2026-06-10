@@ -8085,7 +8085,13 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
      both insets keeps the whole arena — topbar to bottom-bar — inside the
      safe area (0 on desktop). */
   height: 100vh;
-  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  /* `--kb-inset` is the soft-keyboard height, set from JS via the
+     `visualViewport` API (the Android WebView only shrinks the *visual*
+     viewport when the keyboard opens — neither `adjustResize` nor
+     `interactive-widget` shrinks `dvh` here). Subtracting it collapses the
+     composer to the area above the keyboard so the bottom toolbar / publish
+     bar stay reachable. 0 when the keyboard is closed. */
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--kb-inset, 0px));
   overflow: hidden;
   display: flex;
   flex-direction: column;
