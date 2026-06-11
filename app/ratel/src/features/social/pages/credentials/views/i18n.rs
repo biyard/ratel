@@ -124,6 +124,7 @@ translate! {
     empty_cta: { en: "Verify your first attribute", ko: "첫 속성 인증하기" },
 
     verification_error: { en: "Verification failed", ko: "인증에 실패했습니다" },
+    verification_success: { en: "Identity verified", ko: "본인인증이 완료되었습니다" },
     modal_code_title: { en: "Enter Code", ko: "코드 입력" },
     modal_code_placeholder: { en: "Enter verification code", ko: "인증 코드를 입력하세요" },
     modal_cancel: { en: "Cancel", ko: "취소" },

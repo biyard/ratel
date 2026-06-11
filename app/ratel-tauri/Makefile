@@ -62,6 +62,13 @@ endif
 NDK_HOME ?= $(ANDROID_NDK_HOME)
 GOOGLE_OAUTH_CLIENT_ID ?=
 
+# adb target device for install/launch. Override: `make debug-apk DEVICE=emulator-5554`.
+# Defaults to ANDROID_SERIAL, else the first attached device — so `adb` doesn't
+# fail with "more than one device/emulator" when both an emulator and a phone
+# are connected. List candidates with `adb devices`.
+DEVICE ?= $(or $(ANDROID_SERIAL),$(shell adb devices 2>/dev/null | awk 'NR>1 && $$2=="device"{print $$1; exit}'))
+ADB := adb $(if $(strip $(DEVICE)),-s $(DEVICE),)
+
 ANDROID_ENV = \
 	ANDROID_HOME="$(ANDROID_HOME)" \
 	ANDROID_SDK_ROOT="$(ANDROID_HOME)" \
@@ -82,7 +89,7 @@ DEV_URL ?= http://$(HOST_IP):$(PORT)
 # narrows back down to known origins. Pass via cargo tauri's --config flag
 # at build/run time (see build-android / run-android below).
 ifeq ($(ENV),prod)
-  CSP_CONNECT := 'self' tauri: ipc: http://tauri.localhost http://localhost:8000 https://ratel.foundation https://*.ratel.foundation https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com
+  CSP_CONNECT := 'self' tauri: ipc: http://tauri.localhost http://localhost:8000 https://ratel.foundation https://*.ratel.foundation https://*.amazonaws.com https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com https://*.portone.io https://*.iamport.co https://*.iamport.kr
 else
   CSP_CONNECT := 'self' tauri: ipc: http: https: wss:
 endif
@@ -199,8 +206,8 @@ sign-apk: $(HOME)/.android/debug.keystore
 	done
 
 run-apk: build-android
-	adb install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
-	adb shell am start -n "co.biyard.ratel/.MainActivity"
+	$(ADB) install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
+	$(ADB) shell am start -n "co.biyard.ratel/.MainActivity"
 
 # Debug variant of build-android. Passes --debug to `cargo tauri android build`
 # so AGP produces a debug-signed APK directly (no separate sign-apk step) and
@@ -219,9 +226,9 @@ debug-apk: build-android-debug
 	@APK=$$(find src-tauri/gen/android -name "app-*-debug.apk" 2>/dev/null \
 	       | xargs ls -t 2>/dev/null | head -1); \
 	if [ -z "$$APK" ]; then echo "ERROR: no debug APK found under src-tauri/gen/android"; exit 1; fi; \
-	echo "Installing $$APK"; \
-	adb install -r "$$APK"
-	adb shell am start -n "co.biyard.ratel/.MainActivity"
+	echo "Installing $$APK to $(if $(strip $(DEVICE)),$(DEVICE),<default device>)"; \
+	$(ADB) install -r "$$APK"
+	$(ADB) shell am start -n "co.biyard.ratel/.MainActivity"
 
 clean:
 	rm -rf $(DIST_DIR)
