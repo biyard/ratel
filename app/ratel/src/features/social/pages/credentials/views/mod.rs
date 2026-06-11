@@ -70,6 +70,39 @@ pub fn Home(username: String) -> Element {
         credential.restart();
     });
 
+    // PortOne identity verification on WebView/mobile redirects the whole
+    // window to the PG page and returns here with the result in the query
+    // string (the original `verify_identity` future was dropped when the page
+    // navigated away). On mount, pick up that result, finalize the credential,
+    // and refresh. No-op on desktop (popup flow resolves inline, no redirect).
+    #[cfg(not(feature = "server"))]
+    {
+        let tr_pg = tr.clone();
+        use_effect(move || {
+            let tr_pg = tr_pg.clone();
+            let mut toast = toast;
+            spawn(async move {
+                let Some(id) = super::interop::take_pg_return_id().await else {
+                    return;
+                };
+                match sign_attributes_handler(SignAttributesRequest::PortOne { id }).await {
+                    Ok(_) => {
+                        toast.info(tr_pg.verification_success.to_string());
+                        refresh.call(());
+                        // Pop the PG pages the redirect stacked so "back" exits
+                        // to the pre-credentials page, not the verify screen.
+                        super::interop::clear_kyc_history().await;
+                    }
+                    Err(err) => {
+                        tracing::error!("kyc: finalize failed: {err}");
+                        toast.error(err);
+                        super::interop::clear_kyc_history().await;
+                    }
+                }
+            });
+        });
+    }
+
     let fallback_did = user_ctx().did();
 
     rsx! {

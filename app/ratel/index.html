@@ -26,6 +26,19 @@
         } catch (e) {}
       })();
     </script>
+    <!-- PortOne identity verification returns to `/credentials?identityVerificationId=...`
+         after a WebView redirect. Dioxus' router normalizes the URL to the matched
+         route on boot and DROPS the query string before any app code can read it.
+         Capture it here at document-start (runs during HTML parse, before the WASM
+         bundle boots) so the credentials page can finalize the verification. The
+         credentials return handler consumes and clears this value. -->
+    <script>
+      (function () {
+        try {
+          window.__ratelInitialSearch = window.location.search || "";
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="main"></div>

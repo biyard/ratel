@@ -25460,6 +25460,10 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   cursor: pointer;
   text-decoration: none;
   color: var(--text);
+  /* Grid items default to min-width:auto, which lets a long file name push the
+     card past its track and break the ellipsis. Allow it to shrink so
+     .file-card__name can truncate. */
+  min-width: 0;
 }
 .file-card:hover {
   border-color: var(--discuss-border);

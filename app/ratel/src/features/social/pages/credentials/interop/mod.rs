@@ -19,6 +19,30 @@ extern "C" {
     ) -> Promise;
 }
 
+/// On WebView/mobile PortOne completes identity verification by redirecting the
+/// whole window back to `redirectUrl` (the credentials page) with the result in
+/// the query string — the original `request_identity_verification` future is
+/// gone (the page reloaded). This reads that result on page load: it returns
+/// the `identityVerificationId` once and clears the query so a refresh does not
+/// re-trigger. Returns `None` on desktop (popup flow leaves no query param).
+#[cfg(not(feature = "server"))]
+pub async fn take_pg_return_id() -> Option<String> {
+    use dioxus::document::eval as dx_eval;
+    let mut runner = dx_eval(include_str!("web/take_pg_return.js"));
+    runner.recv::<Option<String>>().await.ok().flatten()
+}
+
+/// Pops the PG pages the WebView redirect stacked in browser history, so "back"
+/// from the returned credentials page exits to the pre-credentials page instead
+/// of the verification screen. Call AFTER the credential is finalized. No-op
+/// when there is no stashed history marker (e.g. desktop popup flow).
+#[cfg(not(feature = "server"))]
+pub async fn clear_kyc_history() {
+    use dioxus::document::eval as dx_eval;
+    let mut runner = dx_eval(include_str!("web/kyc_clear_history.js"));
+    let _ = runner.recv::<bool>().await;
+}
+
 #[cfg(feature = "bypass")]
 pub async fn verify_identity(
     _store_id: &str,
