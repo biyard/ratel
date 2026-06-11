@@ -28,6 +28,15 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let action_overlay = use_context_provider(|| ActiveActionOverlaySignal(Signal::new(None)));
     let _completed_quiz = use_context_provider(|| CompletedActionCard(Signal::new(None)));
 
+    // Scope the in-space notification bell + panel to THIS space. These two
+    // installers shadow the global inbox/unread-count (installed at the app
+    // root) for the space subtree only, so the bell badge, the panel list, and
+    // "mark all read" all reflect just this space's notifications. Order
+    // matters: the unread-count provider must run first — `use_provide_space_inbox`
+    // reads the scoped `UnreadCountSignal` it installs.
+    crate::features::notifications::hooks::use_provide_space_unread_count(space_id);
+    let _ = crate::features::notifications::hooks::use_provide_space_inbox(space_id)?;
+
     let is_admin = real_role.is_admin();
 
     let logo = if space.logo.is_empty() {
