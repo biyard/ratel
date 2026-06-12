@@ -124,6 +124,9 @@ pub fn ActionPollViewer(
     );
 
     let is_in_progress = poll.status == PollStatus::InProgress;
+    // "Not started yet" — the begin button must be disabled in this state (the
+    // poll can't be taken before it starts), mirroring the quiz arena.
+    let is_not_started = poll.status == PollStatus::NotStarted;
     let has_response = poll.my_response.is_some();
     let can_submit = can_respond && can_execute_action && is_in_progress && !has_response;
     let can_update = can_respond
@@ -474,8 +477,9 @@ pub fn ActionPollViewer(
                             class: "poll-begin-btn",
                             "data-testid": "poll-arena-begin",
                             // Allow viewing questions even when the poll has ended
-                            // or the user cannot submit — read-only mode.
-                            disabled: total == 0,
+                            // or the user cannot submit — read-only mode. But a
+                            // not-yet-started poll has nothing to show, so disable.
+                            disabled: total == 0 || is_not_started,
                             onclick: move |_| {
                                 question_index.set(0);
                                 step.set(PollStep::Poll);

@@ -46,6 +46,13 @@ pub fn UserLayout(username: ReadSignal<String>) -> Element {
     // Provide selected category context shared with child routes
     use_context_provider(|| Signal::new(Option::<String>::None));
 
+    // Pull-to-refresh (mobile/Tauri only) for every social/team list page.
+    // They share this layout's `.social-scroll` outlet wrapper, so the gesture
+    // is installed once here and each child page registers its own refresh via
+    // `use_register_refresh`.
+    let page_refresh = use_provide_page_refresh();
+    use_pull_to_refresh(".social-scroll", move || page_refresh.run());
+
     rsx! {
         div {
             class: "grid overflow-hidden grid-cols-1 w-full h-screen bg-team-bg text-text-primary",
@@ -60,7 +67,7 @@ pub fn UserLayout(username: ReadSignal<String>) -> Element {
                 // becomes a `flex: 0 1 auto` item that shrinks to its
                 // intrinsic content width, leaving the right half of
                 // the viewport empty.
-                div { class: "flex overflow-auto flex-col flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
+                div { class: "social-scroll flex overflow-auto flex-col flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
                     Outlet::<Route> {}
                 }
             }

@@ -15,7 +15,12 @@
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
-  width: 100dvw;
+  /* `:root`(html) is 100dvw with left/right safe-area-inset padding (border-box),
+     so its content box is `100dvw - insets`. Using `100dvw` here would make body
+     wider than that content box by (left+right inset) and cause an app-wide
+     horizontal scroll on devices that report non-zero left/right insets (e.g.
+     edge-to-edge release builds). `100%` fits the html content box exactly. */
+  width: 100%;
   height: 100%;
 }
 
@@ -6081,6 +6086,10 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   display: flex;
   gap: 6px;
   align-items: center;
+  /* Wrap the page buttons (WINDOW_SIZE = 10 numbers + prev/next) onto more
+     than one row when they can't fit the width — otherwise the trailing
+     buttons (incl. the next `›`) overflow off-screen on mobile. */
+  flex-wrap: wrap;
 }
 .essence-page-btn {
   min-width: 32px;
@@ -6119,6 +6128,17 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 .essence-page-btn svg {
   width: 12px;
   height: 12px;
+}
+@media (max-width: 600px) {
+  /* Stack info above the controls and give the buttons the full row width so
+     they wrap centered instead of overflowing past the screen edge. */
+  .essence-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .essence-pagination__actions {
+    justify-content: center;
+  }
 }
 
 /* ── Empty state ── */
@@ -6203,13 +6223,16 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 768px) {
-  /* On mobile body uses `overflow: auto` (tailwind.css max-tablet) so the
-     document already scrolls — let the arena grow naturally instead of
-     trapping scroll inside it. */
+  /* Keep the arena as its OWN scroll container on mobile too (same as
+     desktop) so the `position: sticky` topbar has a scrolling ancestor to
+     anchor to. With `overflow: visible` the document body scrolled instead,
+     and a sticky element whose scroll ancestor is the body drifted up with
+     the content — the `SOURCES` header scrolled away instead of staying
+     pinned. */
   .essence-arena {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 .essence-arena::before {
@@ -6384,12 +6407,14 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 768px) {
-  /* On mobile `body` falls back to `overflow: auto` — let the page grow
-     naturally so the document handles scroll instead of trapping it. */
+  /* Keep the page as its OWN scroll container on mobile (same as desktop) so
+     the `position: sticky` `.my-ai__topbar` has a scrolling ancestor to
+     anchor to. With `overflow: visible` the body scrolled and the header
+     drifted up with the content instead of staying pinned. */
   .my-ai {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
@@ -6782,6 +6807,9 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 /* ─── Responsive ───────────────────────────────────── */
 @media (max-width: 600px) {
+  /* Hide the "MCP ONLINE/OFFLINE" status pill on mobile — too cramped next
+     to the title on a phone topbar. */
+  .my-ai__status { display: none; }
   .my-ai__topbar { padding: 14px 16px; }
   .my-ai__title-main { font-size: 13px; }
   .my-ai__page { padding: 18px 16px 60px; }
@@ -6967,7 +6995,10 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
+    /* The panel is `position: fixed; top: 0`, so it ignores the root
+       safe-area padding and would otherwise render under the device status
+       bar (clock/notch). Add the top inset so the header sits below it. */
+    padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
     border-bottom: 1px solid var(--panel-border);
 }
 .notification-panel__title {
@@ -7000,6 +7031,9 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 .notification-panel__list {
     flex: 1;
     overflow-y: auto;
+    /* Keep the last item clear of the device's bottom nav bar / home
+       indicator (panel is fixed to bottom:0, ignoring root safe-area). */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 .notification-panel__empty {
     padding: 40px 20px;
@@ -7027,9 +7061,15 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   --accent-violet: #818cf8;
 
   position: relative;
-  /* Body has `overflow: hidden` on desktop (tailwind.css), so this
-     arena owns its own scroll container. */
-  height: 100%;
+  /* This arena owns its own scroll container so the sticky topbar pins.
+     `height: 100%` only works when an ancestor has a definite height — on
+     mobile `body` is content-driven (overflow:auto), so `100%` resolved to
+     the *content* height and the arena grew instead of scrolling, which made
+     the document body scroll and the sticky `상세` topbar drift away. A
+     viewport-relative height (minus safe-area + keyboard insets) is always
+     definite, so the arena scrolls internally and the header stays pinned. */
+  height: 100vh;
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--kb-inset, 0px));
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -7676,6 +7716,24 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   color: var(--pd-text-primary);
 }
 
+/* The post-detail comments sheet reuses the `.comments-panel` class, which the
+   space-discussion arena (≈line 26004, inside a `max-width:720px` block) also
+   styles as a translateY-collapsed bottom sheet:
+   `position: fixed; transform: translateY(calc(100% - 64px))`. That GLOBAL
+   rule leaked onto this sheet — it pushed the panel mostly below the viewport
+   (only a ~64px "Comments" peek showed, the comment input fell off-screen) and
+   its collapse/expand is driven by the discussion arena's JS, not the
+   post-detail drag handler, so dragging up did nothing and snapped back.
+   The `#post-comments-sheet` id (higher specificity than the leaked class)
+   resets it so `.pd-drawer-wrap` owns the layout; `padding-bottom` keeps the
+   content above the home indicator. The drag JS still sets an inline
+   `transform` while dragging, which overrides this. */
+#post-comments-sheet {
+  position: relative;
+  transform: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 .comments-panel .sheet-handle { display: none; }
 .comments-panel__header {
   display: flex;
@@ -8048,9 +8106,21 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   position: relative;
   /* Use dynamic viewport height so the layout doesn't extend below
      the visible area when the mobile browser's URL bar is showing.
-     Fallback to 100vh for older browsers. */
+     Fallback to 100vh for older browsers.
+     Subtract the safe-area insets: the arena sits inside `:root`'s
+     safe-area padding (pushed down by `safe-area-inset-top`), so a full
+     `100dvh` overflowed the bottom by that amount and buried the static
+     `.bottom-bar` (Publish / Options) under the home indicator. Trimming
+     both insets keeps the whole arena — topbar to bottom-bar — inside the
+     safe area (0 on desktop). */
   height: 100vh;
-  height: 100dvh;
+  /* `--kb-inset` is the soft-keyboard height, set from JS via the
+     `visualViewport` API (the Android WebView only shrinks the *visual*
+     viewport when the keyboard opens — neither `adjustResize` nor
+     `interactive-widget` shrinks `dvh` here). Subtracting it collapses the
+     composer to the area above the keyboard so the bottom toolbar / publish
+     bar stay reachable. 0 when the keyboard is closed. */
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--kb-inset, 0px));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -9079,12 +9149,14 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   font-family: var(--font-body);
 }
 @media (max-width: 768px) {
-  /* On mobile `body` falls back to `overflow: auto`; let the page grow
-     naturally so the document handles scroll instead of trapping it. */
+  /* Keep the arena as its OWN scroll container on mobile (same as desktop)
+     so the `position: sticky` topbar has a scrolling ancestor to anchor to.
+     With `overflow: visible` the body scrolled and the header drifted up
+     with the content instead of staying pinned. */
   .credentials-arena {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 .credentials-arena::before {
@@ -9508,13 +9580,17 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 .proof__row--ok span:last-child { color: var(--accent-green); }
 .proof__sig {
-  display: flex; gap: 10px; align-items: center;
+  display: flex; gap: 10px; align-items: flex-start;
   padding: 10px 12px; border-radius: 10px;
   background: rgba(34, 197, 94, 0.04); border: 1px solid rgba(34, 197, 94, 0.15);
   font-size: 12px; color: var(--accent-green); line-height: 1.45;
 }
-.proof__sig svg { width: 14px; height: 14px; flex-shrink: 0; }
-.proof__sig strong { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; }
+.proof__sig svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+/* `min-width: 0` lets the text column shrink below the long DID's intrinsic
+   width; `overflow-wrap: anywhere` breaks the unbreakable
+   `did:web:…#key-1` string instead of overflowing the card. */
+.proof__sig > span { min-width: 0; overflow-wrap: anywhere; }
+.proof__sig strong { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; overflow-wrap: anywhere; }
 
 /* Privacy */
 .credentials-arena .privacy {
@@ -13525,8 +13601,19 @@ body:has(.ts-sub-page) .bg-popup-background button:not([type]) {
 }
 @media (max-width: 720px) {
     .ts-sub-page .hero {
-        margin-bottom: 20px;
-        padding: 0 14px;
+        /* Collapse the 2-column (title | desc) grid to a single column on
+           mobile so the description stacks BELOW the title and wraps within
+           the viewport instead of overflowing off the right edge (the grid
+           was ~546px wide, clipped by `overflow: hidden`).
+           `margin: 0 14px` insets the hero box so its left/right edges line
+           up with the tier cards below (which sit at 14px via `.page`'s
+           padding); `padding: 18px 16px` gives inner breathing room and
+           aligns the text with the card content; `gap: 4px` tightens the
+           previously oversized (32px) title↔description gap. */
+        grid-template-columns: 1fr;
+        gap: 4px;
+        margin: 0 14px 20px;
+        padding: 18px 16px;
     }
     .ts-sub-page .hero__title {
         font-size: 24px;
@@ -13908,7 +13995,9 @@ html[data-theme="light"] .team-arena .ta-settings-panel,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 28px 20px;
+  /* Panel is `position: fixed; top: 0` so it doesn't get `:root`'s
+     safe-area padding — clear the status bar / notch here (0 on desktop). */
+  padding: calc(24px + env(safe-area-inset-top)) 28px 20px;
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
@@ -13951,7 +14040,9 @@ html[data-theme="light"] .team-arena .ta-settings-panel__close:hover,
 .team-arena .ta-settings-panel__body {
   flex: 1;
   overflow-y: auto;
-  padding: 28px;
+  /* Extra bottom inset so the last action (Log out) clears the home
+     indicator / bottom safe area instead of being buried under it. */
+  padding: 28px 28px calc(28px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -14369,11 +14460,17 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   min-height: 0;
   /* Reserve room for the fixed topbar here (not on `.team-arena`) so
      the arena's ::before fade and decorative layers extend under the
-     topbar — eliminates the header/body two-tone. */
-  padding-top: 110px;
+     topbar — eliminates the header/body two-tone.
+     NOTE: do NOT add `env(safe-area-inset-top)` here. This content box is
+     already pushed down by `:root`'s safe-area padding, and the fixed
+     topbar's own safe-area padding grows its height by the same amount —
+     the two cancel, so adding it here double-counts and leaves a big gap
+     under the icon row. The value is just the topbar's non-safe height +
+     a small gap. */
+  padding-top: 96px;
 }
 @media (max-width: 540px) {
-  .team-arena__content { padding-top: 84px; }
+  .team-arena__content { padding-top: 68px; }
 }
 
 @media (max-width: 1024px) {
@@ -14396,7 +14493,9 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px;
+  /* `position: fixed` escapes the `:root` safe-area padding, so add the
+     top inset here to keep the header below the status bar (0 on desktop). */
+  padding: calc(20px + env(safe-area-inset-top)) 28px 20px;
   flex-shrink: 0;
   gap: 12px;
   /* Transparent so the `.team-arena::before` radial gradient (the one
@@ -14815,9 +14914,19 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 /* ── Responsive ── */
 @media (max-width: 720px) {
   .team-arena .arena-topbar {
-    padding: 12px 14px;
+    /* `position: fixed; top: 0` sits at the true viewport top, BEHIND the
+       status bar / notch — the `:root` safe-area padding doesn't push a
+       fixed element. Add the inset to the top padding so the icon row clears
+       the status bar (0 on desktop). */
+    padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
     gap: 8px;
     flex-wrap: nowrap;
+  }
+  /* Hide the parent-team (graduation-cap) and sub-team (hierarchy) HUD icons
+     on mobile — the icon row is too cramped on a phone. */
+  .team-arena .parent-panel-wrap,
+  .team-arena .arena-topbar__hud--mobile-hide {
+    display: none;
   }
   .team-arena .arena-topbar__logo {
     width: 30px;
@@ -15461,6 +15570,19 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
     }
 }
 @media (max-width: 720px) {
+    .tm-status-page .hero {
+        /* Same fix as `.ts-sub-page .hero`: the 2-column (title | desc) grid
+           is ~574px wide and overflows the phone viewport, clipping the
+           description ("Your current plan…") off the right edge. Collapse to
+           a single column so the description stacks below the title, inset
+           the box (margin 14px) to line up with the cards below, align the
+           inner text (padding 16px), and tighten the oversized title↔desc
+           gap. */
+        grid-template-columns: 1fr;
+        gap: 4px;
+        margin: 0 14px 20px;
+        padding: 18px 16px;
+    }
     .tm-status-page .hero__title {
         font-size: 24px;
     }
@@ -17094,7 +17216,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -17486,7 +17608,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -18573,9 +18695,21 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   min-height: 44px;
 }
 @media (max-width: 640px) {
-  .q-linear-row { flex-wrap: wrap; }
-  .q-linear-row .field { flex: 1 1 100px; }
-  .q-linear-preview { flex-basis: 100%; }
+  /* Stack min / max vertically and move the 1…5 scale preview BELOW the max
+     field (it was sandwiched between min and max). `order: 1` pushes the
+     preview after both order-0 fields. */
+  .q-linear-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .q-linear-row .field {
+    flex: none;
+    width: 100%;
+  }
+  .q-linear-preview {
+    order: 1;
+    flex-basis: auto;
+  }
 }
 .q-linear-preview__dot {
   width: 10px;
@@ -18682,7 +18816,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -19287,9 +19421,21 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   min-height: 44px;
 }
 @media (max-width: 640px) {
-  .q-linear-row { flex-wrap: wrap; }
-  .q-linear-row .field { flex: 1 1 100px; }
-  .q-linear-preview { flex-basis: 100%; }
+  /* Stack min / max vertically and move the 1…5 scale preview BELOW the max
+     field (it was sandwiched between min and max). `order: 1` pushes the
+     preview after both order-0 fields. */
+  .q-linear-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .q-linear-row .field {
+    flex: none;
+    width: 100%;
+  }
+  .q-linear-preview {
+    order: 1;
+    flex-basis: auto;
+  }
 }
 .q-linear-preview__dot {
   width: 10px;
@@ -19396,7 +19542,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 }
 
 @media (max-width: 768px) {
-  .pager__page { padding: 0 16px 24px; }
+  .pager__page { padding: 20px 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
 
@@ -19737,6 +19883,37 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   font-weight: 600;
 }
 
+/* Hide the action-editor topbar breadcrumb (space name › Actions) AND the
+   topbar title input on mobile — the small phone topbar only needs the back
+   button + type badge. The title is redundant on mobile (it's edited again in
+   the body's "제목" field), and removing it frees the cramped topbar. Desktop
+   keeps both. Scoped to the `--ae-topbar` marker so the analyze views' shared
+   `.breadcrumb` is unaffected; `.topbar-title-input` is unique to the action
+   editor topbar. */
+@media (max-width: 720px) {
+  .breadcrumb--ae-topbar {
+    display: none;
+  }
+  /* `.arena-topbar` descendant selector bumps specificity above the bare
+     `.topbar-title-input { flex: 1 }` base rule (defined later in source), so
+     the hide wins regardless of cascade order. */
+  .arena-topbar .topbar-title-input {
+    display: none;
+  }
+}
+
+/* Action editor safe areas — the layout is `position:fixed; inset:0` (it fills
+   the whole viewport, under the status bar and the bottom gesture bar), so the
+   topbar must be pushed below the status bar and the footer above the gesture
+   bar. `env()` is 0 on desktop, so this is a no-op there. Scoped via `:has`
+   so only the action-editor `.arena` is affected. */
+.arena:has(> .action-edit-footer) > .arena-topbar {
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+.arena:has(> .action-edit-footer) > .action-edit-footer {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
 .type-badge {
   display: inline-flex;
   align-items: center;
@@ -19750,6 +19927,10 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   background: var(--aet-surface-soft);
   color: var(--aet-accent-gold);
   border: 1px solid var(--aet-border-subtle);
+  /* Keep the label on one line — in the cramped mobile topbar the 2-char
+     label ("투표") was wrapping to two stacked characters. */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .type-badge svg {
   width: 13px;
@@ -20001,6 +20182,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* Grid items default to `min-width: auto`, which refuses to shrink below the
+     column's min-content width. On narrow/mobile the "10,000" reward value and
+     the credit-usage input push that min-content past the single 1fr track, so
+     the column (and its cards) overflow ~22px to the right and look shoved off
+     to the side instead of aligning with the full-width `__head` toggle above.
+     `min-width: 0` lets the column honor the track width. */
+  min-width: 0;
 }
 .arena-reward__column-label {
   font-family: var(--font-display, 'Orbitron', sans-serif);
@@ -20022,6 +20210,8 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   border: 1px solid var(--ars-tile-border);
   position: relative;
   overflow: hidden;
+  /* Honor the column track width instead of growing to content min-content. */
+  min-width: 0;
 }
 .arena-reward__display::after {
   content: '';
@@ -20093,6 +20283,80 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   color: var(--qc-text-muted);
 }
 
+@media (max-width: 720px) {
+  /* On mobile the reward card is narrow and the value is right-aligned flush
+     to the 20px padding, so "10,000 / 액션 포인트 보상" reads as stuck to the
+     right edge. Give it a touch more breathing room. */
+  .arena-reward__display {
+    padding-right: 30px;
+  }
+  /* Hide the "Markdown 지원" content hint on mobile — the small phone editor
+     header only needs the section label. Marker class so the attachment/date
+     hints (`.section__hint` without the modifier) stay visible. */
+  .section__hint--markdown {
+    display: none;
+  }
+}
+
+/* Mobile plain-textarea fallback for the action description editors
+   (ActionDescriptionEditor). It lives inside the `.editor` box, so it stays
+   transparent/borderless and just fills the full width with a comfortable
+   height. */
+.action-desc-textarea {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  resize: vertical;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--qc-text-primary);
+  font-family: "Outfit", "Inter", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+.action-desc-textarea::placeholder {
+  color: var(--qc-text-muted);
+}
+
+/* Action participation/viewer pages (poll / quiz / discussion) — their
+   header and fixed footer fill a full-viewport arena (rendered under the
+   status bar and bottom gesture bar), so push the header below the status bar
+   and the footer above the gesture bar. Scoped with the `*-arena` ancestor so
+   the specificity beats the bare per-element mobile padding overrides; `env()`
+   is 0 on desktop, so this is a no-op there. */
+.poll-arena .poll-header {
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.poll-arena .poll-footer {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.quiz-arena .quiz-topbar {
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.quiz-arena .quiz-bottom {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+/* NOTE: the discussion participant page (`/discussions/:id`) is a normal-flow
+   route, NOT a fixed full-viewport layover like the poll/quiz arenas, so the
+   `:root` safe-area padding already clears the status bar for it. Adding
+   `env(safe-area-inset-top)` to its topbar would double-count and push the
+   header too far down — so it deliberately has NO safe-area rule here. */
+
+/* Poll question editor header on mobile — keep the Q-number and the delete (×)
+   button on the first line (× pinned to the far right by the flex:1 spacer),
+   and push the type segmented control (단일/다중/주관식/선형) onto its own line
+   below. `order:1; flex-basis:100%` makes the segmented wrap after the order-0
+   items (Q-num, spacer, ×). Desktop keeps everything on one line. */
+@media (max-width: 768px) {
+  .q-block__head .segmented {
+    order: 1;
+    flex-basis: 100%;
+  }
+}
+
 /* Boost Multiplier tile */
 .arena-reward__boost-tile {
   padding: 16px 18px;
@@ -20102,6 +20366,8 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Honor the column track width instead of growing to content min-content. */
+  min-width: 0;
 }
 .arena-reward__boost-row {
   display: flex;
@@ -24595,6 +24861,11 @@ html[data-theme="light"] .sga-modal__confirm-danger,
 
 .type-sheet__panel {
   width: min(560px, 100%);
+  /* Cap the panel to the (safe-area-trimmed) viewport so it never overflows
+     the screen — without this the panel grew to its content height (≈844px,
+     taller than the viewport) and the action cards spilled off the top and
+     bottom. The card grid below scrolls within this height. */
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);
   background: var(--sheet-bg);
   border: 1px solid var(--sheet-border);
   border-radius: 20px;
@@ -24614,6 +24885,7 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 .type-sheet__title {
   font-family: 'Orbitron', sans-serif;
@@ -24646,6 +24918,11 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  /* Scroll the action cards inside the height-capped panel instead of letting
+     them overflow the screen. `min-height: 0` lets this flex child shrink
+     below its content height so the overflow actually engages. */
+  overflow-y: auto;
+  min-height: 0;
 }
 .type-option {
   padding: 18px 16px;
@@ -24860,6 +25137,36 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   align-items: center;
   gap: 10px;
 }
+/* discussion subscribe toggle (top bar) */
+.topbar__subscribe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--dark, rgba(255, 255, 255, 0.14)) var(--light, rgba(0, 0, 0, 0.12));
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.03));
+  color: var(--dark, #f0f0f5) var(--light, #12121a);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+.topbar__subscribe:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.06));
+}
+.topbar__subscribe[aria-pressed="true"] {
+  border-color: #fcb300;
+  color: #fcb300;
+  background: rgba(252, 179, 0, 0.12);
+}
+.topbar__subscribe:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 .topbar__status {
   display: inline-flex;
   align-items: center;
@@ -25030,6 +25337,10 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   font-size: 15px;
   line-height: 1.8;
   color: var(--text);
+  /* Break long unbroken strings (e.g. a single huge word) so user content
+     can't overflow the card horizontally. */
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .disc-body__content p {
   margin-bottom: 16px;
@@ -25154,6 +25465,10 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   cursor: pointer;
   text-decoration: none;
   color: var(--text);
+  /* Grid items default to min-width:auto, which lets a long file name push the
+     card past its track and break the ellipsis. Allow it to shrink so
+     .file-card__name can truncate. */
+  min-width: 0;
 }
 .file-card:hover {
   border-color: var(--discuss-border);
@@ -25823,7 +26138,9 @@ body.comments-panel-resizing {
 .disc-banner {
   position: relative;
   z-index: 10;
-  margin: 0 28px;
+  /* Top margin so the "not started / ended" banner isn't flush against the
+     header. */
+  margin: 14px 28px 0;
   padding: 10px 18px;
   border-radius: 10px;
   font-size: 13px;
@@ -29108,7 +29425,11 @@ body.comments-panel-resizing {
   top: 0;
   right: 0;
   width: 360px;
-  height: 100vh;
+  /* Fill the positioned parent (.home-arena = visible area, already inside
+     the :root safe-area padding) rather than 100vh, which overshoots by the
+     status-bar/nav-bar insets and pushes the bottom-anchored logout button
+     (margin-top:auto) off-screen / behind the system nav bar. */
+  height: 100%;
   z-index: 25;
   background: var(--panel-bg);
   backdrop-filter: blur(32px);
@@ -29164,6 +29485,9 @@ body.comments-panel-resizing {
   flex: 1;
   overflow-y: auto;
   padding: 28px;
+  /* Clear the device's bottom nav bar / home indicator so the logout button
+     (margin-top:auto, sits at the very bottom) isn't tucked under it. */
+  padding-bottom: calc(28px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -37823,6 +38147,97 @@ body.comments-panel-resizing {
   font-family: "Outfit", sans-serif;
 }
 
+/* Standalone home (views/index) renders `.home-arena` at the document root.
+   `height: 100%` only works if every ancestor has a definite height, and on
+   mobile tailwind flips `body` to `overflow: auto` (max-tablet:overflow-auto),
+   so any height-chain gap lets the arena grow to content height and the page
+   scrolls. Pin it to the viewport directly with 100dvh so it stays a fixed
+   single screen regardless of the ancestor chain. Scoped to --standalone so
+   the `.team-arena .home-arena` / social variants (flex children) are
+   unaffected. */
+.home-arena--standalone {
+  /* Fill the parent (#main → body → :root) which already subtracts the
+     safe-area insets via :root padding. Using 100dvh here instead would be
+     taller than the padded area by the inset amount, so `body`
+     (max-tablet:overflow-auto) would scroll the whole arena — header
+     included. 100% matches the visible area exactly → header stays put,
+     only `.home-arena__scroll` scrolls. */
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+/* Topbar (icon row) stays pinned at the top. */
+.home-arena--standalone > .arena-topbar {
+  flex-shrink: 0;
+}
+/* Everything below the topbar scrolls vertically when it overflows a short
+   viewport, instead of being clipped. On tall viewports it simply fills the
+   space and doesn't scroll. */
+.home-arena__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+/* Inside the scroll region the carousel keeps its natural height (no flex
+   stretch) so the whole column scrolls as one, rather than the carousel
+   collapsing to zero. */
+/* Higher specificity (3 classes) so it beats `.home-arena .carousel-wrapper
+   { flex: 1 }` which is declared later in the file — otherwise the carousel
+   stays flex:1, gets squeezed inside the scroll body, and its `overflow:hidden`
+   clips tall cards (RISING badge / ENTER ARENA button cut off). With natural
+   height the whole card shows and the column scrolls instead. */
+.home-arena .home-arena__scroll > .carousel-wrapper {
+  flex: 0 0 auto;
+}
+
+/* === src/views/index/pull_to_refresh (mobile only) === */
+.ptr-indicator {
+  flex-shrink: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.ptr-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(252, 179, 0, 0.22);
+  border-top-color: #fcb300;
+  transition: transform 0.2s ease;
+}
+.ptr-indicator.ptr-ready .ptr-spinner {
+  transform: rotate(180deg);
+}
+.ptr-indicator.ptr-refreshing .ptr-spinner {
+  animation: ptr-spin 0.7s linear infinite;
+}
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* `UserLayout`/`SocialLayout` wrap their outlet in `.social-scroll` with
+   `p-5` (→ `p-2` on mobile) padding. Full-bleed arena pages (their own
+   background + topbar reach the edges) must NOT get that frame, or a gap
+   appears above the sticky header. Strip the padding only when the scroll
+   container directly holds an arena — other (non-arena) outlet pages keep
+   their padding. */
+.social-scroll:has(> .rewards-arena),
+.social-scroll:has(> .drafts-arena),
+.social-scroll:has(> .essence-arena),
+.social-scroll:has(> .my-ai) {
+  padding: 0;
+}
+
 .home-arena::before {
   content: "";
   position: absolute;
@@ -38181,17 +38596,34 @@ body.comments-panel-resizing {
 }
 
 /* ── Teams dropdown ──────────────────────────────── */
+/* `.hud-teams` is `static` (not `relative`) so the dropdown's
+ * `position: absolute` anchors to the nearest positioned
+ * ancestor instead — which is `.arena-topbar` (also
+ * `position: relative`). That makes the dropdown align to
+ * the header's right edge rather than the trigger icon's
+ * right edge. The trigger sits mid-header on mobile, so
+ * anchoring to it pushed the box's left edge off-viewport;
+ * anchoring to the header keeps the box always within the
+ * visible width and reads as "below the icon row" because
+ * `top: 100%` lands it just under the topbar.
+ */
 .home-arena .hud-teams {
-  position: relative;
+  position: static;
   display: inline-flex;
 }
 .home-arena .team-dd {
   --ha-dd-bg: var(--dark, #0f0f1f) var(--light, #ffffff);
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  top: 100%;
+  right: 16px;
   z-index: 40;
-  width: 280px;
+  /* `clamp(min, preferred, max)` covers every viewport in
+   * one rule (no media query, no hot-reload edge cases):
+   * phones get nearly full width (viewport - 32px); narrow
+   * desktops cap at 420px; sub-280 viewports clamp up so
+   * content never compresses.
+   */
+  width: clamp(280px, calc(100vw - 32px), 420px);
   max-height: 320px;
   background: var(--ha-dd-bg);
   border: 1px solid var(--ha-border-subtle);
@@ -38445,6 +38877,15 @@ body.comments-panel-resizing {
 .home-arena .carousel-track::-webkit-scrollbar {
   display: none;
 }
+/* Shrink the carousel-track's vertical padding on short viewports so the
+   fixed arena (topbar + carousel + bottom-bar) fits within the screen and
+   doesn't force the page to scroll. */
+@media (max-height: 760px) {
+  .home-arena__scroll .carousel-track { padding-top: 32px; padding-bottom: 32px; }
+}
+@media (max-height: 620px) {
+  .home-arena__scroll .carousel-track { padding-top: 18px; padding-bottom: 18px; }
+}
 
 /* ── Dots ────────────────────────────────────────── */
 .home-arena .carousel-dots {
@@ -38491,6 +38932,13 @@ body.comments-panel-resizing {
   gap: 12px;
   padding: 14px 28px 22px;
   flex-shrink: 0;
+  /* Pin to the bottom of the scroll column. The carousel keeps its natural
+     height (`flex: 0 0 auto`, so tall cards aren't clipped), which leaves the
+     footer floating right under a short MY-SPACES card. `margin-top: auto`
+     pushes it to the bottom when content is short, and collapses (scrolls
+     normally) when content is tall. The empty state uses `flex: 1` and already
+     reached the bottom — this keeps that working too. */
+  margin-top: auto;
 }
 .home-arena .hud-stat {
   flex: 1;
@@ -41904,8 +42352,13 @@ body.comments-panel-resizing {
    Below releases the lock on tablet+mobile so the document scrolls
    naturally — matches the existing `.essence-arena` mobile override. */
 @media (max-width: 768px) {
+  /* NOTE: `.post-arena` is intentionally NOT in this list. It uses a fixed
+     viewport-height internal scroll (see its base rule) so its sticky `상세`
+     topbar stays pinned — `height: auto` here let it grow to content height,
+     which moved scrolling to the document body and dragged the header away.
+     Because the arena is sized to exactly the (safe-area-trimmed) viewport,
+     the body doesn't overflow, so there's no competing-scroll-root problem. */
   .arena,
-  .post-arena,
   .home-arena,
   .connections-arena,
   .onboarding-arena,
@@ -41916,6 +42369,75 @@ body.comments-panel-resizing {
     height: auto;
     min-height: 100%;
     overflow-x: hidden;
+  }
+}
+
+/* Space app pages (settings/general, analyze, panels, files) must OWN their
+   scroll on mobile so their sticky topbar actually pins (the page would
+   otherwise grow to content height under the global `body { overflow: hidden }`
+   and the header would scroll out of view). The generic `height: auto` group
+   above breaks that for the ones listed there, and `.space-panels-arena` never
+   set an overflow at all — re-assert the scroll-container model here. Status-bar
+   safe area is already handled by the `:root` padding, so the pinned header
+   lands just below the status bar with `top: 0`. Desktop is untouched. */
+@media (max-width: 768px) {
+  .space-general-arena,
+  .space-panels-arena,
+  .space-files-arena,
+  .analyze-arena {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  /* Analyze pages (home / create / report / poll·discussion detail) nest the
+     real content + its sticky `.arena-topbar` inside an inner `.arena` that was
+     `overflow: hidden` — so tall content got clipped with no scroll and the
+     header couldn't pin. Make the inner `.arena` own the scroll. */
+  .analyze-arena > .arena {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  /* The analyze report/detail variant (`--detail`, e.g. the cross-filter report
+     view) kept `height: 100vh` — taller than the safe-area-constrained body — so
+     it overflowed instead of scrolling, and its topbar was `position: relative`.
+     Bind it to the parent height, own the scroll, and pin the header. (`--create`
+     already scrolls with a sticky topbar.) `body` prefix raises specificity above
+     the variant's own (0,2,0)/(0,3,0) rules. */
+  body .analyze-arena.analyze-arena--detail {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  body .analyze-arena.analyze-arena--detail .arena-topbar {
+    position: sticky;
+    top: 0;
+  }
+  /* Hide the "사용된 데이터 확인하기" (view raw data) CTA on mobile — desktop
+     keeps it. `body .analyze-arena--detail` prefix beats the variant's own
+     (0,3,0) `display: inline-flex` rule. */
+  body .analyze-arena.analyze-arena--detail .builder-result__records-btn {
+    display: none;
+  }
+  /* Reports use `overflow: hidden` expecting an inner scroller that doesn't
+     exist, so long reports get clipped with no way to scroll. Make the arena
+     own the scroll and pin its (relative) topbar so the header stays put.
+     `body` prefix bumps specificity above the bare `.reports-arena` base rule,
+     which is defined LATER in the source and would otherwise win. */
+  body .reports-arena {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  body .reports-arena .reports-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
   }
 }
 

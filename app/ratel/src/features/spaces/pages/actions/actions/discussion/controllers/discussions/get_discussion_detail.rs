@@ -1,6 +1,6 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
-#[get("/api/spaces/{space_id}/discussions/{discussion_sk}/detail", role: SpaceUserRole)]
+#[get("/api/spaces/{space_id}/discussions/{discussion_sk}/detail", role: SpaceUserRole, user: crate::common::models::OptionalUser)]
 pub async fn get_discussion_detail(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -23,5 +23,26 @@ pub async fn get_discussion_detail(
     .await?
     .ok_or(Error::NotFound("SpaceAction not found".into()))?;
 
-    Ok(DiscussionResponse { post, space_action })
+    let subscribed = if let Some(u) = &user.0 {
+        let space_post_pk = match &discussion_sk_entity {
+            EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
+            _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
+        };
+        let (sub_pk, sub_sk) = SpacePostSubscription::keys(&space_post_pk, &u.pk);
+        SpacePostSubscription::get(cli, &sub_pk, Some(sub_sk))
+            .await
+            .map_err(|e| {
+                crate::error!("get_discussion_detail subscribed check failed: {e}");
+                SpaceActionDiscussionError::NotFound
+            })?
+            .is_some()
+    } else {
+        false
+    };
+
+    Ok(DiscussionResponse {
+        post,
+        space_action,
+        subscribed,
+    })
 }

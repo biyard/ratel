@@ -27,7 +27,7 @@ validator = { version = "0.20.0", features = ["derive"] }
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-reqwest = "0.12.12"
+reqwest = "0.13"
 schemars.workspace = true
 tokio = { version = "1.43.0", features = ["full"] }
 sqlx = { version = "0.8.3", features = ["sqlite", "postgres", "runtime-tokio", "bigdecimal"] }

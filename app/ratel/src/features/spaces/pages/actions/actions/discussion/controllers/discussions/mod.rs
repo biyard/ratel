@@ -18,3 +18,9 @@ pub use get_discussion_detail::*;
 
 mod remove_discussion_file;
 pub use remove_discussion_file::*;
+
+mod subscribe_discussion;
+pub use subscribe_discussion::*;
+
+mod unsubscribe_discussion;
+pub use unsubscribe_discussion::*;

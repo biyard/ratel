@@ -43,7 +43,7 @@ pub fn use_unread_count() -> Signal<i64> {
         spawn(async move {
             loop {
                 if user_ctx().is_logged_in() {
-                    match get_unread_count_handler().await {
+                    match get_unread_count_handler(None).await {
                         Ok(resp) => count.set(resp.count),
                         Err(e) => debug!("use_unread_count poll failed: {e}"),
                     }
@@ -54,4 +54,32 @@ pub fn use_unread_count() -> Signal<i64> {
         provide_context(UnreadCountSignal(count));
         count
     })
+}
+
+/// Space-scoped variant: installs an `UnreadCountSignal` whose polling loop
+/// counts only unread notifications belonging to `space_id`. Call it **once**
+/// in the space page scope (`SpaceIndexPage`), BEFORE `use_provide_space_inbox`
+/// — descendants (the in-space `NotificationBell`) then read this scoped count
+/// via `use_unread_count()` instead of the global one, because
+/// `try_consume_context` resolves to the nearest provider.
+///
+/// Like `use_unread_count`, the whole setup runs inside `use_hook` so it
+/// registers exactly one stable hook slot per scope.
+pub fn use_provide_space_unread_count(space_id: ReadSignal<SpacePartition>) {
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    use_hook(|| {
+        let mut count = Signal::new(0i64);
+        spawn(async move {
+            loop {
+                if user_ctx().is_logged_in() {
+                    match get_unread_count_handler(Some(space_id())).await {
+                        Ok(resp) => count.set(resp.count),
+                        Err(e) => debug!("use_provide_space_unread_count poll failed: {e}"),
+                    }
+                }
+                crate::common::utils::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
+            }
+        });
+        provide_context(UnreadCountSignal(count));
+    });
 }

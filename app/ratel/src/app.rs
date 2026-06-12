@@ -34,13 +34,35 @@ pub fn App() -> Element {
       `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`,
     );
   }
+
+  // Track the soft-keyboard height as `--kb-inset` on <html>. The Android
+  // WebView only shrinks the *visual* viewport when the keyboard opens (the
+  // layout viewport / `dvh` stays full), so CSS alone can't react. Full-screen
+  // editors (`.composer-arena`) subtract this so their bottom toolbar stays
+  // above the keyboard. Updates on resize/scroll of the visual viewport.
+  (function () {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    function update() {
+      var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      document.documentElement.style.setProperty("--kb-inset", kb + "px");
+    }
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    update();
+  })();
 "#,
         );
     });
 
     rsx! {
         document::Meta {
-            content: "width=device-width, initial-scale=1.0, viewport-fit=cover",
+            // `interactive-widget=resizes-content` shrinks the layout viewport
+            // (and `dvh`) when the soft keyboard opens, so `100dvh`-based
+            // layouts like the composer collapse to the area above the keyboard
+            // and their bottom toolbar stays reachable instead of being hidden
+            // behind the keyboard. Pairs with `adjustResize` on MainActivity.
+            content: "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
             name: "viewport",
         }
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }

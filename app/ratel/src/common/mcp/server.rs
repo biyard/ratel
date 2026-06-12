@@ -664,10 +664,15 @@ impl RatelMcpServer {
 
     #[rmcp::tool(
         name = "get_unread_count",
-        description = "Get the count of unread notifications for the current user (capped at 100)."
+        description = "Get the count of unread notifications for the current user (capped at 100). Pass optional `space_id` to count only one space's notifications."
     )]
-    async fn get_unread_count(&self) -> McpResult {
-        crate::features::notifications::controllers::get_unread_count::get_unread_count_handler_mcp_handler(&self.mcp_secret).await
+    async fn get_unread_count(
+        &self,
+        Parameters(req): Parameters<
+            crate::features::notifications::controllers::get_unread_count::GetUnreadCountHandlerMcpRequest,
+        >,
+    ) -> McpResult {
+        crate::features::notifications::controllers::get_unread_count::get_unread_count_handler_mcp_handler(&self.mcp_secret, req).await
     }
 
     // ── Analyze app tools ───────────────────────────────────────────

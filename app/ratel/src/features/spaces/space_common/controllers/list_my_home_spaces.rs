@@ -50,13 +50,15 @@ pub async fn list_my_home_spaces_handler(
     };
 
     // Active (Ongoing/Open) spaces come first so the carousel leads with
-    // what the user can still engage with; Finished/Designing still surface
-    // below for history access (result review, archive revisit, notification
-    // deep-links). Within each bucket, sort by last participant activity.
-    let mut spaces: Vec<SpaceCommon> = fetched
-        .into_iter()
-        .filter(|s| s.is_published())
-        .collect();
+    // what the user can still engage with; Finished/Designing/Draft still
+    // surface below for history access (result review, archive revisit,
+    // notification deep-links) AND so creators see their own in-progress
+    // designs — `create_space_handler` writes a participant row for the
+    // author at creation time, but the space starts in `publish_state =
+    // Draft`, so filtering on `is_published()` would hide the creator's
+    // own brand-new space from this list. Within each bucket, sort by
+    // last participant activity.
+    let mut spaces: Vec<SpaceCommon> = fetched;
     spaces.sort_by(|a, b| {
         b.is_active().cmp(&a.is_active()).then_with(|| {
             let a_act = activity_map.get(&a.pk.to_string()).copied().unwrap_or(0);
@@ -65,37 +67,30 @@ pub async fn list_my_home_spaces_handler(
         })
     });
 
-    let post_keys: Vec<(Partition, EntityType)> = spaces
-        .iter()
-        .filter_map(|s| s.pk.clone().to_post_key().ok())
-        .map(|pk| (pk, EntityType::Post))
-        .collect();
-
-    let posts: Vec<Post> = if post_keys.is_empty() {
-        vec![]
-    } else {
-        Post::batch_get(cli, post_keys).await.unwrap_or_default()
-    };
-
-    let title_map: HashMap<String, String> = posts
-        .iter()
-        .map(|p| (p.pk.to_string(), p.title.clone()))
-        .collect();
-    let desc_map: HashMap<String, String> = posts
-        .iter()
-        .map(|p| (p.pk.to_string(), extract_description(&p.body.to_html())))
-        .collect();
-
     let mut items: Vec<HotSpaceResponse> = Vec::with_capacity(spaces.len());
     for (idx, space) in spaces.into_iter().enumerate() {
         let post_pk = space.pk.clone().to_post_key().ok();
-        let post_pk_str = post_pk.as_ref().map(|p| p.to_string()).unwrap_or_default();
 
-        let title = title_map.get(&post_pk_str).cloned().unwrap_or_default();
+        // Fetch the backing post per space (same path `list_hot_spaces`'s
+        // fan-out uses, which works) — the previous `batch_get` + pk-keyed
+        // HashMap lookup came back empty, leaving every card title/description
+        // blank. We already do a per-space `count_actions` below, so an extra
+        // point-get here keeps the cost in the same N ballpark.
+        let post = match &post_pk {
+            Some(pk) => Post::get(cli, pk.clone(), Some(EntityType::Post))
+                .await
+                .ok()
+                .flatten(),
+            None => None,
+        };
+
+        let title = post.as_ref().map(|p| p.title.clone()).unwrap_or_default();
         let description = if !space.content.is_empty() {
             extract_description(&space.content)
         } else {
-            desc_map.get(&post_pk_str).cloned().unwrap_or_default()
+            post.as_ref()
+                .map(|p| extract_description(&p.body.to_html()))
+                .unwrap_or_default()
         };
 
         let (poll_count, discussion_count, quiz_count, follow_count) =

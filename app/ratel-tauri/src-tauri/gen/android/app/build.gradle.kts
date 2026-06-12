@@ -13,6 +13,17 @@ val tauriProperties = Properties().apply {
     }
 }
 
+// Release signing for Google Play. Reads credentials from
+// `src-tauri/gen/android/keystore.properties` (gitignored — never commit it).
+// When absent (e.g. on a fresh checkout / debug-only machine), the release
+// signingConfig is left empty and a release build is simply unsigned.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+
 android {
     compileSdk = 36
     namespace = "co.biyard.ratel"
@@ -21,8 +32,25 @@ android {
         applicationId = "co.biyard.ratel"
         minSdk = 24
         targetSdk = 36
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
-        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+        // Play requires a strictly increasing versionCode per upload. Tauri does
+        // not regenerate `tauri.properties` here, so the property lookup always
+        // falls back to "1". Allow an explicit override via the
+        // ANDROID_VERSION_CODE env var (bump it each release):
+        //   ANDROID_VERSION_CODE=2 ... make release-aab
+        versionCode = (System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull()
+            ?: tauriProperties.getProperty("tauri.android.versionCode", "1").toInt())
+        versionName = (System.getenv("ANDROID_VERSION_NAME")
+            ?: tauriProperties.getProperty("tauri.android.versionName", "1.0"))
+    }
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
     }
     buildTypes {
         getByName("debug") {
@@ -37,6 +65,16 @@ android {
             }
         }
         getByName("release") {
+            // The app serves its own frontend over `http://tauri.localhost`
+            // (cleartext). External flows that redirect BACK to that origin —
+            // e.g. PortOne identity verification returning to
+            // `http://tauri.localhost/credentials?...` — are blocked with
+            // `net::ERR_CLEARTEXT_NOT_PERMITTED` when cleartext is disabled.
+            // Debug already enables it; release must too or KYC dies on return.
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }

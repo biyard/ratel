@@ -15,6 +15,8 @@ use crate::features::membership::models::MembershipTier as ApiMembershipTier;
 use crate::features::membership::models::{CardInfo, Currency};
 use crate::features::auth::LoginModal;
 
+use crate::common::components::popup::PopupService;
+use crate::common::providers::ToastService;
 use crate::common::wasm_bindgen::prelude::JsValue;
 use crate::common::wasm_bindgen_futures::JsFuture;
 
@@ -49,6 +51,123 @@ fn display_amount_for_tier(tier: MembershipTier, is_ko: bool) -> i64 {
     }
 }
 
+#[cfg(not(feature = "server"))]
+fn tier_key(tier: MembershipTier) -> &'static str {
+    match tier {
+        MembershipTier::Pro => "pro",
+        MembershipTier::Max => "max",
+        MembershipTier::Vip => "vip",
+        _ => "",
+    }
+}
+
+#[cfg(not(feature = "server"))]
+fn tier_from_key(key: &str) -> Option<MembershipTier> {
+    match key {
+        "pro" => Some(MembershipTier::Pro),
+        "max" => Some(MembershipTier::Max),
+        "vip" => Some(MembershipTier::Vip),
+        _ => None,
+    }
+}
+
+/// Finalize identity (`identify_handler`) and open the purchase modal. Shared by
+/// the desktop popup path (verification resolves inline) and the mobile WebView
+/// path (verification redirects away and resumes here on return to /membership).
+#[cfg(not(feature = "server"))]
+async fn open_membership_purchase(
+    tier: MembershipTier,
+    is_ko: bool,
+    identity_id: String,
+    mut popup: PopupService,
+    toast: ToastService,
+) {
+    let display_amount = display_amount_for_tier(tier, is_ko);
+    let customer = match identify_handler(IdentificationRequest { id: identity_id }).await {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Failed to verify identity: {:?}", err);
+            return;
+        }
+    };
+    let popup_modal = popup;
+    let popup_receipt = popup;
+    popup
+        .open(rsx! {
+            MembershipPurchaseModal {
+                membership: tier,
+                display_amount,
+                customer,
+                on_confirm: move |info: CustomerInfo| {
+                    let mut popup_receipt = popup_receipt;
+                    let mut popup_modal = popup_modal;
+                    let mut toast = toast;
+                    spawn(async move {
+                        let req = ChangeMembershipRequest {
+                            membership: match tier {
+                                MembershipTier::Pro => ApiMembershipTier::Pro,
+                                MembershipTier::Max => ApiMembershipTier::Max,
+                                MembershipTier::Vip => ApiMembershipTier::Vip,
+                                MembershipTier::Enterprise => {
+                                    ApiMembershipTier::Enterprise("Enterprise".to_string())
+                                }
+                                MembershipTier::Free => ApiMembershipTier::Free,
+                            },
+                            currency: Currency::Krw,
+                            card_info: Some(CardInfo {
+                                card_number: info.card_number,
+                                expiry_year: info.expiry_year,
+                                expiry_month: info.expiry_month,
+                                birth_or_business_registration_number: info.birth_or_biz,
+                                password_two_digits: info.card_password,
+                            }),
+                        };
+                        match change_membership_handler(req).await {
+                            Ok(resp) => {
+                                let Some(membership_resp) = resp.membership else {
+                                    toast.error(crate::common::Error::MembershipResponseMissing);
+                                    popup_modal.close();
+                                    return;
+                                };
+                                if let Some(receipt_resp) = resp.receipt {
+                                    let membership_tier = match membership_resp.tier {
+                                        ApiMembershipTier::Free => MembershipTier::Free,
+                                        ApiMembershipTier::Pro => MembershipTier::Pro,
+                                        ApiMembershipTier::Max => MembershipTier::Max,
+                                        ApiMembershipTier::Vip => MembershipTier::Vip,
+                                        ApiMembershipTier::Enterprise(_) => {
+                                            MembershipTier::Enterprise
+                                        }
+                                    };
+                                    let receipt = MembershipReceiptData {
+                                        tx_id: receipt_resp.tx_id,
+                                        membership: membership_tier,
+                                        amount: receipt_resp.amount,
+                                        duration_days: membership_resp.duration_days as i64,
+                                        credits: membership_resp.credits,
+                                        paid_at: receipt_resp.paid_at,
+                                    };
+                                    popup_receipt.open(rsx! {
+                                        MembershipReceiptModal { receipt }
+                                    });
+                                } else {
+                                    toast.info("Membership downgrade scheduled");
+                                    popup_modal.close();
+                                }
+                            }
+                            Err(err) => {
+                                error!("Failed to change membership: {:?}", err);
+                                toast.error(crate::common::Error::MembershipChangeFailed);
+                                popup_modal.close();
+                            }
+                        }
+                    });
+                },
+            }
+        })
+        .without_close();
+}
+
 #[component]
 pub fn MembershipPlan() -> Element {
     let lang = use_language();
@@ -67,11 +186,29 @@ pub fn MembershipPlan() -> Element {
     let memberships = use_memo(move || membership_plan_items(matches!(lang(), Language::Ko)));
     let memberships_len = memberships.read().len();
 
+    // Resume the purchase flow after a mobile WebView PortOne redirect: the
+    // verification returns to /membership with the result in the (stripped)
+    // query plus the tier we stashed before the redirect. No-op on desktop.
+    #[cfg(not(feature = "server"))]
+    {
+        use_effect(move || {
+            spawn(async move {
+                if let Some((identity_id, tier_key_str)) =
+                    crate::features::membership::interop::take_membership_return().await
+                {
+                    if let Some(tier) = tier_from_key(&tier_key_str) {
+                        open_membership_purchase(tier, is_ko, identity_id, popup, toast).await;
+                    }
+                }
+            });
+        });
+    }
+
     rsx! {
         div { class: "py-8 px-4 mx-auto w-full max-w-desktop",
             MembershipPlanHeader {}
             div { class: "gap-2.5 mt-8 membership-plan-grid",
-                for (idx , membership) in memberships.read().iter().cloned().enumerate() {
+                for (idx, membership) in memberships.read().iter().cloned().enumerate() {
                     MembershipCard {
                         key: "{membership.name}",
                         membership: membership.clone(),
@@ -92,140 +229,65 @@ pub fn MembershipPlan() -> Element {
                                         enterprise_contact();
                                     }
                                     MembershipTier::Pro | MembershipTier::Max | MembershipTier::Vip => {
-                                        let display_amount = display_amount_for_tier(
-                                            membership_for_action.tier,
-                                            is_ko,
-                                        );
                                         let prefix = user_ctx()
                                             .user
                                             .as_ref()
                                             .map(|u| u.pk.to_string())
                                             .unwrap_or_default();
                                         let tier = membership_for_action.tier;
-                                        let mut popup_modal = popup.clone();
-                                        let popup_receipt = popup.clone();
                                         let store_id = portone_store_id.clone();
                                         let channel_key = portone_channel_key.clone();
                                         spawn(async move {
-                                            let identity_id = {
-                                                #[cfg(feature = "server")]
-                                                {
-                                                    error!("identity verification is not available on server");
-                                                    return;
-                                                }
-                                                #[cfg(not(feature = "server"))]
-                                                {
-                                                    let promise = request_identity_verification(
-                                                        &store_id,
-                                                        &channel_key,
-                                                        &prefix,
-                                                    );
-
-                                                    match JsFuture::from(promise).await {
-                                                        Ok(val) => {
-                                                            match val.as_string() {
-                                                                Some(id) => id,
-                                                                None => {
-                                                                    error!(
-                                                                        "Failed to request identity verification: missing id"
-                                                                    );
-                                                                    return;
-                                                                }
+                                            #[cfg(feature = "server")]
+                                            {
+                                                let _ = (
+                                                    prefix,
+                                                    store_id,
+                                                    channel_key,
+                                                    tier,
+                                                    is_ko,
+                                                    popup,
+                                                    toast, // On mobile this navigates away (redirect) and never
+                                                );
+                                                error!("identity verification is not available on server");
+                                            }
+                                            #[cfg(not(feature = "server"))]
+                                            {
+                                                crate::features::membership::interop::stash_membership_tier(
+                                                        tier_key(tier),
+                                                    )
+                                                    .await;
+                                                let promise = request_identity_verification(
+                                                    &store_id,
+                                                    &channel_key,
+                                                    &prefix,
+                                                );
+                                                let identity_id = match JsFuture::from(promise).await {
+                                                    Ok(val) => {
+                                                        match val.as_string() {
+                                                            Some(id) => id,
+                                                            None => {
+                                                                error!("identity verification: missing id");
+                                                                return;
                                                             }
-                                                        }
-                                                        Err(err) => {
-                                                            error!(
-                                                                "Failed to request identity verification: {:?}",
-                                                                format_js_error(err)
-                                                            );
-                                                            return;
                                                         }
                                                     }
-                                                }
-                                            };
-                                            let customer = match identify_handler(IdentificationRequest {
-                                                    id: identity_id,
-                                                })
-                                                .await
-                                            {
-                                                Ok(resp) => resp,
-                                                Err(err) => {
-                                                    error!("Failed to verify identity: {:?}", err);
-                                                    return;
-                                                }
-                                            };
-                                            popup_modal.open(rsx! {
-                                                MembershipPurchaseModal {
-                                                    membership: tier,
-                                                    display_amount,
-                                                    customer,
-                                                    on_confirm: move |info: CustomerInfo| {
-                                                        let mut popup_receipt = popup_receipt.clone();
-                                                        let mut popup_modal = popup_modal.clone();
-                                                        let mut toast = toast;
-                                                        spawn(async move {
-                                                            let req = ChangeMembershipRequest {
-                                                                membership: match tier {
-                                                                    MembershipTier::Pro => ApiMembershipTier::Pro,
-                                                                    MembershipTier::Max => ApiMembershipTier::Max,
-                                                                    MembershipTier::Vip => ApiMembershipTier::Vip,
-                                                                    MembershipTier::Enterprise => {
-                                                                        ApiMembershipTier::Enterprise("Enterprise".to_string())
-                                                                    }
-                                                                    MembershipTier::Free => ApiMembershipTier::Free,
-                                                                },
-                                                                currency: Currency::Krw,
-                                                                card_info: Some(CardInfo {
-                                                                    card_number: info.card_number,
-                                                                    expiry_year: info.expiry_year,
-                                                                    expiry_month: info.expiry_month,
-                                                                    birth_or_business_registration_number: info.birth_or_biz,
-                                                                    password_two_digits: info.card_password,
-                                                                }),
-                                                            };
-                                                            match change_membership_handler(req).await {
-                                                                Ok(resp) => {
-                                                                    let Some(membership_resp) = resp.membership else {
-                                                                        toast.error(crate::common::Error::MembershipResponseMissing);
-                                                                        popup_modal.close();
-                                                                        return;
-                                                                    };
-                                                                    if let Some(receipt_resp) = resp.receipt {
-                                                                        let membership_tier = match membership_resp.tier {
-                                                                            ApiMembershipTier::Free => MembershipTier::Free,
-                                                                            ApiMembershipTier::Pro => MembershipTier::Pro,
-                                                                            ApiMembershipTier::Max => MembershipTier::Max,
-                                                                            ApiMembershipTier::Vip => MembershipTier::Vip,
-                                                                            ApiMembershipTier::Enterprise(_) => {
-                                                                                MembershipTier::Enterprise
-                                                                            }
-                                                                        };
-                                                                        let receipt = MembershipReceiptData {
-                                                                            tx_id: receipt_resp.tx_id,
-                                                                            membership: membership_tier,
-                                                                            amount: receipt_resp.amount,
-                                                                            duration_days: membership_resp.duration_days as i64,
-                                                                            credits: membership_resp.credits,
-                                                                            paid_at: receipt_resp.paid_at,
-                                                                        };
-                                                                        popup_receipt.open(rsx! {
-                                                                            MembershipReceiptModal { receipt }
-                                                                        });
-                                                                    } else {
-                                                                        toast.info("Membership downgrade scheduled");
-                                                                        popup_modal.close();
-                                                                    }
-                                                                }
-                                                                Err(err) => {
-                                                                    error!("Failed to change membership: {:?}", err);
-                                                                    toast.error(crate::common::Error::MembershipChangeFailed);
-                                                                    popup_modal.close();
-                                                                }
-                                                            }
-                                                        });
-                                                    },
-                                                }
-                                            }).without_close();
+                                                    Err(err) => {
+                                                        error!(
+                                                            "identity verification failed: {:?}", format_js_error(err)
+                                                        );
+                                                        return;
+                                                    }
+                                                };
+                                                open_membership_purchase(
+                                                        tier,
+                                                        is_ko,
+                                                        identity_id,
+                                                        popup,
+                                                        toast,
+                                                    )
+                                                    .await;
+                                            }
                                         });
                                     }
                                     MembershipTier::Free => {}

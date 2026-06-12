@@ -62,13 +62,20 @@ endif
 NDK_HOME ?= $(ANDROID_NDK_HOME)
 GOOGLE_OAUTH_CLIENT_ID ?=
 
+# adb target device for install/launch. Override: `make debug-apk DEVICE=emulator-5554`.
+# Defaults to ANDROID_SERIAL, else the first attached device — so `adb` doesn't
+# fail with "more than one device/emulator" when both an emulator and a phone
+# are connected. List candidates with `adb devices`.
+DEVICE ?= $(or $(ANDROID_SERIAL),$(shell adb devices 2>/dev/null | awk 'NR>1 && $$2=="device"{print $$1; exit}'))
+ADB := adb $(if $(strip $(DEVICE)),-s $(DEVICE),)
+
 ANDROID_ENV = \
-	ANDROID_HOME=$(ANDROID_HOME) \
-	ANDROID_SDK_ROOT=$(ANDROID_HOME) \
-	ANDROID_NDK_HOME=$(ANDROID_NDK_HOME) \
-	NDK_HOME=$(NDK_HOME) \
-	GOOGLE_OAUTH_CLIENT_ID=$(GOOGLE_OAUTH_CLIENT_ID) \
-	JAVA_HOME=$(JAVA_HOME) \
+	ANDROID_HOME="$(ANDROID_HOME)" \
+	ANDROID_SDK_ROOT="$(ANDROID_HOME)" \
+	ANDROID_NDK_HOME="$(ANDROID_NDK_HOME)" \
+	NDK_HOME="$(NDK_HOME)" \
+	GOOGLE_OAUTH_CLIENT_ID="$(GOOGLE_OAUTH_CLIENT_ID)" \
+	JAVA_HOME="$(JAVA_HOME)" \
 
 # WebView dev source URL for `make android-dev`. Defaults to the auto-detected
 # host LAN IP (so physical devices on the same Wi-Fi work out of the box).
@@ -82,7 +89,7 @@ DEV_URL ?= http://$(HOST_IP):$(PORT)
 # narrows back down to known origins. Pass via cargo tauri's --config flag
 # at build/run time (see build-android / run-android below).
 ifeq ($(ENV),prod)
-  CSP_CONNECT := 'self' tauri: ipc: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com
+  CSP_CONNECT := 'self' tauri: ipc: http://tauri.localhost http://localhost:8000 https://ratel.foundation https://*.ratel.foundation https://*.amazonaws.com https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com https://*.portone.io https://*.iamport.co https://*.iamport.kr
 else
   CSP_CONNECT := 'self' tauri: ipc: http: https: wss:
 endif
@@ -92,7 +99,7 @@ endif
 # alone only allows WebAssembly.compile/instantiate, not JS string-eval.
 # Without it the wasm bundle aborts with `EvalError: Refused to evaluate a
 # string as JavaScript`. Acceptable in dev; consider narrowing for prod.
-CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self'  https://cdn.portone.io 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
+CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost http://localhost:8000 http://192.168.219.103:8000 https://ratel.foundation https://*.ratel.foundation; script-src 'self'  https://cdn.portone.io 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
 
 DIST_DIR := $(CURDIR)/dist
 RATEL_DIR := $(CURDIR)/../ratel
@@ -103,7 +110,7 @@ WORKSPACE_ROOT := $(CURDIR)/../..
 DX_CARGO_TARGET_DIR ?= $(PWD)/dx-tauri-target
 DX_BUILD_DIR = $(DX_CARGO_TARGET_DIR)/dx/app-shell/release/web/public
 
-.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk clean keystore.sha1 apk.sha1
+.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk release-aab clean keystore.sha1 apk.sha1 FORCE
 
 help:
 	@echo "Targets:"
@@ -158,9 +165,14 @@ run: run-android
 # Always regenerated so DEV_URL / ENV changes are picked up.
 TAURI_OVERRIDE_FILE := $(PWD)/tauri-override.json
 
-$(TAURI_OVERRIDE_FILE):
+# Depend on FORCE so the override is regenerated on every invocation —
+# otherwise make treats the existing file as up-to-date and DEV_URL / ENV
+# changes are silently ignored (stale devUrl).
+$(TAURI_OVERRIDE_FILE): FORCE
 	@printf '{"build":{"devUrl":"%s"},"app":{"security":{"csp":"%s"}}}' \
 			"$(DEV_URL)" "$(CSP_OVERRIDE)" > $(TAURI_OVERRIDE_FILE)
+
+FORCE:
 
 
 run-android: install-tauri-cli $(TAURI_OVERRIDE_FILE)
@@ -173,6 +185,29 @@ build-android: install-tauri-cli dx-build
 	@echo
 	@echo "APK output:"
 	@find src-tauri/gen/android -name "*.apk" -newer Makefile -not -name "*unsigned*" 2>/dev/null
+
+# Release AAB (Android App Bundle) for Google Play Console upload.
+# Builds the prod web bundle then a release-signed .aab. Signing uses
+# src-tauri/gen/android/keystore.properties (wired into app/build.gradle.kts);
+# without it the bundle is unsigned and Play will reject it.
+#
+# Pass the FULL prod env (same profile as a normal build, not just one var).
+# NOTE: the inner app/ratel Makefile defaults MOBILE_API_URL to HOST_IP:PORT
+# regardless of ENV, so you MUST export MOBILE_API_URL explicitly:
+#   ratel_envs
+#   export ENV=prod
+#   export MOBILE_API_URL=https://ratel.foundation
+#   export PORTONE_STORE_ID=... PORTONE_INICIS_CHANNEL_KEY=...   # PRODUCTION (contracted) MID
+#   export GOOGLE_OAUTH_CLIENT_ID=...   # Web client id; register the Play/upload SHA-1 in GCP
+#   make release-aab
+#
+# Bump the version in tauri.conf.json before each upload — Play requires a
+# strictly increasing versionCode.
+release-aab: install-tauri-cli dx-build
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --aab
+	@echo
+	@echo "AAB output (upload this .aab to Play Console):"
+	@find src-tauri/gen/android -name "*.aab" -newer Makefile 2>/dev/null
 
 # Sign every fresh release-unsigned APK with the local debug keystore so it
 # can be `adb install`ed without the user manually invoking apksigner.
@@ -194,8 +229,8 @@ sign-apk: $(HOME)/.android/debug.keystore
 	done
 
 run-apk: build-android
-	adb install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
-	adb shell am start -n "co.biyard.ratel/.MainActivity"
+	$(ADB) install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
+	$(ADB) shell am start -n "co.biyard.ratel/.MainActivity"
 
 # Debug variant of build-android. Passes --debug to `cargo tauri android build`
 # so AGP produces a debug-signed APK directly (no separate sign-apk step) and
@@ -214,9 +249,9 @@ debug-apk: build-android-debug
 	@APK=$$(find src-tauri/gen/android -name "app-*-debug.apk" 2>/dev/null \
 	       | xargs ls -t 2>/dev/null | head -1); \
 	if [ -z "$$APK" ]; then echo "ERROR: no debug APK found under src-tauri/gen/android"; exit 1; fi; \
-	echo "Installing $$APK"; \
-	adb install -r "$$APK"
-	adb shell am start -n "co.biyard.ratel/.MainActivity"
+	echo "Installing $$APK to $(if $(strip $(DEVICE)),$(DEVICE),<default device>)"; \
+	$(ADB) install -r "$$APK"
+	$(ADB) shell am start -n "co.biyard.ratel/.MainActivity"
 
 clean:
 	rm -rf $(DIST_DIR)

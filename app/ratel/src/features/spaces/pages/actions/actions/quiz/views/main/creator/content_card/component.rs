@@ -1,5 +1,5 @@
-use crate::common::components::editor::Editor as RichEditor;
 use crate::common::components::{FileUploader, UploadedFileMeta};
+use crate::features::spaces::pages::actions::components::ActionDescriptionEditor;
 use crate::common::types::extract_filename_from_url;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::actions::quiz::views::main::creator::QuizCreatorTranslate;
@@ -179,7 +179,9 @@ pub fn ContentCard() -> Element {
                 section { class: "section", "data-testid": "section-content",
                     div { class: "section__head",
                         span { class: "section__label", "{tr.section_content_label}" }
-                        span { class: "section__hint", "{tr.section_content_hint}" }
+                        span { class: "section__hint section__hint--markdown",
+                            "{tr.section_content_hint}"
+                        }
                     }
                     div { class: "field",
                         div { style: "display:flex;align-items:center;justify-content:space-between;gap:8px",
@@ -200,7 +202,7 @@ pub fn ContentCard() -> Element {
                         }
                     }
                     div { class: "editor",
-                        RichEditor {
+                        ActionDescriptionEditor {
                             class: "[&_.re-toolbar]:border-b [&_.re-toolbar]:border-[rgba(255,255,255,0.06)] [&_.re-content]:min-h-[180px] [&_.re-content]:px-[22px] [&_.re-content]:py-[20px] [&_.re-content]:outline-none",
                             content: description(),
                             editable: true,

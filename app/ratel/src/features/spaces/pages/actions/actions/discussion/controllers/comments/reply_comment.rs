@@ -52,7 +52,7 @@ pub async fn reply_comment(
         _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
     };
     let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_pk);
-    let _post = SpacePost::get(cli, &post_pk, Some(post_sk))
+    let post = SpacePost::get(cli, &post_pk, Some(post_sk))
         .await?
         .ok_or(SpaceActionDiscussionError::NotFound)?;
 
@@ -120,24 +120,28 @@ pub async fn reply_comment(
     )
     .await;
 
-    // Fire reply-on-comment notification. Recipient resolution (parent author +
-    // thread participants → emails) runs at send time, not here — the handler
-    // only persists one notification row and returns.
+    // Fire the unified discussion-comment notification. The send-time fan-out
+    // notifies direct reply targets (parent author + prior repliers) AND
+    // subscribers, deduped to one notification per recipient per comment with
+    // priority mention > reply-target > subscriber. Replaces the old separate
+    // ReplyOnComment fire for discussions.
     {
+        let _ = parent_pk_str; // parent pk no longer needed (helper rebuilds it)
         let notification = crate::common::models::notification::Notification::new(
-            crate::common::types::NotificationData::ReplyOnComment {
-                source:
-                    crate::common::utils::reply_notification::ReplyCommentSource::SpaceDiscussion,
-                parent_comment_pk: parent_pk_str,
-                parent_comment_sk: parent_sk_str,
-                replier_pk: member.pk.to_string(),
-                replier_name: member.display_name.clone(),
-                reply_content: comment.content.clone(),
+            crate::common::types::NotificationData::DiscussionCommentPosted {
+                space_id: space_id.clone(),
+                discussion_id: discussion_sk.to_string(),
+                discussion_title: post.title.clone(),
+                comment_sk: comment.sk.to_string(),
+                parent_comment_sk: Some(parent_sk_str),
+                commenter_pk: member.pk.to_string(),
+                commenter_name: member.display_name.clone(),
+                comment_content: comment.content.clone(),
                 cta_url,
             },
         );
         if let Err(e) = notification.create(cli).await {
-            tracing::error!("Failed to enqueue reply-on-comment notification: {}", e);
+            tracing::error!("Failed to enqueue discussion comment notification: {e}");
         }
     }
 

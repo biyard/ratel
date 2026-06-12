@@ -17,7 +17,28 @@ pub fn spawn_stream_poller() {
                 .enable_all()
                 .build()
                 .expect("stream-poller runtime");
-            rt.block_on(poll_loop());
+
+            // Supervisor loop: `poll_loop` can exit (no stream ARN yet at
+            // startup) or panic (a single poison record handler unwinding the
+            // task). Without this, the poller silently dies for the rest of the
+            // process lifetime and notifications stop processing. Restart it so
+            // the local-dev poller self-heals — on restart it re-discovers the
+            // stream ARN and resets shard iterators to `Latest`, which also
+            // skips past the poison record that killed the previous run.
+            loop {
+                let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    rt.block_on(poll_loop());
+                }));
+                match outcome {
+                    Ok(()) => {
+                        tracing::warn!("stream poller exited; restarting in 5s");
+                    }
+                    Err(_) => {
+                        tracing::error!("stream poller panicked; restarting in 5s");
+                    }
+                }
+                std::thread::sleep(std::time::Duration::from_secs(5));
+            }
         })
         .expect("failed to spawn stream-poller thread");
 }

@@ -90,6 +90,8 @@ pub fn DiscussionArenaPage(
     let members = arena.members;
     let top_priority = arena.top_priority;
     let sort_tick = arena.sort_tick;
+    let subscribed = arena.subscribed;
+    let mut handle_toggle_subscription = arena.handle_toggle_subscription;
 
     let disc = arena.disc_loader.clone()();
     let post = disc.post.clone();
@@ -307,6 +309,26 @@ pub fn DiscussionArenaPage(
                     span { class: "topbar__title", "{post.title}" }
                 }
                 div { class: "topbar__right",
+                    button {
+                        class: "topbar__subscribe",
+                        "data-testid": "discussion-subscribe-btn",
+                        "aria-label": "{tr.subscribe_tooltip}",
+                        title: "{tr.subscribe_tooltip}",
+                        // The author (space Creator) always stays subscribed to
+                        // their own discussion — show "Subscribed" but disabled.
+                        "aria-pressed": subscribed() || is_creator,
+                        disabled: is_creator || handle_toggle_subscription.pending(),
+                        onclick: move |_| {
+                            if !is_creator {
+                                handle_toggle_subscription.call();
+                            }
+                        },
+                        if subscribed() || is_creator {
+                            "{tr.subscribed_btn}"
+                        } else {
+                            "{tr.subscribe_btn}"
+                        }
+                    }
                     span { class: "{status_class}", "{status_text}" }
                 }
             }
@@ -477,7 +499,7 @@ pub fn DiscussionArenaPage(
                                 on_submit: move |_| on_submit(()),
                                 placeholder: if in_thread { tr.reply_placeholder.to_string() } else { tr.comment_placeholder.to_string() },
                                 disabled: comment_text().trim().is_empty()
-                                                                    && pending_images.read().is_empty(),
+                                                                                                    && pending_images.read().is_empty(),
                                 on_mention_query_change,
                                 on_composer_focus,
                                 priority_user_pks: top_priority,

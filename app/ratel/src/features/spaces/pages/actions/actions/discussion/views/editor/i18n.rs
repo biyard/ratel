@@ -4,6 +4,7 @@ translate! {
     DiscussionEditorTranslate;
 
     type_badge_label: { en: "Discussion", ko: "토론" },
+    import_from_overview: { en: "Import from overview", ko: "오버뷰 가져오기" },
     footer_status: { en: "All changes saved", ko: "모든 변경사항 저장됨" },
     autosave_saving: { en: "Saving...", ko: "저장 중..." },
     autosave_saved: { en: "Saved", ko: "저장됨" },

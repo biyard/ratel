@@ -13,6 +13,11 @@ pub fn ActionEditTopbar(
     on_title_change: EventHandler<String>,
     on_cancel: EventHandler<()>,
     #[props(default = true)] editable_title: bool,
+    /// Optional extra actions rendered in the top-right area, before the
+    /// Cancel button. Left empty for most action editors; the discussion
+    /// editor uses it for the "Import from overview" button.
+    #[props(default)]
+    right_actions: Option<Element>,
     on_back: EventHandler<()>,
 ) -> Element {
     let tr: ActionEditTopbarTranslate = use_translate();
@@ -37,16 +42,15 @@ pub fn ActionEditTopbar(
                         path { d: "M19 12H5M12 19l-7-7 7-7" }
                     }
                 }
-                nav { class: "breadcrumb",
+                // `breadcrumb--ae-topbar` marker so we can hide just this
+                // breadcrumb on mobile (the `.breadcrumb` class is shared with
+                // the analyze views, which keep theirs).
+                nav { class: "breadcrumb breadcrumb--ae-topbar",
                     span { class: "breadcrumb__item", "{space_name}" }
                     span { class: "breadcrumb__sep", "\u{203A}" }
                     span { class: "breadcrumb__item breadcrumb__current", "{tr.actions_breadcrumb}" }
                 }
-                span {
-                    class: "type-badge",
-                    "data-action-type": action_type_key,
-                    "{action_type_label}"
-                }
+                span { class: "type-badge", "data-action-type": action_type_key, "{action_type_label}" }
                 if editable_title {
                     input {
                         class: "topbar-title-input",
@@ -62,6 +66,7 @@ pub fn ActionEditTopbar(
                 }
             }
             div { class: "arena-topbar__right",
+                {right_actions}
                 button {
                     class: "btn btn--ghost",
                     onclick: move |_| on_cancel.call(()),

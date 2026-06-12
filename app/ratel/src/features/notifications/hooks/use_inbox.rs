@@ -52,7 +52,7 @@ pub fn use_provide_inbox() -> std::result::Result<UseInbox, RenderError> {
             if !logged_in {
                 return Ok(ListResponse::<InboxNotificationResponse>::default());
             }
-            list_inbox_handler(Some(unread_only), bookmark).await
+            list_inbox_handler(Some(unread_only), None, bookmark).await
         }
     })?;
 
@@ -74,7 +74,70 @@ pub fn use_provide_inbox() -> std::result::Result<UseInbox, RenderError> {
     let mut unread_count = super::use_unread_count();
 
     let handle_mark_all = use_action(move || async move {
-        mark_all_read_handler().await?;
+        mark_all_read_handler(None).await?;
+        unread_count.set(0);
+        inbox.refresh();
+        Ok::<(), crate::common::Error>(())
+    });
+
+    Ok(use_context_provider(|| UseInbox {
+        inbox,
+        unread_only,
+        unread_count,
+        handle_item_click,
+        handle_mark_all,
+    }))
+}
+
+/// Space-scoped installer. Mirrors [`use_provide_inbox`] but every query and
+/// mutation is filtered to `space_id`, so the bell/panel rendered inside a
+/// space show only that space's notifications. Install it **once** in the
+/// space page scope (`SpaceIndexPage`), AFTER `use_provide_space_unread_count`
+/// — it reads the scoped `UnreadCountSignal` via `use_unread_count()` so
+/// "mark all read" resets the in-space badge. Providing `UseInbox` here
+/// shadows the global one (installed at the app root) for the space subtree
+/// only; the global navbar bell lives outside a space and is unaffected.
+#[track_caller]
+pub fn use_provide_space_inbox(
+    space_id: ReadSignal<SpacePartition>,
+) -> std::result::Result<UseInbox, RenderError> {
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+
+    let unread_only = use_signal(|| false);
+
+    let mut inbox = use_infinite_query(move |bookmark| {
+        let unread_only = unread_only();
+        let logged_in = user_ctx().is_logged_in();
+        let sid = space_id();
+        async move {
+            if !logged_in {
+                return Ok(ListResponse::<InboxNotificationResponse>::default());
+            }
+            list_inbox_handler(Some(unread_only), Some(sid), bookmark).await
+        }
+    })?;
+
+    let nav = use_navigator();
+
+    let handle_item_click = use_action(move |item: InboxNotificationResponse| async move {
+        let inbox_id = item.id.clone();
+        let cta = item.payload.url().to_string();
+
+        mark_read_handler(inbox_id).await?;
+
+        if !cta.is_empty() {
+            nav.push(cta);
+        }
+
+        Ok::<(), crate::common::Error>(())
+    });
+
+    // Resolves to the scoped `UnreadCountSignal` installed by
+    // `use_provide_space_unread_count` in this same scope.
+    let mut unread_count = super::use_unread_count();
+
+    let handle_mark_all = use_action(move || async move {
+        mark_all_read_handler(Some(space_id())).await?;
         unread_count.set(0);
         inbox.refresh();
         Ok::<(), crate::common::Error>(())

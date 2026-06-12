@@ -32,6 +32,12 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         feed.has_more()
     );
 
+    // Register this page's refresh with SocialLayout's pull-to-refresh.
+    use_register_refresh(move || {
+        let mut f = feed;
+        f.refresh();
+    });
+
     let items = feed.items();
 
     // Derived category list with counts (across loaded posts).

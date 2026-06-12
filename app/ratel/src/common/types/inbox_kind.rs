@@ -28,6 +28,9 @@ pub enum InboxKind {
     /// can click through to the post-detail page and hit "Retry now".
     /// `auth_expired` failures route to Settings → Connections instead.
     CrossPostingFailed,
+    /// A new comment/reply was posted on a discussion the recipient subscribes
+    /// to (and they are not the author, a mentionee, or a direct reply target).
+    DiscussionCommentPosted,
 }
 
 impl Default for InboxKind {
@@ -54,6 +57,7 @@ impl InboxKind {
             InboxKind::SubTeamLeftParent => "STTERM_LEAVE",
             InboxKind::SubTeamParentDeleted => "STTERM_PDEL",
             InboxKind::CrossPostingFailed => "XPOST_FAIL",
+            InboxKind::DiscussionCommentPosted => "DISC_CMT",
         }
     }
 }
@@ -170,9 +174,33 @@ pub enum InboxPayload {
         error_message: Option<String>,
         cta_url: String,
     },
+    DiscussionCommentPosted {
+        space_id: SpacePartition,
+        discussion_id: String,
+        discussion_title: String,
+        commenter_name: String,
+        commenter_profile_url: String,
+        comment_preview: String,
+        cta_url: String,
+    },
 }
 
 impl InboxPayload {
+    /// The space this notification belongs to, if any. Used to scope the
+    /// in-space notification bell/panel to a single space. Variants that
+    /// are not space-related (sub-team, cross-posting, bare mention) return
+    /// `None`.
+    pub fn space_id(&self) -> Option<SpacePartition> {
+        match self {
+            InboxPayload::SpaceStatusChanged { space_id, .. }
+            | InboxPayload::SpaceInvitation { space_id, .. }
+            | InboxPayload::SpaceActionOngoing { space_id, .. }
+            | InboxPayload::DiscussionCommentPosted { space_id, .. } => Some(space_id.clone()),
+            InboxPayload::ReplyOnComment { space_id, .. } => space_id.clone(),
+            _ => None,
+        }
+    }
+
     pub fn url(&self) -> &str {
         match self {
             InboxPayload::ReplyOnComment { cta_url, .. } => cta_url,
@@ -190,6 +218,7 @@ impl InboxPayload {
             InboxPayload::SubTeamLeftParent { cta_url, .. } => cta_url,
             InboxPayload::SubTeamParentDeleted { cta_url, .. } => cta_url,
             InboxPayload::CrossPostingFailed { cta_url, .. } => cta_url,
+            InboxPayload::DiscussionCommentPosted { cta_url, .. } => cta_url,
         }
     }
 }
@@ -237,6 +266,7 @@ impl InboxPayload {
             InboxPayload::SubTeamLeftParent { .. } => InboxKind::SubTeamLeftParent,
             InboxPayload::SubTeamParentDeleted { .. } => InboxKind::SubTeamParentDeleted,
             InboxPayload::CrossPostingFailed { .. } => InboxKind::CrossPostingFailed,
+            InboxPayload::DiscussionCommentPosted { .. } => InboxKind::DiscussionCommentPosted,
         }
     }
 }

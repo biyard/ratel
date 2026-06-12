@@ -19,6 +19,18 @@ function requestIdentityVerification(storeId, channelKey, prefix) {
     //   },
     // },
   };
+  // WebView (Tauri): PortOne redirects the whole window to the PG page and
+  // returns via redirectUrl. Without it the webview is stuck on iamport (white
+  // screen). Only set inside Tauri so desktop keeps its popup. See credential.js.
+  if (window.__TAURI_INTERNALS__ || window.isTauri) {
+    payload.redirectUrl = window.location.origin + window.location.pathname;
+    try {
+      window.sessionStorage.setItem(
+        "ratel_kyc_hist_len",
+        String(window.history.length),
+      );
+    } catch (e) {}
+  }
   return window.PortOne.requestIdentityVerification(payload).then(
     () => identityVerificationId,
   );

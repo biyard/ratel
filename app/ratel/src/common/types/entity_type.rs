@@ -157,6 +157,7 @@ pub enum EntityType {
     SpacePostComment(String),
     SpacePostCommentReply(String, String),
     SpacePostCommentLike(String, String),
+    SpacePostSubscription(String),
 
     // Space - Topic feature
     Topic(String),                     // TOPIC#{topic_name}
