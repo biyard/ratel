@@ -480,7 +480,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     div { class: "text-base font-semibold text-white", {tr.continue_with_google} }
                 }
                 button {
-                    class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#3B99FC] py-5.5",
+                    class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#3B99FC] py-5.5 max-mobile:hidden",
                     disabled: loading(),
                     onclick: handle_wallet_login,
                     icons::wallet::WalletConnect { class: "fill-white", width: "24", height: "24" }
