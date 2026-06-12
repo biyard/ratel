@@ -110,7 +110,7 @@ WORKSPACE_ROOT := $(CURDIR)/../..
 DX_CARGO_TARGET_DIR ?= $(PWD)/dx-tauri-target
 DX_BUILD_DIR = $(DX_CARGO_TARGET_DIR)/dx/app-shell/release/web/public
 
-.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk clean keystore.sha1 apk.sha1 FORCE
+.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk release-aab clean keystore.sha1 apk.sha1 FORCE
 
 help:
 	@echo "Targets:"
@@ -185,6 +185,29 @@ build-android: install-tauri-cli dx-build
 	@echo
 	@echo "APK output:"
 	@find src-tauri/gen/android -name "*.apk" -newer Makefile -not -name "*unsigned*" 2>/dev/null
+
+# Release AAB (Android App Bundle) for Google Play Console upload.
+# Builds the prod web bundle then a release-signed .aab. Signing uses
+# src-tauri/gen/android/keystore.properties (wired into app/build.gradle.kts);
+# without it the bundle is unsigned and Play will reject it.
+#
+# Pass the FULL prod env (same profile as a normal build, not just one var).
+# NOTE: the inner app/ratel Makefile defaults MOBILE_API_URL to HOST_IP:PORT
+# regardless of ENV, so you MUST export MOBILE_API_URL explicitly:
+#   ratel_envs
+#   export ENV=prod
+#   export MOBILE_API_URL=https://ratel.foundation
+#   export PORTONE_STORE_ID=... PORTONE_INICIS_CHANNEL_KEY=...   # PRODUCTION (contracted) MID
+#   export GOOGLE_OAUTH_CLIENT_ID=...   # Web client id; register the Play/upload SHA-1 in GCP
+#   make release-aab
+#
+# Bump the version in tauri.conf.json before each upload — Play requires a
+# strictly increasing versionCode.
+release-aab: install-tauri-cli dx-build
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --aab
+	@echo
+	@echo "AAB output (upload this .aab to Play Console):"
+	@find src-tauri/gen/android -name "*.aab" -newer Makefile 2>/dev/null
 
 # Sign every fresh release-unsigned APK with the local debug keystore so it
 # can be `adb install`ed without the user manually invoking apksigner.
