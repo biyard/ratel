@@ -513,8 +513,12 @@ jobs:
           # `auth-git2 0.5.8` (`Cred::credential_helper` was removed in
           # the new git2). `--locked` pins to the lockfile shipped with
           # the published crate, which used `git2 0.20`.
-          cargo binstall -y --locked dioxus-cli
-          cargo binstall -y --locked --version "^2.0.0" tauri-cli
+          # `--force`: when binstall falls back to a source build (e.g. GitHub
+          # 403 rate-limits the prebuilt fetch), it must overwrite the `dx`/
+          # `cargo-tauri` binaries restored from cache, else `cargo install`
+          # aborts with "binary already exists in destination".
+          cargo binstall -y --locked --force dioxus-cli
+          cargo binstall -y --locked --force --version "^2.0.0" tauri-cli
 
       - name: Build x86_64 debug APK
         working-directory: app/ratel-tauri
