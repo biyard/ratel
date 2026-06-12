@@ -15,7 +15,12 @@
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
-  width: 100dvw;
+  /* `:root`(html) is 100dvw with left/right safe-area-inset padding (border-box),
+     so its content box is `100dvw - insets`. Using `100dvw` here would make body
+     wider than that content box by (left+right inset) and cause an app-wide
+     horizontal scroll on devices that report non-zero left/right insets (e.g.
+     edge-to-edge release builds). `100%` fits the html content box exactly. */
+  width: 100%;
   height: 100%;
 }
 

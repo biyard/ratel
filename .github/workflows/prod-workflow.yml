@@ -234,3 +234,139 @@ jobs:
           path: ${{ github.workspace }}/.build/app-shell/bootstrap
           if-no-files-found: error
           retention-days: 7
+
+  # Build a signed, prod-configured Android App Bundle and upload it to the
+  # Google Play internal-testing track. Runs in parallel with the web/lambda
+  # deploy (no `needs`). versionCode auto-increments via the run number, offset
+  # by 1000 so it stays above any manually-uploaded builds (1001, 1002, ...).
+  #
+  # Required secrets (signing + publishing — add in repo settings):
+  #   ANDROID_KEYSTORE_BASE64      base64 of the upload keystore
+  #                                (`base64 -i ~/ratel-upload.jks | pbcopy`)
+  #   ANDROID_KEYSTORE_PASSWORD    keystore (store) password
+  #   ANDROID_KEY_ALIAS            key alias (e.g. "upload")
+  #   ANDROID_KEY_ALIAS_PASSWORD   key password
+  #   PLAY_SERVICE_ACCOUNT_JSON    Play Console service-account JSON (plain text),
+  #                                granted "Release to testing tracks" access
+  #   GOOGLE_OAUTH_CLIENT_ID       Web OAuth client id (register the Play/upload
+  #                                signing SHA-1 in Google Cloud or sign-in fails)
+  # Reuses existing PORTONE_* / FIREBASE_* prod secrets.
+  android-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Restore cache
+        uses: actions/cache/restore@v5
+        with:
+          key: android-release-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            android-release-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown,aarch64-linux-android
+          cache: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-34 build-tools;34.0.0 ndk;29.0.14206865"
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install dioxus-cli + tauri-cli
+        run: |
+          # `--locked` pins dioxus-cli's published lockfile (git2 0.20); the
+          # source-build fallback otherwise grabs git2 0.21 and breaks auth-git2.
+          cargo binstall -y --locked dioxus-cli
+          cargo binstall -y --locked --version "^2.0.0" tauri-cli
+
+      - name: Write upload keystore + signing config
+        working-directory: app/ratel-tauri/src-tauri/gen/android
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > upload-keystore.jks
+          cat > keystore.properties <<EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=$(pwd)/upload-keystore.jks
+          EOF
+
+      - name: Build signed release AAB (prod)
+        working-directory: app/ratel-tauri
+        env:
+          ENV: prod
+          MOBILE_API_URL: https://ratel.foundation
+          ANDROID_TARGET: aarch64-linux-android
+          # versionCode is computed in the run script (GH Actions expressions
+          # have no arithmetic): 1000 + run_number, to stay above manual uploads.
+          ANDROID_VERSION_NAME: "1.0.${{ github.run_number }}"
+          DYNAMO_TABLE_PREFIX: ratel-prod
+          RUSTFLAGS: "-D warnings"
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.PROD_PORTONE_INICIS_CHANNEL_KEY }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
+          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          # app/ratel/Makefile's BUILD_ENV resolves AWS_ACCOUNT_ID via the AWS
+          # CLI; the client build only needs these to be non-empty placeholders.
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+        run: |
+          # setup-android exports ANDROID_HOME; point NDK_HOME at the version we
+          # installed (Makefile's Linux default /opt/android-ndk doesn't exist here).
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+          export NDK_HOME="$ANDROID_NDK_HOME"
+          # Auto-increment versionCode (offset above manual uploads 1,2,3...).
+          export ANDROID_VERSION_CODE=$(( 1000 + ${{ github.run_number }} ))
+          echo "versionCode=$ANDROID_VERSION_CODE"
+          # release-aab depends on dx-build (web bundle) + a signed AAB build.
+          make release-aab
+          echo "AAB:"
+          find src-tauri/gen/android -name 'app-universal-release.aab' -print
+
+      - name: Upload to Google Play (internal track)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: co.biyard.ratel
+          releaseFiles: app/ratel-tauri/src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
+          track: internal
+          status: completed
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          key: android-release-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target
