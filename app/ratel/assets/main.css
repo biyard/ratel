@@ -26203,7 +26203,12 @@ body.comments-panel-resizing {
   /* Convert comments-panel to bottom sheet */
   .comments-panel {
     position: fixed;
-    bottom: 0;
+    /* Lift the whole sheet above the system navigation bar. The WebView is
+       edge-to-edge (`viewport-fit=cover`), so `bottom: 0` would tuck the
+       collapsed "Comments" handle (and, when expanded, the comment input)
+       behind the nav bar. `env(safe-area-inset-bottom)` clears it; falls back
+       to 0 on devices with no bottom inset. */
+    bottom: env(safe-area-inset-bottom, 0px);
     left: 0;
     right: 0;
     z-index: 100;
@@ -26213,7 +26218,9 @@ body.comments-panel-resizing {
        phone widths (e.g. 375px). */
     width: 100% !important;
     min-width: 0 !important;
-    max-height: 85vh;
+    /* Expanded sheet rises to ~75% so the discussion (topbar + body peek)
+       stays visible above it instead of being fully covered. */
+    max-height: 75vh;
     border-left: none;
     border-top: 1px solid var(--border);
     border-radius: 20px 20px 0 0;
