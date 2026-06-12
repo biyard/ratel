@@ -110,7 +110,7 @@ WORKSPACE_ROOT := $(CURDIR)/../..
 DX_CARGO_TARGET_DIR ?= $(PWD)/dx-tauri-target
 DX_BUILD_DIR = $(DX_CARGO_TARGET_DIR)/dx/app-shell/release/web/public
 
-.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk release-aab clean keystore.sha1 apk.sha1 FORCE
+.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk release-aab ios-init run-ios build-ios build-ios-sim clean keystore.sha1 apk.sha1 FORCE
 
 help:
 	@echo "Targets:"
@@ -158,6 +158,43 @@ dx-build:
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
 
 run: run-android
+
+# ── iOS ──────────────────────────────────────────────────────────────
+# CocoaPods / xcodegen need a UTF-8 locale; the HOMEBREW_* flags keep
+# tauri's dependency check quiet. GOOGLE_OAUTH_CLIENT_ID flows into the
+# web bundle exactly like the Android path.
+IOS_ENV = \
+	LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
+	HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
+	GOOGLE_OAUTH_CLIENT_ID="$(GOOGLE_OAUTH_CLIENT_ID)"
+
+# Generate the Xcode project (src-tauri/gen/apple). Run once, or after
+# changing the bundle identifier / tauri.conf iOS settings.
+ios-init: install-tauri-cli
+	cd src-tauri && $(IOS_ENV) cargo tauri ios init
+
+# Live-reload dev on a booted Simulator. Run `cd ../ratel && PORT=8000 make
+# run-tauri` in another terminal first (serves the web bundle the WebView loads).
+run-ios: install-tauri-cli $(TAURI_OVERRIDE_FILE)
+	cd src-tauri && $(IOS_ENV) cargo tauri ios dev --config $(TAURI_OVERRIDE_FILE)
+
+# Release .ipa for App Store / TestFlight. Requires a configured Apple
+# development team + signing (set in Xcode, or APPLE_DEVELOPMENT_TEAM /
+# the generated ExportOptions.plist). Pass the FULL prod env, same as
+# release-aab:
+#   ratel_envs; export ENV=prod MOBILE_API_URL=https://ratel.foundation
+#   export GOOGLE_OAUTH_CLIENT_ID=...
+#   make build-ios
+build-ios: install-tauri-cli dx-build
+	cd src-tauri && $(IOS_ENV) cargo tauri ios build
+	@echo
+	@echo "iOS output (.ipa):"
+	@find src-tauri/gen/apple -name "*.ipa" -newer Makefile 2>/dev/null
+
+# Simulator build — no Apple team / code signing needed. Verifies the iOS
+# app compiles + bundles and produces a .app runnable on the Simulator.
+build-ios-sim: install-tauri-cli dx-build
+	cd src-tauri && $(IOS_ENV) cargo tauri ios build --target aarch64-sim --debug
 
 # Write a one-off JSON override merging per-ENV CSP and the DEV_URL into
 # /tmp/tauri-override.json. Tauri's `--config` accepts a file path, which

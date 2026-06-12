@@ -93,8 +93,13 @@ fn serve(app: fn() -> Element) {
         use tower_http::cors::{AllowOrigin, CorsLayer};
         let allow = AllowOrigin::predicate(|origin, _req_parts| {
             let bytes = origin.as_bytes();
+            // Android Tauri WebView serves the app from http(s)://tauri.localhost;
+            // iOS WKWebView uses the custom scheme origin `tauri://localhost`.
+            // With `allow_credentials(true)` the exact origin must be echoed, so
+            // the iOS scheme has to be listed explicitly (a wildcard is invalid).
             bytes == b"http://tauri.localhost"
                 || bytes == b"https://tauri.localhost"
+                || bytes == b"tauri://localhost"
                 || bytes == b"https://ratel.foundation"
                 || (bytes.starts_with(b"https://") && bytes.ends_with(b".ratel.foundation"))
         });
