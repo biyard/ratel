@@ -25094,6 +25094,10 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   display: flex;
   align-items: center;
   gap: 14px;
+  /* Take all leftover width and allow the title to shrink/ellipsize so the
+     subscribe button + status pill stay pinned to the right. */
+  flex: 1;
+  min-width: 0;
 }
 .topbar__back {
   width: 36px;
@@ -25126,7 +25130,7 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
-  max-width: 300px;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -25136,6 +25140,8 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   display: flex;
   align-items: center;
   gap: 10px;
+  /* Pinned right — never shrinks; the title (in __left) ellipsizes instead. */
+  flex-shrink: 0;
 }
 /* discussion subscribe toggle (top bar) */
 .topbar__subscribe {
@@ -25201,6 +25207,12 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   background: rgba(252, 179, 0, 0.08);
   border: 1px solid rgba(252, 179, 0, 0.15);
   color: #fcb300;
+}
+
+@media (max-width: 500px) {
+  /* Drop the topbar title on mobile — it's redundant (the discussion body
+     repeats it as an <h1>) and crowds the back button + subscribe + status. */
+  .topbar__title { display: none; }
 }
 
 @keyframes disc-pulse-dot {
@@ -27329,6 +27341,11 @@ body.comments-panel-resizing {
   white-space: nowrap; flex-shrink: 0;
 }
 .quiz-topbar__badge svg { width: 14px; height: 14px; flex-shrink: 0; }
+/* Hide the "❓ Quiz" type badge on mobile — the topbar is too cramped on
+   narrow screens and the title already conveys context. */
+@media (max-width: 500px) {
+  .quiz-topbar__badge { display: none; }
+}
 .quiz-topbar__right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 
 /* ── Progress ring ───────────────────────────────── */
@@ -27622,6 +27639,13 @@ body.comments-panel-resizing {
   .quiz-bottom { padding: 14px 16px; }
   .quiz-nav-btn { padding: 9px 18px; font-size: 10px; }
   .quiz-question-area { padding: 0 16px 120px; }
+  /* Overview screen lacked a bottom inset, so the last file/begin button got
+     clipped behind the gesture nav. `safe center` keeps short content
+     centered but falls back to top-aligned scrolling when it overflows. */
+  .quiz-overview { justify-content: safe center; padding: 8px 16px 48px; }
+  /* Symmetric banner spacing — was `16px 28px 0` (glued to content below,
+     large gap above). */
+  .quiz-banner { margin: 10px 16px; }
 }
 
 
