@@ -416,9 +416,9 @@ jobs:
       - name: Restore cache
         uses: actions/cache/restore@v5
         with:
-          key: ios-release-${{ runner.os }}-rust-ios17-${{ hashFiles('**/Cargo.lock') }}
+          key: ios-release-${{ runner.os }}-rust-ios18-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ios-release-${{ runner.os }}-rust-ios17-
+            ios-release-${{ runner.os }}-rust-ios18-
           path: |
             ~/.cargo/bin
             target
@@ -516,7 +516,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v5
         with:
-          key: ios-release-${{ runner.os }}-rust-ios17-${{ hashFiles('**/Cargo.lock') }}
+          key: ios-release-${{ runner.os }}-rust-ios18-${{ hashFiles('**/Cargo.lock') }}
           path: |
             ~/.cargo/bin
             target
