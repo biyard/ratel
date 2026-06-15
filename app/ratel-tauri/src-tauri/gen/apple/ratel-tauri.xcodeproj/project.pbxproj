@@ -194,7 +194,7 @@
 			path = "ratel-tauri";
 			sourceTree = "<group>";
 		};
-		"TEMP_4E02166D-8E3A-43D2-A7B9-5760707C2888" /* x86_64 */ = {
+		"TEMP_0424CB8D-8050-49EC-A8DF-9E24BCF7D521" /* x86_64 */ = {
 			isa = PBXGroup;
 			children = (
 			);
