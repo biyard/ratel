@@ -221,6 +221,12 @@ $(IOS_CARGO_CONFIG): FORCE
 # `brew install xcodegen`).
 .PHONY: gen-xcodeproj
 gen-xcodeproj:
+	# xcodegen validates that every source dir exists. `Externals` (holds the
+	# Rust `libapp.a`) and `assets` (the web bundle) are produced later by the
+	# build/preBuildScript, so on a fresh checkout (CI) they don't exist yet and
+	# xcodegen aborts. Pre-create them as empty placeholders — the build fills
+	# them in. (git doesn't track empty dirs, so they're absent after checkout.)
+	@mkdir -p src-tauri/gen/apple/Externals src-tauri/gen/apple/assets
 	cd src-tauri/gen/apple && xcodegen generate --spec project.yml
 
 # Generate the Xcode project (src-tauri/gen/apple). Run once, or after
