@@ -370,3 +370,146 @@ jobs:
             ~/.cargo/bin
             target
             app/ratel-tauri/dx-tauri-target
+
+  # ── iOS → TestFlight ────────────────────────────────────────────────
+  # Mirrors android-release but for iOS. Builds a signed .ipa and uploads it
+  # to App Store Connect / TestFlight via `make testflight` (altool + ASC API
+  # key). CI has no access to your local Xcode/keychain, so signing material is
+  # injected from secrets into a throwaway keychain on the runner.
+  #
+  # Required repo secrets (add in Settings → Secrets and variables → Actions):
+  #   IOS_DIST_CERT_BASE64        base64 of the Apple Distribution .p12
+  #                               (cert + private key). Export from Keychain
+  #                               Access → "Apple Distribution: Biyard Corp."
+  #                               (the one expiring 2027, SHA-1 BC325439…) →
+  #                               Export → .p12. Then: base64 -i cert.p12 | pbcopy
+  #   IOS_DIST_CERT_PASSWORD      the password set when exporting that .p12
+  #   IOS_PROVISION_PROFILE_BASE64  base64 of the "Ratel Tauri AppStore"
+  #                               App Store profile (.mobileprovision):
+  #                               base64 -i "~/Library/MobileDevice/Provisioning Profiles/2c3cc49d-…​.mobileprovision" | pbcopy
+  #   IOS_KEYCHAIN_PASSWORD       any string (temp keychain password)
+  #   ASC_KEY_ID                  App Store Connect API Key ID
+  #   ASC_ISSUER_ID               App Store Connect API Issuer ID
+  #   ASC_API_KEY_BASE64          base64 of AuthKey_<ASC_KEY_ID>.p8:
+  #                               base64 -i AuthKey_XXX.p8 | pbcopy
+  # Reuses existing GOOGLE_OAUTH_CLIENT_ID / PORTONE_* / FIREBASE_* / PULL_KEY_REPO.
+  # The signing identity SHA-1 + profile name are pinned in
+  # app/ratel-tauri/src-tauri/gen/apple/project.yml (committed) — keep the
+  # exported cert/profile matching those.
+  ios-release:
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      # Apple now requires the iOS 26 SDK (Xcode 26+) for App Store uploads.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show Xcode / SDK
+        run: xcodebuild -version && xcodebuild -showsdks | grep -i ios
+
+      - name: Restore cache
+        uses: actions/cache/restore@v5
+        with:
+          key: ios-release-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ios-release-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown,aarch64-apple-ios
+          cache: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install dioxus-cli + tauri-cli + xcodegen
+        run: |
+          cargo binstall -y --locked dioxus-cli
+          cargo binstall -y --locked --version "^2.0.0" tauri-cli
+          # `make gen-xcodeproj` regenerates the pbxproj from project.yml.
+          brew install xcodegen
+
+      - name: Import signing certificate & provisioning profile
+        env:
+          IOS_DIST_CERT_BASE64: ${{ secrets.IOS_DIST_CERT_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/dist_cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+
+          echo "$IOS_DIST_CERT_BASE64" | base64 --decode > "$CERT_PATH"
+
+          # Throwaway keychain, added to the search list so xcodebuild sees the cert.
+          security create-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$IOS_DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          mkdir -p "$PROFILES_DIR"
+          echo "$IOS_PROVISION_PROFILE_BASE64" | base64 --decode > "$PROFILES_DIR/ci-appstore.mobileprovision"
+
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$ASC_API_KEY_BASE64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+
+      - name: Build & upload to TestFlight (prod)
+        working-directory: app/ratel-tauri
+        env:
+          ENV: prod
+          MOBILE_API_URL: https://ratel.foundation
+          DYNAMO_TABLE_PREFIX: ratel-prod
+          RUSTFLAGS: "-D warnings"
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.PROD_PORTONE_INICIS_CHANNEL_KEY }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
+          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+        run: |
+          make testflight \
+            APPLE_DEVELOPMENT_TEAM=7P4Z67D4N7 \
+            ASC_KEY_ID=${{ secrets.ASC_KEY_ID }} \
+            ASC_ISSUER_ID=${{ secrets.ASC_ISSUER_ID }}
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          key: ios-release-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target

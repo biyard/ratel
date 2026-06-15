@@ -1,0 +1,109 @@
+name: ratel-tauri
+options:
+  bundleIdPrefix: co.biyard.ratel
+  deploymentTarget:
+    iOS: 13.0
+fileGroups: [../../src]
+configs:
+  debug: debug
+  release: release
+settingGroups:
+  app:
+    base:
+      PRODUCT_NAME: Ratel
+      PRODUCT_BUNDLE_IDENTIFIER: co.biyard.ratel
+targetTemplates:
+  app:
+    type: application
+    sources:
+      - path: Sources
+    scheme:
+      environmentVariables:
+        RUST_BACKTRACE: full
+        RUST_LOG: info
+    settings:
+      groups: [app]
+targets:
+  ratel-tauri_iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Assets.xcassets
+      # buildPhase: none → keep Externals (libapp.a) visible to the project but
+      # NOT copied into the .app bundle. xcodegen otherwise drops the static
+      # lib into Copy Bundle Resources, which App Store rejects ("libapp.a is
+      # not permitted"). The actual link comes from `dependencies: libapp.a`
+      # (Frameworks phase) + LIBRARY_SEARCH_PATHS below, not from this source.
+      - path: Externals
+        buildPhase: none
+      - path: ratel-tauri_iOS
+      - path: assets
+        buildPhase: resources
+        type: folder
+      - path: LaunchScreen.storyboard
+    info:
+      path: ratel-tauri_iOS/Info.plist
+      properties:
+        LSRequiresIPhoneOS: true
+        UILaunchStoryboardName: LaunchScreen
+        UIRequiredDeviceCapabilities: [arm64, metal]
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleShortVersionString: 0.1.0
+        CFBundleVersion: 0.1.0
+    entitlements:
+      path: ratel-tauri_iOS/ratel-tauri_iOS.entitlements
+    scheme:
+      environmentVariables:
+        RUST_BACKTRACE: full
+        RUST_LOG: info
+    settings:
+      base:
+        ENABLE_BITCODE: false
+        ARCHS: [arm64]
+        VALID_ARCHS: arm64 
+        LIBRARY_SEARCH_PATHS[arch=x86_64]: $(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
+        LIBRARY_SEARCH_PATHS[arch=arm64]: $(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
+        ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: true
+        EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
+      configs:
+        # Release builds (build-ios / testflight) sign manually with the
+        # org's Apple Distribution cert + the App Store profile for
+        # co.biyard.ratel. Debug builds (build-ios-sim / run-ios) inherit
+        # nothing here, so simulator builds stay unsigned.
+        release:
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: "7P4Z67D4N7"
+          # Pinned to the SHA-1 of the distribution cert created on THIS machine
+          # (serial 2A2C69BA…, has private key, not revoked, expires 2027). The
+          # "Ratel Tauri AppStore" App Store profile embeds this exact cert.
+          # Pinning avoids xcodebuild auto-picking the other same-named keychain
+          # certs (5F7F6E1F / 5DCD47E8) which are REVOKED.
+          CODE_SIGN_IDENTITY: "BC325439AFB2CCD00BEDF434DB1ABF2BA65CE345"
+          PROVISIONING_PROFILE_SPECIFIER: "Ratel Tauri AppStore"
+      groups: [app]
+    dependencies:
+      - framework: libapp.a
+        embed: false
+      - sdk: CoreGraphics.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: QuartzCore.framework
+      - sdk: Security.framework
+      - sdk: UIKit.framework
+      - sdk: WebKit.framework
+    preBuildScripts:
+      - script: cargo tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+        name: Build Rust Code
+        basedOnDependencyAnalysis: false
+        outputFiles:
+          - $(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a
+          - $(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a

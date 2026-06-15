@@ -55,6 +55,16 @@ pub fn App() -> Element {
         );
     });
 
+    // iOS WKWebView auto-zooms into any focused input whose font-size < 16px
+    // (Android has no such behavior), which shoves modals off-screen. In the
+    // native Tauri shell pinch-zoom isn't wanted anyway, so `maximum-scale=1 +
+    // user-scalable=no` kills the focus-zoom for every input at once. The
+    // browser web build keeps user zoom for accessibility.
+    #[cfg(feature = "tauri-web")]
+    let viewport_content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content";
+    #[cfg(not(feature = "tauri-web"))]
+    let viewport_content = "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content";
+
     rsx! {
         document::Meta {
             // `interactive-widget=resizes-content` shrinks the layout viewport
@@ -62,7 +72,7 @@ pub fn App() -> Element {
             // layouts like the composer collapse to the area above the keyboard
             // and their bottom toolbar stays reachable instead of being hidden
             // behind the keyboard. Pairs with `adjustResize` on MainActivity.
-            content: "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+            content: viewport_content,
             name: "viewport",
         }
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
