@@ -478,9 +478,10 @@ pub fn Index() -> Element {
                         div {
                             class: "carousel-track",
                             id: "home-carousel-track",
-                            for card in cards.iter() {
+                            for (i , card) in cards.iter().enumerate() {
                                 ArenaSpaceCard {
                                     key: "{card.space_id.clone().to_string()}",
+                                    active: i == 0,
                                     heat: heat_from_response(card.heat),
                                     rank: card.rank as u32,
                                     logo: card_logo(card, &brand_logo),

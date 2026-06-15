@@ -27,3 +27,26 @@ tauri-plugin-google-auth = "0.5.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+
+# Native HTTP transport for the WebView. iOS WKWebView blocks the cross-site
+# session cookie (ITP), so API calls route through the `api_request` command
+# using a persistent reqwest cookie jar in the app process instead of the
+# in-WebView fetch. `cookies` enables the jar.
+#
+# Not inheriting the workspace reqwest: 0.13's default TLS backend is rustls +
+# aws-lc-sys, which needs `cmake` to cross-compile for aarch64-apple-ios-sim
+# (build panics with "Missing dependency: cmake").
+#
+# `native-tls-vendored` is the cross-platform-safe choice for the mobile shell:
+#   - Apple (iOS/macOS): native-tls uses Security.framework — `vendored` is
+#     inert, no OpenSSL is compiled or linked.
+#   - Android: native-tls uses OpenSSL; `vendored` builds it from source so the
+#     NDK cross-build doesn't need a system OpenSSL (plain `native-tls` pulls
+#     openssl-sys with no lib to link → Android build fails).
+# Also negotiates HTTP/2 (avoids the simulator's broken QUIC).
+reqwest = { version = "0.13", default-features = false, features = [
+    "cookies",
+    "json",
+    "http2",
+    "native-tls-vendored",
+] }
