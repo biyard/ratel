@@ -197,6 +197,7 @@ ios-init run-ios build-ios build-ios-sim testflight: GOOGLE_OAUTH_CLIENT_ID := $
 IOS_ENV = \
 	LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
 	HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
+	IPHONEOS_DEPLOYMENT_TARGET=17.0 \
 	GOOGLE_OAUTH_CLIENT_ID="$(GOOGLE_OAUTH_CLIENT_ID)"
 
 # `GOOGLE_OAUTH_CLIENT_ID` is a compile-time `option_env!` in the native lib.
