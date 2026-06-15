@@ -437,11 +437,19 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
 
       - name: Install dioxus-cli + tauri-cli + xcodegen
+        env:
+          # Authenticated GitHub API: avoids the 403 rate-limit on binstall's
+          # release-artifact lookup so it downloads the prebuilt dx/cargo-tauri
+          # binaries (fast) instead of falling back to a slow source build.
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          cargo binstall -y --locked dioxus-cli
-          cargo binstall -y --locked --version "^2.0.0" tauri-cli
+          # `command -v … ||` skips reinstall when the cache restored the binary
+          # into ~/.cargo/bin — otherwise binstall's source fallback aborts with
+          # "binary `dx` already exists in destination".
+          command -v dx >/dev/null || cargo binstall -y --locked dioxus-cli
+          command -v cargo-tauri >/dev/null || cargo binstall -y --locked --version "^2.0.0" tauri-cli
           # `make gen-xcodeproj` regenerates the pbxproj from project.yml.
-          brew install xcodegen
+          command -v xcodegen >/dev/null || brew install xcodegen
 
       - name: Import signing certificate & provisioning profile
         env:
