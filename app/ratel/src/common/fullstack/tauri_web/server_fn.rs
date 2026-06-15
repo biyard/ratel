@@ -95,61 +95,69 @@ pub async fn delete_with_body<B: Serialize + ?Sized, R: DeserializeOwned>(
     send::<B, R>(Method::DELETE, path, Some(body)).await
 }
 
+/// Args sent to the native `api_request` Tauri command.
+#[derive(Serialize)]
+struct ApiArgs<'a> {
+    method: &'a str,
+    url: &'a str,
+    body: Option<String>,
+}
+
+/// Mirror of `ratel_tauri_lib::commands::api_request::ApiResponse`.
+#[derive(serde::Deserialize)]
+struct ApiResponse {
+    status: u16,
+    body: String,
+}
+
 async fn send<B: Serialize + ?Sized, R: DeserializeOwned>(
     method: Method,
     path: &str,
     body: Option<&B>,
 ) -> crate::common::Result<R> {
     let url = format!("{}{}", api_base_url(), path);
-
-    // A fresh client per call is fine — reqwest's wasm backend reuses the
-    // browser's fetch internals and the builder-level config (cookie_store,
-    // pool, etc.) is a no-op on wasm anyway. Cross-origin cookie handling on
-    // wasm is driven by `fetch_credentials_include` below, not by client
-    // config.
-    let client = reqwest::Client::new();
-    let mut req = client.request(method.clone(), &url);
-
-    // The Tauri WebView page lives at http://tauri.localhost and the backend
-    // at https://ratel.foundation — that's a cross-origin pair, so the
-    // browser defaults to `credentials: 'same-origin'` and strips the
-    // session cookie. Forcing `include` lets the cookie ride along, paired
-    // with the server's CORS allow-credentials + `SameSite=None; Secure`
-    // cookie attributes that we already configured.
-    #[cfg(target_arch = "wasm32")]
-    {
-        req = req.fetch_credentials_include();
-    }
-
-    if let Some(b) = body {
-        req = req.json(b);
-    }
+    let body = body.map(|b| serde_json::to_string(b).unwrap_or_default());
 
     tracing::debug!("[tauri-web] {} {}", method, url);
 
-    let resp = req.send().await.map_err(|e| {
-        tracing::error!("[tauri-web] {} {} request error: {e}", method, url);
+    // Route through the native `api_request` command instead of the in-WebView
+    // fetch. The WebView page (tauri://localhost / http://tauri.localhost) and
+    // the backend (https://*.ratel.foundation) are a cross-site pair, and iOS
+    // WKWebView (ITP) strips the session cookie from cross-site fetches —
+    // breaking auth right after login. The native command owns a persistent
+    // reqwest cookie jar in the app process, so the login `Set-Cookie` is
+    // stored and replayed on every later call. It also negotiates HTTP/2 (not
+    // WKWebView's QUIC), sidestepping the simulator's broken HTTP/3.
+    let resp: ApiResponse = crate::common::utils::web::invoke_tauri(
+        "api_request",
+        ApiArgs {
+            method: method.as_str(),
+            url: &url,
+            body,
+        },
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!("[tauri-web] {} {} invoke error: {e:?}", method, url);
         Error::Internal
     })?;
 
-    let status = resp.status();
-    if !status.is_success() {
-        let body_text = resp.text().await.unwrap_or_default();
+    if !(200..300).contains(&resp.status) {
         tracing::error!(
             "[tauri-web] {} {} -> {} body={}",
             method,
             url,
-            status,
-            body_text
+            resp.status,
+            resp.body
         );
         // Map HTTP semantics to existing Error variants where it matters.
-        return Err(match status.as_u16() {
+        return Err(match resp.status {
             401 | 403 => Error::UnauthorizedAccess,
             _ => Error::Internal,
         });
     }
 
-    resp.json::<R>().await.map_err(|e| {
+    serde_json::from_str::<R>(&resp.body).map_err(|e| {
         tracing::error!("[tauri-web] {} {} decode error: {e}", method, url);
         Error::Internal
     })

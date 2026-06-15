@@ -74,4 +74,10 @@ google-services.json
 # Migration source data (supplied via env vars at runtime; never committed)
 /app/ratel/src/common/migrations/data/
 /app/ratel-tauri/tauri-override.json
+# Generated per-build by the iOS Makefile target (injects GOOGLE_OAUTH_CLIENT_ID
+# from the build env). Never commit — it would hardcode a per-env value.
+/app/ratel-tauri/src-tauri/.cargo/config.toml
 *target/
+
+# Generated NDK tool-name shims for vendored OpenSSL Android build
+/app/ratel-tauri/.ndk-shims/

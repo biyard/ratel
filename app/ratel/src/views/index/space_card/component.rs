@@ -55,10 +55,18 @@ pub fn ArenaSpaceCard(
     heat_delta: String,
     chips: Vec<ActionChip>,
     reward_amount: String,
+    /// Render this card in the sharp/focused state on first paint. The
+    /// carousel JS (`updateActive`) takes over on scroll, but seeding the
+    /// centered (first) card as active means it's never stuck blurred before
+    /// the JS settles — which is what happened on iOS where the scroll-based
+    /// detection didn't fire on the initial flaky load.
+    #[props(default)]
+    active: bool,
     #[props(default)] onenter: Option<EventHandler<()>>,
 ) -> Element {
     let t: super::super::HomeArenaTranslate = use_translate();
     let heat_css = heat.css();
+    let active_cls = if active { " active" } else { "" };
     let heat_label = match heat {
         HeatLevel::Blazing => t.heat_blazing,
         HeatLevel::Trending => t.heat_trending,
@@ -68,7 +76,7 @@ pub fn ArenaSpaceCard(
 
     rsx! {
 
-        div { class: "space-card space-card--{heat_css}", "data-heat": heat_css,
+        div { class: "space-card space-card--{heat_css}{active_cls}", "data-heat": heat_css,
             div { class: "space-card__wave" }
 
             div { class: "space-card__top",
