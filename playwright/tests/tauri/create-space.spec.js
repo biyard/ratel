@@ -390,22 +390,30 @@ test("tauri smoke: signup → team → post → space", async () => {
     { timeout: 15_000, label: `navigated to /${team.username}` },
   );
 
-  // ── 3. Create post + space via REST (from inside the WebView) ────────
-  // `fetch` runs in the WebView's origin context (tauri.localhost), so
-  // the session cookie that was set on dev.ratel.foundation during
-  // signup rides along automatically via credentials: 'include'.
+  // ── 3. Create post + space via REST (through the native transport) ───
+  // The session cookie lives in the NATIVE reqwest cookie jar (the app
+  // routes every API call through the `api_request` Tauri command), NOT
+  // in the WebView — iOS WKWebView (ITP) and the cross-site origin pair
+  // (tauri.localhost -> ratel.foundation) mean a plain in-WebView `fetch`
+  // never carries the session and gets 401. So these calls must invoke
+  // the same `api_request` command the app uses; it returns { status, body }.
   const apiBase = JSON.stringify(API_BASE);
+  // Helper (defined in the page) that proxies a request through api_request
+  // and throws on non-2xx, mirroring server_fn::send.
+  const apiRequest = `async (method, path, body) => {
+    const res = await window.__TAURI_INTERNALS__.invoke('api_request', {
+      method, url: ${apiBase} + path, body,
+    });
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(method + ' ' + path + ' -> ' + res.status + ' ' + res.body);
+    }
+    return res.body ? JSON.parse(res.body) : null;
+  }`;
 
   const postId = await evalJs(`
     (async () => {
-      const r = await fetch(${apiBase} + '/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: '{}',
-      });
-      if (!r.ok) throw new Error('POST /api/posts -> ' + r.status);
-      const data = await r.json();
+      const apiRequest = ${apiRequest};
+      const data = await apiRequest('POST', '/api/posts', '{}');
       const pk = data.post_pk;
       return pk.includes('#') ? pk.split('#')[1] : pk;
     })()
@@ -414,28 +422,21 @@ test("tauri smoke: signup → team → post → space", async () => {
 
   const spaceId = await evalJs(`
     (async () => {
-      const r = await fetch(${apiBase} + '/api/spaces/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ req: { post_id: ${JSON.stringify(postId)} } }),
-      });
-      if (!r.ok) throw new Error('POST /api/spaces/create -> ' + r.status);
-      const data = await r.json();
+      const apiRequest = ${apiRequest};
+      const data = await apiRequest(
+        'POST', '/api/spaces/create',
+        JSON.stringify({ req: { post_id: ${JSON.stringify(postId)} } }),
+      );
       return data.space_id;
     })()
   `);
   expect(spaceId, "space creation must return space_id").toBeTruthy();
 
-  // ── 4. Verify space is queryable from the WebView ─────────────────────
+  // ── 4. Verify space is queryable through the native transport ─────────
   const spaceTitle = await evalJs(`
     (async () => {
-      const r = await fetch(${apiBase} + '/api/spaces/' + ${JSON.stringify(spaceId)}, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      if (!r.ok) throw new Error('GET /api/spaces/' + ${JSON.stringify(spaceId)} + ' -> ' + r.status);
-      const data = await r.json();
+      const apiRequest = ${apiRequest};
+      const data = await apiRequest('GET', '/api/spaces/' + ${JSON.stringify(spaceId)}, undefined);
       return data.title ?? null;
     })()
   `);
