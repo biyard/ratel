@@ -2,7 +2,13 @@ name: ratel-tauri
 options:
   bundleIdPrefix: co.biyard.ratel
   deploymentTarget:
-    iOS: 13.0
+    # iOS 17.0: Xcode 26 dropped the Swift back-deploy compat static libs
+    # (swiftCompatibility56 / Concurrency / Packs). Targeting < iOS 17 makes the
+    # linker force-load those now-removed libs → "symbol(s) not found". iOS 17
+    # has concurrency (15.0), Swift 5.6 runtime (15.4) and parameter packs (17)
+    # all native, so no compat lib is needed. Pair with IPHONEOS_DEPLOYMENT_TARGET
+    # in the Makefile so the Rust/Swift objects in libapp.a target 17 too.
+    iOS: 17.0
 fileGroups: [../../src]
 configs:
   debug: debug
