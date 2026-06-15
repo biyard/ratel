@@ -40,21 +40,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.925748630857-f17s6e6dg64b3mugn0dnu35i9d4694dh</string>
-			</array>
-		</dict>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>googlechrome</string>
-		<string>safari</string>
-	</array>
 </dict>
 </plist>
