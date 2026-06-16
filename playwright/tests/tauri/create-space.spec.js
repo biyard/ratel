@@ -298,8 +298,13 @@ test("tauri smoke: signup → team → post → space", async () => {
     'input[placeholder="Enter your email address"]',
     user.email,
   );
-  // First Continue → send the verification code.
-  await clickSelector('[data-testid="continue-button"]');
+  // First Continue → send the verification code. Use clickByText (not
+  // clickSelector) because the button is `disabled: loading()` and shows
+  // "Loading..." while the request is in flight — clickByText filters out
+  // disabled elements and retries, so it waits until the button settles
+  // back to "Continue" instead of firing a swallowed click on the slow
+  // software-rendered emulator WebView.
+  await clickByText("Continue", { exact: true });
   // The verification-code input is always in the DOM but hidden via
   // aria-hidden until `show_code = true` (after send_code resolves).
   await waitForVisible(
@@ -312,7 +317,19 @@ test("tauri smoke: signup → team → post → space", async () => {
   );
   // Second Continue → verify + attempt login → routes into signup since the
   // account doesn't exist yet. The display-name field confirms the switch.
-  await clickSelector('[data-testid="continue-button"]');
+  await clickByText("Continue", { exact: true });
+  // Diagnostic: dump the modal state shortly after the second Continue so a
+  // failure here shows WHY the signup form didn't appear (login error vs
+  // still on the code step vs modal closed) instead of an opaque timeout.
+  await new Promise((r) => setTimeout(r, 4000));
+  const afterContinue = await evalJs(`JSON.stringify({
+    hasDisplayName: !!document.querySelector('input[placeholder="Enter your display name"]'),
+    hasEmail: !!document.querySelector('input[placeholder="Enter your email address"]'),
+    hasCode: !!document.querySelector('input[placeholder="Enter the verification code"]'),
+    errors: [...document.querySelectorAll('.text-red-500')].map(e => e.textContent.trim()).filter(Boolean),
+    buttons: [...document.querySelectorAll('button')].map(b => b.textContent.trim()).filter(Boolean).slice(0, 12),
+  })`);
+  console.log("[smoke] modal state after 2nd Continue:", afterContinue);
   await waitForSelector('input[placeholder="Enter your display name"]');
 
   // Passwordless signup — no password / confirm-password fields anymore.
