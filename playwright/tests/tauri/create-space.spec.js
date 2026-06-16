@@ -318,18 +318,6 @@ test("tauri smoke: signup → team → post → space", async () => {
   // Second Continue → verify + attempt login → routes into signup since the
   // account doesn't exist yet. The display-name field confirms the switch.
   await clickByText("Continue", { exact: true });
-  // Diagnostic: dump the modal state shortly after the second Continue so a
-  // failure here shows WHY the signup form didn't appear (login error vs
-  // still on the code step vs modal closed) instead of an opaque timeout.
-  await new Promise((r) => setTimeout(r, 4000));
-  const afterContinue = await evalJs(`JSON.stringify({
-    hasDisplayName: !!document.querySelector('input[placeholder="Enter your display name"]'),
-    hasEmail: !!document.querySelector('input[placeholder="Enter your email address"]'),
-    hasCode: !!document.querySelector('input[placeholder="Enter the verification code"]'),
-    errors: [...document.querySelectorAll('.text-red-500')].map(e => e.textContent.trim()).filter(Boolean),
-    buttons: [...document.querySelectorAll('button')].map(b => b.textContent.trim()).filter(Boolean).slice(0, 12),
-  })`);
-  console.log("[smoke] modal state after 2nd Continue:", afterContinue);
   await waitForSelector('input[placeholder="Enter your display name"]');
 
   // Passwordless signup — no password / confirm-password fields anymore.
