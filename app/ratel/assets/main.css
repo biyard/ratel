@@ -37728,6 +37728,24 @@ body.comments-panel-resizing {
   filter: blur(0);
   box-shadow: 0 12px 60px var(--ha-shadow-card);
 }
+
+/* === src/views/index/space_card (My Posts carousel variant) ===
+   Posts reuse the FULL `.space-card` structure (ArenaSpaceCard) so a post
+   card looks identical to a space card. The only delta is taming the post
+   body HTML rendered into `.space-card__desc` so stray margins / images
+   don't break the fixed-height card. */
+.home-arena .space-card--post .space-card__desc * {
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  font-weight: inherit;
+  display: inline;
+}
+.home-arena .space-card--post .space-card__desc img {
+  display: none;
+}
 .home-arena .space-card--blazing.active {
   border-color: rgba(239, 68, 68, 0.20);
   box-shadow: 0 12px 60px var(--ha-shadow-card), 0 0 50px rgba(239, 68, 68, 0.18);
