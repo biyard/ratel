@@ -4,7 +4,9 @@ use super::*;
 // Returns the email used.
 async fn signup_email_user(app: &axum::Router) -> String {
     let email = format!("auth-{}@test.com", uuid::Uuid::now_v7());
-    let username = format!("u{}", uuid::Uuid::now_v7().simple());
+    // validate_username caps at 20 chars; uuid.simple() is 32 hex, so take
+    // the trailing 12 (random) chars → "u" + 12 = 13 chars, still unique.
+    let username = format!("u{}", &uuid::Uuid::now_v7().simple().to_string()[20..]);
 
     let (s, _, _) = crate::test_post! {
         app: app.clone(),
@@ -68,7 +70,9 @@ async fn test_email_code_signup_no_password_creates_user() {
     let ctx = TestContext::setup().await;
 
     let email = format!("signup-{}@test.com", uuid::Uuid::now_v7());
-    let username = format!("u{}", uuid::Uuid::now_v7().simple());
+    // validate_username caps at 20 chars; uuid.simple() is 32 hex, so take
+    // the trailing 12 (random) chars → "u" + 12 = 13 chars, still unique.
+    let username = format!("u{}", &uuid::Uuid::now_v7().simple().to_string()[20..]);
 
     let (_, _, _) = crate::test_post! {
         app: ctx.app.clone(),
@@ -97,7 +101,9 @@ async fn test_legacy_password_user_logs_in_with_email_code() {
     let ctx = TestContext::setup().await;
 
     let email = format!("legacy-{}@test.com", uuid::Uuid::now_v7());
-    let username = format!("u{}", uuid::Uuid::now_v7().simple());
+    // validate_username caps at 20 chars; uuid.simple() is 32 hex, so take
+    // the trailing 12 (random) chars → "u" + 12 = 13 chars, still unique.
+    let username = format!("u{}", &uuid::Uuid::now_v7().simple().to_string()[20..]);
 
     // Simulate a pre-existing account the same way old signups created them:
     // a real User row carrying a `Some(password_hash)`.

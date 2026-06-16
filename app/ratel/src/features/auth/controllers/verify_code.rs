@@ -57,13 +57,18 @@ pub async fn verify_email_code(
     )
     .await?;
 
-    if verification_list.is_empty() {
-        return Err(Error::NotFoundVerificationCode);
-    }
-
+    // Honor the test bypass code BEFORE requiring a stored verification
+    // record. Test setup logs in without first calling send-verification-code,
+    // so there is no EmailVerification row — the bypass must short-circuit
+    // here, not after the emptiness check. `bypass` is test/local only and is
+    // never compiled into production, so real logins still require a record.
     #[cfg(feature = "bypass")]
     if code.eq("000000") {
         return Ok(());
+    }
+
+    if verification_list.is_empty() {
+        return Err(Error::NotFoundVerificationCode);
     }
 
     let email_verification = verification_list[0].clone();
