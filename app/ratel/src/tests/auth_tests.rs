@@ -139,3 +139,44 @@ async fn test_legacy_password_user_logs_in_with_email_code() {
         body
     );
 }
+
+/// Backward compatibility for already-shipped mobile apps (the Android build
+/// in App Store review still sends password-based signup + login). The
+/// restored `EmailPassword` variants must keep working alongside the new
+/// email-code flow: sign up WITH a password, then log in WITH that password.
+#[tokio::test]
+async fn test_password_signup_and_login_backward_compat() {
+    let ctx = TestContext::setup().await;
+
+    let email = format!("pw-{}@test.com", uuid::Uuid::now_v7());
+    let username = format!("u{}", &uuid::Uuid::now_v7().simple().to_string()[20..]);
+    let password = "Secret!234";
+
+    // Old-app signup: {email, password, code} → EmailPassword variant.
+    let (s, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/auth/signup",
+        body: { "req": {
+            "email": email, "password": password, "code": "000000",
+            "display_name": "PW", "username": username, "profile_url": "",
+            "description": "", "term_agreed": true, "informed_agreed": false
+        } }
+    };
+    assert_eq!(s, 200, "password signup: {:?}", body);
+
+    // Old-app login: {email, password} (no code) → EmailPassword variant.
+    let (s, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/auth/login",
+        body: { "req": { "email": email, "password": password } }
+    };
+    assert_eq!(s, 200, "password login: {:?}", body);
+
+    // Wrong password must be rejected.
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/auth/login",
+        body: { "req": { "email": email, "password": "WrongPass!1" } }
+    };
+    assert_ne!(s, 200, "wrong password must not log in");
+}

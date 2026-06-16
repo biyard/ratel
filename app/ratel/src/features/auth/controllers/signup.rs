@@ -39,6 +39,16 @@ pub struct SignupRequest {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum SignupType {
+    // Backward-compat: password signup used by already-shipped mobile apps
+    // (the Android build in App Store review). Declared BEFORE `Email` so an
+    // untagged `{email,password,code}` body matches here — otherwise it would
+    // match `Email{email,code}` (password silently dropped, account created
+    // with no password, breaking the old app's later password login).
+    EmailPassword {
+        email: String,
+        password: String,
+        code: String,
+    },
     Email {
         email: String,
         code: String,
@@ -86,6 +96,11 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
     })?;
 
     let user = match req.signup_type.clone() {
+        SignupType::EmailPassword {
+            email,
+            password,
+            code,
+        } => signup_with_email_password(cli, req.clone(), email, password, code).await?,
         SignupType::Email { email, code } => {
             signup_with_email(cli, req.clone(), email, code).await?
         }
@@ -193,6 +208,56 @@ async fn signup_with_email(
         UserType::Individual,
         username,
         None, // passwordless
+    );
+
+    user.create(cli).await?;
+
+    Ok(user)
+}
+
+/// Backward-compat: password signup for already-shipped mobile apps (the
+/// Android build in App Store review). Identical to `signup_with_email` but
+/// stores the hashed password so the old app's later password login
+/// (`find_by_email_and_password`) keeps working.
+#[cfg(feature = "server")]
+async fn signup_with_email_password(
+    cli: &aws_sdk_dynamodb::Client,
+    SignupRequest {
+        display_name,
+        username,
+        profile_url,
+        term_agreed,
+        informed_agreed,
+        ..
+    }: SignupRequest,
+    email: String,
+    password: String,
+    code: String,
+) -> Result<User> {
+    tracing::debug!("Signing up with email + password: {}", email);
+
+    crate::features::auth::controllers::verify_code::verify_email_code(cli, &email, &code).await?;
+
+    let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
+    if !users.is_empty() {
+        return Err(Error::Duplicate(format!(
+            "Email already registered: {}",
+            email
+        )));
+    }
+
+    ensure_username_available(cli, &username).await?;
+
+    let hashed_password = crate::common::utils::password::hash_password(&password);
+    let user = User::new(
+        display_name,
+        email,
+        profile_url,
+        term_agreed,
+        informed_agreed,
+        UserType::Individual,
+        username,
+        Some(hashed_password),
     );
 
     user.create(cli).await?;

@@ -127,13 +127,16 @@ async fn create_session_with_user_type(
 
     user.create(cli).await.expect("Failed to create user");
 
+    // Email-code login (passwordless). Sending only {email, code} matches the
+    // `Email` variant; including a `password` would now match the restored
+    // backward-compat `EmailPassword` variant and fail (the setup user's
+    // stored password isn't hashed to match login_with_email_password).
     let (_, header, _) = crate::test_post! {
         app: app,
         path: "/api/auth/login",
         body: {
             "req": {
                 "email": email,
-                "password": uid,
                 "code": "000000"
             }
         }
