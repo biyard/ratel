@@ -6,6 +6,8 @@ use crate::common::types::ListResponse;
 use crate::common::TeamItem;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
+use crate::features::posts::controllers::dto::PostResponse;
+use crate::features::posts::controllers::list_user_posts::list_user_posts_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
 use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
@@ -19,6 +21,7 @@ use crate::*;
 enum HomeTab {
     Hot,
     Mine,
+    Posts,
 }
 
 #[component]
@@ -35,6 +38,45 @@ pub fn Index() -> Element {
             .unwrap_or_default()
     });
     let has_user = user_ctx().user.is_some();
+
+    // "My Posts" tab — the logged-in user's own published posts, fetched
+    // lazily-paginated via the same endpoint the social home wall uses.
+    // The query is wired unconditionally (hooks can't be conditional),
+    // so guard the logged-out / empty-username case to avoid a stray
+    // request that the backend would reject with `PostInvalidUsername`.
+    //
+    // `use_infinite_query` reads its key INSIDE the async body, which
+    // Dioxus does not track — so the loader locks onto whatever username
+    // existed at the first poll (empty, before the user context resolves)
+    // and never re-runs on its own. Seed a dedicated signal and restart
+    // the query when the username actually changes (the same pattern the
+    // social home wall uses).
+    let mut posts_username = use_signal(|| username());
+    let mut user_posts = use_infinite_query(move |bookmark| {
+        let username = posts_username();
+        async move {
+            if username.is_empty() {
+                return Ok(ListResponse::<PostResponse> {
+                    items: Vec::new(),
+                    bookmark: None,
+                });
+            }
+            list_user_posts_handler(username, bookmark).await
+        }
+    })?;
+    use_effect(move || {
+        let name = username();
+        // The auth context can momentarily flip to an empty username while
+        // it re-initializes during client hydration. Ignore transitions TO
+        // empty — restarting then would overwrite the SSR-cached posts with
+        // an empty result (the `is_empty()` guard above). Only restart when
+        // a real username resolves or actually changes (e.g. account switch).
+        if !name.is_empty() && *posts_username.peek() != name {
+            posts_username.set(name);
+            user_posts.restart();
+        }
+    });
+
     // Admin users get a shield button next to Settings in the topbar
     // HUD that jumps straight to `/admin/`. Non-admins see nothing —
     // mirrors the team_arena topbar so admin tooling is one click away
@@ -96,6 +138,8 @@ pub fn Index() -> Element {
     let cards = match current_tab {
         HomeTab::Hot => hot_cards.clone(),
         HomeTab::Mine => mine_cards.clone(),
+        // Posts tab renders its own list below, not the space carousel.
+        HomeTab::Posts => Vec::new(),
     };
 
     let active_spaces = hot_cards.len() as i64;
@@ -461,11 +505,46 @@ pub fn Index() -> Element {
                             onclick: move |_| active_tab.set(HomeTab::Mine),
                             "{t.tab_mine}"
                         }
+                        button {
+                            class: "section-tab",
+                            aria_selected: current_tab == HomeTab::Posts,
+                            "data-testid": "home-tab-posts",
+                            onclick: move |_| active_tab.set(HomeTab::Posts),
+                            "{t.tab_posts}"
+                        }
                     }
                 }
 
-                // CAROUSEL
-                if cards.is_empty() {
+                // CAROUSEL / MY POSTS
+                if current_tab == HomeTab::Posts {
+                    if user_posts.items().is_empty() {
+                        div { class: "home-arena__empty", "{t.empty_posts}" }
+                    } else {
+                        // Same carousel shell as the spaces tabs so script.js
+                        // (which binds to `#home-carousel-track` / `.space-card`)
+                        // drives the scroll-snap sliding + active-card focus for
+                        // free. Posts reuse the `.space-card` frame via a `--post`
+                        // variant.
+                        div { class: "carousel-wrapper",
+                            div {
+                                class: "carousel-track",
+                                id: "home-carousel-track",
+                                for (i, post) in user_posts.items().iter().enumerate() {
+                                    HomePostCard {
+                                        key: "{post.pk}",
+                                        post: post.clone(),
+                                        active: i == 0,
+                                    }
+                                }
+                            }
+                        }
+                        div { class: "carousel-dots", id: "home-carousel-dots",
+                            for post in user_posts.items() {
+                                button { key: "{post.pk}", class: "carousel-dot" }
+                            }
+                        }
+                    }
+                } else if cards.is_empty() {
                     div { class: "home-arena__empty",
                         if current_tab == HomeTab::Mine {
                             "{t.empty_mine}"
@@ -478,7 +557,7 @@ pub fn Index() -> Element {
                         div {
                             class: "carousel-track",
                             id: "home-carousel-track",
-                            for (i , card) in cards.iter().enumerate() {
+                            for (i, card) in cards.iter().enumerate() {
                                 ArenaSpaceCard {
                                     key: "{card.space_id.clone().to_string()}",
                                     active: i == 0,
@@ -967,5 +1046,125 @@ fn HomeTeamDdItem(
                 span { class: "team-dd__handle", "{handle}" }
             }
         }
+    }
+}
+
+/// One slide in the home "My Posts" carousel. Reuses the EXACT same
+/// `.space-card` sub-structure as `ArenaSpaceCard` (top badge + rank,
+/// identity logo/title, description, three stats, footer + CTA) so the
+/// post card looks identical to a space card — only the data differs.
+#[component]
+fn HomePostCard(post: PostResponse, #[props(default)] active: bool) -> Element {
+    let t: super::HomeArenaTranslate = use_translate();
+    let nav = use_navigator();
+    // "View Post" always opens the post detail page. `post.url()` would
+    // redirect space-attached posts to their Space, but in the My Posts tab
+    // the user expects the post itself.
+    let url = Route::PostDetail {
+        post_id: post.pk.clone(),
+    };
+    let title = if post.title.trim().is_empty() {
+        "Untitled".to_string()
+    } else {
+        post.title.clone()
+    };
+    let date = format_post_date(post.created_at);
+    let body_html = post.body.to_html();
+    let author = if post.author_display_name.trim().is_empty() {
+        format!("@{}", post.author_username)
+    } else {
+        post.author_display_name.clone()
+    };
+    let avatar = post.author_profile_url.clone();
+    let category = post.categories.first().cloned().unwrap_or_default();
+    let badge_label = if category.is_empty() {
+        t.post_badge.to_string()
+    } else {
+        category
+    };
+    let likes = post.likes;
+    let comments = post.comments;
+    let shares = post.shares;
+    let active_cls = if active { " active" } else { "" };
+
+    rsx! {
+        // `space-card--post` reuses every `.space-card__*` style; the
+        // `--rising` heat tone is borrowed purely for the badge color so
+        // the card reads visually identical to a space card.
+        div {
+            class: "space-card space-card--rising space-card--post{active_cls}",
+            "data-testid": "home-post-{post.pk}",
+            div { class: "space-card__wave" }
+
+            div { class: "space-card__top",
+                span { class: "space-card__heat space-card__heat--rising",
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "2",
+                        view_box: "0 0 24 24",
+                        path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                        polyline { points: "14 2 14 8 20 8" }
+                    }
+                    "{badge_label}"
+                }
+                span { class: "space-card__rank", "{date}" }
+            }
+
+            div { class: "space-card__identity",
+                img { class: "space-card__logo", src: "{avatar}", alt: "" }
+                div { class: "space-card__id",
+                    span { class: "space-card__category", "{author}" }
+                    span { class: "space-card__title", "{title}" }
+                }
+            }
+
+            div { class: "space-card__desc", dangerous_inner_html: body_html }
+
+            div { class: "space-card__stats",
+                div { class: "space-stat",
+                    span { class: "space-stat__value", "{likes}" }
+                    span { class: "space-stat__label", "{t.stat_likes}" }
+                }
+                div { class: "space-stat",
+                    span { class: "space-stat__value", "{comments}" }
+                    span { class: "space-stat__label", "{t.stat_comments}" }
+                }
+                div { class: "space-stat",
+                    span { class: "space-stat__value", "{shares}" }
+                    span { class: "space-stat__label", "{t.stat_shares}" }
+                }
+            }
+
+            div { class: "space-card__footer",
+                div { class: "space-card__reward" }
+                button {
+                    class: "space-card__cta",
+                    onclick: move |_| {
+                        nav.push(url.clone());
+                    },
+                    "{t.view_post}"
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "2.5",
+                        view_box: "0 0 24 24",
+                        polyline { points: "9 18 15 12 9 6" }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn format_post_date(timestamp_ms: i64) -> String {
+    use chrono::{TimeZone, Utc};
+    match Utc.timestamp_millis_opt(timestamp_ms).single() {
+        Some(dt) => dt.format("%b %-d. %Y").to_string(),
+        None => String::new(),
     }
 }
