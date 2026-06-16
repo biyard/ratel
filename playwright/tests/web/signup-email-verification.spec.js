@@ -16,7 +16,7 @@ import { click, fill, goto, getLocator, waitPopup } from "../utils";
  *   4. Enter email and click "Send" (triggers send_code_handler which now
  *      creates a Notification document instead of calling SES directly)
  *   5. Enter the bypass verification code "000000" and click "Verify"
- *   6. Fill password, confirm password, display name, username
+ *   6. Fill display name and username (passwordless — no password step)
  *   7. Agree to Terms of Service
  *   8. Submit signup ("Finished Sign-up")
  *   9. Verify the modal closes and the user is logged in
@@ -34,7 +34,6 @@ test.describe.serial("Signup with email verification (event-driven notification)
     email: `e2e_signup_notif_${uniqueId}@biyard.co`,
     username: `su${uniqueId}`,
     displayName: `Signup Test ${uniqueId}`,
-    password: "Test!234",
   };
 
   test.beforeAll(async ({ browser }) => {
@@ -109,21 +108,7 @@ test.describe.serial("Signup with email verification (event-driven notification)
 
   // --- 5. Fill signup details ---
 
-  test("should fill password, display name, and username", async () => {
-    // Password
-    await fill(
-      page,
-      { placeholder: "Enter your password" },
-      testUser.password,
-    );
-
-    // Confirm password
-    await fill(
-      page,
-      { placeholder: "Re-enter your password" },
-      testUser.password,
-    );
-
+  test("should fill display name and username", async () => {
     // Display name
     await fill(
       page,
@@ -138,11 +123,11 @@ test.describe.serial("Signup with email verification (event-driven notification)
       testUser.username,
     );
 
-    // Verify all fields are filled
-    const passwordInput = page.getByPlaceholder("Enter your password", {
+    // Verify the username field is filled (passwordless — no password input)
+    const usernameInput = page.getByPlaceholder("Enter your user name", {
       exact: true,
     });
-    await expect(passwordInput).toHaveValue(testUser.password);
+    await expect(usernameInput).toHaveValue(testUser.username);
   });
 
   // --- 6. Agree to Terms of Service and submit ---

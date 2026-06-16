@@ -315,10 +315,10 @@ test.describe
       await clickNoNav(page, { testId: "btn-signin" });
       await waitPopup(page, { visible: true });
 
-      // Switch to signup
-      await click(page, { text: "Create an account" });
-
-      // Fill signup form
+      // Passwordless email-code flow. Enter email → Continue (sends code) →
+      // code "000000" → Continue (verifies). A brand-new email surfaces
+      // UserNotFound, which opens the signup modal with the email + code
+      // already verified — only profile fields remain.
       const ts = Date.now();
       const signupEmail = `hi+user-${ts}@biyard.co`;
       await fill(
@@ -326,22 +326,9 @@ test.describe
         { placeholder: "Enter your email address" },
         signupEmail,
       );
-
-      // Send and verify code (requires --features bypass)
-      await click(page, { text: "Send" });
-      await fill(
-        page,
-        { placeholder: "Enter the verification code" },
-        "000000",
-      );
-      await click(page, { text: "Verify" });
-      await expect(page.getByText("Send", { exact: true })).toBeHidden({
-        timeout: 10000,
-      });
-
-      // Fill password
-      await fill(page, { placeholder: "Enter your password" }, "Test!234");
-      await fill(page, { placeholder: "Re-enter your password" }, "Test!234");
+      await click(page, { testId: "continue-button" });
+      await fill(page, { testId: "code-input" }, "000000");
+      await click(page, { testId: "continue-button" });
 
       // Fill display name and username
       await fill(

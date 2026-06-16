@@ -90,19 +90,15 @@ async function signUpFromSpace(browser, spaceUrl) {
   });
   await clickNoNav(page, { testId: "btn-signin" });
   await waitPopup(page, { visible: true });
-  await click(page, { text: "Create an account" });
 
+  // Passwordless email-code flow: email → Continue (sends code) →
+  // code "000000" → Continue (verifies). A new email surfaces UserNotFound,
+  // opening the signup modal with email + code already verified.
   const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
   await fill(page, { placeholder: "Enter your email address" }, signupEmail);
-  await click(page, { text: "Send" });
-  await fill(page, { placeholder: "Enter the verification code" }, "000000");
-  await click(page, { text: "Verify" });
-  await expect(page.getByText("Send", { exact: true })).toBeHidden({
-    timeout: 10000,
-  });
-
-  await fill(page, { placeholder: "Enter your password" }, "Test!234");
-  await fill(page, { placeholder: "Re-enter your password" }, "Test!234");
+  await click(page, { testId: "continue-button" });
+  await fill(page, { testId: "code-input" }, "000000");
+  await click(page, { testId: "continue-button" });
 
   const uniqueId = Date.now().toString();
   const displayName = `E2E User ${uniqueId}`;
@@ -426,14 +422,15 @@ test.describe.serial("Space with actions created by a team", () => {
       });
       await clickNoNav(page, { testId: "btn-signin" });
       await waitPopup(page, { visible: true });
+      // Passwordless email-code login for an existing user.
       await fill(
         page,
         { placeholder: "Enter your email address" },
         user2.email,
       );
-      await click(page, { text: "Continue" });
-      await fill(page, { placeholder: "Enter your password" }, user2.password);
-      await click(page, { text: "Continue" });
+      await click(page, { testId: "continue-button" });
+      await fill(page, { testId: "code-input" }, "000000");
+      await click(page, { testId: "continue-button" });
       await waitPopup(page, { visible: false });
 
       // Use the shared helper for robust participation.

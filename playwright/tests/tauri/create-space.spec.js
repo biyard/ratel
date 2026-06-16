@@ -322,11 +322,7 @@ test("tauri smoke: signup → team → post → space", async () => {
     { timeout: 10_000, label: "Send button hidden after verify" },
   );
 
-  await fillSelector('input[placeholder="Enter your password"]', user.password);
-  await fillSelector(
-    'input[placeholder="Re-enter your password"]',
-    user.password,
-  );
+  // Passwordless signup — no password / confirm-password fields anymore.
   await fillSelector(
     'input[placeholder="Enter your display name"]',
     user.nickname,

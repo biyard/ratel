@@ -5,10 +5,10 @@ use crate::features::auth::controllers::login::{
     login_handler, wallet_check_handler, wallet_nonce_handler, LoginRequest, WalletCheckRequest,
 };
 use crate::features::auth::hooks::use_user_context;
+use crate::features::auth::controllers::send_code::{send_code_handler, SendCodeRequest};
 use crate::features::auth::interop::sign_in;
 #[cfg(feature = "web")]
 use crate::features::auth::interop::{wallet_connect, wallet_open_app, wallet_sign_message};
-use crate::features::auth::views::ForgotPassword;
 use crate::features::auth::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18,15 +18,20 @@ enum WalletStep {
     Done,
 }
 
-/// Shared email-login action. Extracted as a free `async fn` so it can be
-/// awaited from multiple event handlers (button onclick, email/password
+/// Shared email-code login action. Extracted as a free `async fn` so it can be
+/// awaited from multiple event handlers (button onclick, email/code
 /// `onkeydown` Enter handlers) without moving a closure multiple times or
 /// falling back to `spawn`. Signals are `Copy`, so each caller passes them
 /// by value.
+///
+/// Step 1 (code field hidden): send a verification code to the email, then
+/// reveal the code field. Step 2 (code field shown): verify code + log in.
+/// A valid code with no existing account surfaces `UserNotFound` — the user
+/// is routed into the signup modal (code is reusable within its window).
 async fn submit_email_login(
     email: Signal<String>,
-    password: Signal<String>,
-    mut show_password: Signal<bool>,
+    code: Signal<String>,
+    mut show_code: Signal<bool>,
     mut loading: Signal<bool>,
     mut error_message: Signal<Option<String>>,
     mut user_ctx: Store<UserContext>,
@@ -35,15 +40,24 @@ async fn submit_email_login(
 ) {
     error_message.set(None);
 
-    if !show_password() {
-        show_password.set(true);
+    if !show_code() {
+        loading.set(true);
+        let result = send_code_handler(SendCodeRequest::Email {
+            email: email.read().clone(),
+        })
+        .await;
+        loading.set(false);
+        match result {
+            Ok(_) => show_code.set(true),
+            Err(e) => error_message.set(Some(format!("{e}"))),
+        }
         return;
     }
 
     loading.set(true);
     let result = login_handler(LoginRequest::Email {
         email: email.read().clone(),
-        password: password.read().clone(),
+        code: code.read().clone(),
         device_id: None,
     })
     .await;
@@ -61,6 +75,17 @@ async fn submit_email_login(
             }
             popup.close();
         }
+        // Valid code but no account → route to signup (new user).
+        Err(Error::Auth(AuthError::UserNotFound)) => {
+            popup.close();
+            popup.open(rsx! {
+                SignupModal {
+                    initial_email: Some(email.read().clone()),
+                    initial_email_code: Some(code.read().clone()),
+                    on_success,
+                }
+            });
+        }
         Err(e) => {
             error_message.set(Some(format!("{e}")));
         }
@@ -71,8 +96,8 @@ async fn submit_email_login(
 pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Element {
     let tr: LoginModalTranslate = use_translate();
     let mut email = use_signal(|| String::new());
-    let mut password = use_signal(|| String::new());
-    let show_password = use_signal(|| false);
+    let mut code = use_signal(|| String::new());
+    let show_code = use_signal(|| false);
     let mut loading = use_signal(|| false);
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
     //NOTE: Web Feature issue
@@ -81,20 +106,11 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
     let mut popup = use_popup();
     let navigator = use_navigator();
     let mut user_ctx = use_user_context();
-
-    let handle_open_signup = move |_| {
-        popup.close();
-        popup.open(rsx! {
-            SignupModal { on_success }
-        });
-    };
-
-    let handle_forgot_password = move |_| {
-        popup.close();
-        popup.open(rsx! {
-            ForgotPassword {}
-        });
-    };
+    // Hide Google sign-in on iOS (Tauri iOS / iOS Safari): the in-WebView Google
+    // OAuth flow is unreliable there and Apple guideline 4.8 would otherwise
+    // require Sign in with Apple. New users are handled by the unified email-code
+    // flow (a code for an unknown account routes into the signup modal).
+    let is_ios = use_signal(|| crate::common::hooks::is_ios());
 
     let handle_open_wallet_app = move |_| async move {
         #[cfg(feature = "web")]
@@ -325,15 +341,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
             img { src: RATEL_LOGO, alt: "Ratel", class: "object-contain h-10" }
 
             div { class: "flex flex-col gap-4 w-full",
-                div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
-                    label { class: "font-medium text-text-primary", {tr.new_user} }
-                    button {
-                        class: "text-primary/70 light:text-primary hover:text-primary",
-                        onclick: handle_open_signup,
-                        {tr.create_account}
-                    }
-                }
-
                 if let Some(err) = error_message() {
                     div { class: "text-sm text-red-500", "{err}" }
                 }
@@ -357,8 +364,8 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                             onconfirm: move |_| async move {
                                 submit_email_login(
                                         email,
-                                        password,
-                                        show_password,
+                                        code,
+                                        show_code,
                                         loading,
                                         error_message,
                                         user_ctx,
@@ -371,28 +378,28 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     }
                 }
                 div {
-                    aria_hidden: if show_password() { "false" } else { "true" },
+                    aria_hidden: if show_code() { "false" } else { "true" },
                     class: "flex flex-col gap-2.5 w-full aria-hidden:hidden",
-                    label { r#for: "password", class: "text-sm", {tr.password} }
+                    label { r#for: "code", class: "text-sm", {tr.verification_code} }
                     div { class: "relative w-full",
                         Input {
-                            id: "password",
-                            name: "password",
-                            autocomplete: "current-password",
+                            id: "code",
+                            name: "one-time-code",
+                            autocomplete: "one-time-code",
                             "data-slot": "input",
-                            "data-testid": "password-input",
+                            "data-testid": "code-input",
                             disabled: loading(),
-                            placeholder: "{tr.password_placeholder}",
-                            r#type: InputType::Password,
-                            value: password(),
+                            placeholder: "{tr.code_placeholder}",
+                            r#type: InputType::Text,
+                            value: code(),
                             oninput: move |ev: FormEvent| {
-                                password.set(ev.data().value());
+                                code.set(ev.data().value());
                             },
                             onconfirm: move |_| async move {
                                 submit_email_login(
                                         email,
-                                        password,
-                                        show_password,
+                                        code,
+                                        show_code,
                                         loading,
                                         error_message,
                                         user_ctx,
@@ -404,12 +411,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         }
                     }
                 }
-                div { class: "flex flex-row gap-2.5 justify-between items-center w-full text-sm",
-                    button {
-                        class: "text-sm text-primary/70 hover:text-primary",
-                        onclick: handle_forgot_password,
-                        {tr.forgot_password}
-                    }
+                div { class: "flex flex-row gap-2.5 justify-end items-center w-full text-sm",
                     button {
                         class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:size-[15px] shrink-0 [&amp;_svg]:shrink-0 font-[var(--font-raleway)] bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline web light:bg-neutral-600 hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text disabled:bg-btn-secondary--disable-bg disabled:border-btn-secondary-disable-outline disabled:text-btn-secondary-disable-text",
                         "data-slot": "button",
@@ -418,8 +420,8 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         onclick: move |_| async move {
                             submit_email_login(
                                     email,
-                                    password,
-                                    show_password,
+                                    code,
+                                    show_code,
                                     loading,
                                     error_message,
                                     user_ctx,
@@ -438,46 +440,48 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
             }
             div { class: "font-light text-center rule-with-text align-center", {tr.or} }
             div { class: "flex flex-col gap-2.5",
-                button {
-                    class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5",
-                    disabled: loading(),
-                    onclick: handle_google_login,
-                    svg {
-                        fill: "none",
-                        height: "24",
-                        view_box: "0 0 24 24",
-                        width: "24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        g { clip_path: "url(#clip0_2052_51930)",
-                            path {
-                                d: "M21.7623 12.1871C21.7623 11.3677 21.6958 10.7697 21.552 10.1497H12.1953V13.848H17.6874C17.5768 14.7671 16.9788 16.1512 15.65 17.0813L15.6314 17.2051L18.5898 19.4969L18.7948 19.5174C20.6771 17.7789 21.7623 15.221 21.7623 12.1871Z",
-                                fill: "#4285F4",
+                if !is_ios() {
+                    button {
+                        class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5",
+                        disabled: loading(),
+                        onclick: handle_google_login,
+                        svg {
+                            fill: "none",
+                            height: "24",
+                            view_box: "0 0 24 24",
+                            width: "24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            g { clip_path: "url(#clip0_2052_51930)",
+                                path {
+                                    d: "M21.7623 12.1871C21.7623 11.3677 21.6958 10.7697 21.552 10.1497H12.1953V13.848H17.6874C17.5768 14.7671 16.9788 16.1512 15.65 17.0813L15.6314 17.2051L18.5898 19.4969L18.7948 19.5174C20.6771 17.7789 21.7623 15.221 21.7623 12.1871Z",
+                                    fill: "#4285F4",
+                                }
+                                path {
+                                    d: "M12.1937 21.9313C14.8844 21.9313 17.1432 21.0454 18.7932 19.5174L15.6484 17.0813C14.8069 17.6682 13.6774 18.0779 12.1937 18.0779C9.55834 18.0779 7.32163 16.3395 6.5243 13.9366L6.40743 13.9466L3.33124 16.3273L3.29102 16.4391C4.92979 19.6945 8.29598 21.9313 12.1937 21.9313Z",
+                                    fill: "#34A853",
+                                }
+                                path {
+                                    d: "M6.52477 13.9366C6.31439 13.3165 6.19264 12.6521 6.19264 11.9656C6.19264 11.279 6.31439 10.6147 6.51371 9.9946L6.50813 9.86253L3.3934 7.4436L3.29149 7.49208C2.61607 8.84299 2.22852 10.36 2.22852 11.9656C2.22852 13.5712 2.61607 15.0881 3.29149 16.439L6.52477 13.9366Z",
+                                    fill: "#FBBC05",
+                                }
+                                path {
+                                    d: "M12.1937 5.85336C14.065 5.85336 15.3273 6.66168 16.047 7.33718L18.8596 4.59107C17.1322 2.9855 14.8844 2 12.1937 2C8.29598 2 4.92979 4.23672 3.29102 7.49214L6.51323 9.99466C7.32163 7.59183 9.55834 5.85336 12.1937 5.85336Z",
+                                    fill: "#EB4335",
+                                }
                             }
-                            path {
-                                d: "M12.1937 21.9313C14.8844 21.9313 17.1432 21.0454 18.7932 19.5174L15.6484 17.0813C14.8069 17.6682 13.6774 18.0779 12.1937 18.0779C9.55834 18.0779 7.32163 16.3395 6.5243 13.9366L6.40743 13.9466L3.33124 16.3273L3.29102 16.4391C4.92979 19.6945 8.29598 21.9313 12.1937 21.9313Z",
-                                fill: "#34A853",
-                            }
-                            path {
-                                d: "M6.52477 13.9366C6.31439 13.3165 6.19264 12.6521 6.19264 11.9656C6.19264 11.279 6.31439 10.6147 6.51371 9.9946L6.50813 9.86253L3.3934 7.4436L3.29149 7.49208C2.61607 8.84299 2.22852 10.36 2.22852 11.9656C2.22852 13.5712 2.61607 15.0881 3.29149 16.439L6.52477 13.9366Z",
-                                fill: "#FBBC05",
-                            }
-                            path {
-                                d: "M12.1937 5.85336C14.065 5.85336 15.3273 6.66168 16.047 7.33718L18.8596 4.59107C17.1322 2.9855 14.8844 2 12.1937 2C8.29598 2 4.92979 4.23672 3.29102 7.49214L6.51323 9.99466C7.32163 7.59183 9.55834 5.85336 12.1937 5.85336Z",
-                                fill: "#EB4335",
-                            }
-                        }
-                        defs {
-                            clipPath { id: "clip0_2052_51930",
-                                rect {
-                                    fill: "white",
-                                    height: "20",
-                                    transform: "translate(2 2)",
-                                    width: "20",
+                            defs {
+                                clipPath { id: "clip0_2052_51930",
+                                    rect {
+                                        fill: "white",
+                                        height: "20",
+                                        transform: "translate(2 2)",
+                                        width: "20",
+                                    }
                                 }
                             }
                         }
+                        div { class: "text-base font-semibold text-white", {tr.continue_with_google} }
                     }
-                    div { class: "text-base font-semibold text-white", {tr.continue_with_google} }
                 }
                 button {
                     class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#3B99FC] py-5.5 max-mobile:hidden",
@@ -528,17 +532,13 @@ translate! {
         en: "Enter your email address",
         ko: "이메일 주소를 입력하세요",
     },
-    password: {
-        en: "Password",
-        ko: "비밀번호",
+    verification_code: {
+        en: "Verification code",
+        ko: "인증 코드",
     },
-    password_placeholder: {
-        en: "Enter your password",
-        ko: "비밀번호를 입력하세요",
-    },
-    forgot_password: {
-        en: "Forgot password?",
-        ko: "비밀번호를 잊으셨나요?",
+    code_placeholder: {
+        en: "Enter the verification code",
+        ko: "인증 코드를 입력하세요",
     },
     continue_btn: {
         en: "Continue",

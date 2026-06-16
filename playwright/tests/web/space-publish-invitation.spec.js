@@ -169,7 +169,6 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
       email: `e2e_sp_signup_${signupUniqueId}@biyard.co`,
       username: `sps${signupUniqueId}`,
       displayName: `Space Signup ${signupUniqueId}`,
-      password: "Test!234",
     };
 
     // Create a fresh anonymous context
@@ -191,41 +190,20 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
       await clickNoNav(page, { testId: "btn-signin" });
       await waitPopup(page, { visible: true });
 
-      // Switch to signup modal
-      await click(page, { text: "Create an account" });
-
-      // Fill email and send verification code
+      // Passwordless email-code flow: email → Continue (sends code) →
+      // code "000000" → Continue (verifies). A new email surfaces
+      // UserNotFound, opening the signup modal with email + code already
+      // verified — only profile fields remain.
       await fill(
         page,
         { placeholder: "Enter your email address" },
         newUser.email,
       );
-      await click(page, { text: "Send" });
-
-      // Enter bypass verification code and verify
-      await fill(
-        page,
-        { placeholder: "Enter the verification code" },
-        "000000",
-      );
-      await click(page, { text: "Verify" });
-
-      // Wait for verification to complete (Send button disappears)
-      await expect(page.getByText("Send", { exact: true })).toBeHidden({
-        timeout: 10000,
-      });
+      await click(page, { testId: "continue-button" });
+      await fill(page, { testId: "code-input" }, "000000");
+      await click(page, { testId: "continue-button" });
 
       // Fill signup details
-      await fill(
-        page,
-        { placeholder: "Enter your password" },
-        newUser.password,
-      );
-      await fill(
-        page,
-        { placeholder: "Re-enter your password" },
-        newUser.password,
-      );
       await fill(
         page,
         { placeholder: "Enter your display name" },
