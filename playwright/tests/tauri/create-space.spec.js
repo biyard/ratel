@@ -287,26 +287,21 @@ test("tauri smoke: signup → team → post → space", async () => {
   // multi-page signup → team → post → space flow can complete without
   // chasing transient slowness as if it were a real failure.
   test.setTimeout(120_000);
-  // ── 1. Sign up new user ───────────────────────────────────────────────
+  // ── 1. Sign up new user (unified passwordless email-code flow) ─────────
+  // The login modal opens straight to the email field — no "Create an
+  // account" step. A single "Continue" button sends the code, then verifies
+  // it; an unknown account routes into the signup form automatically.
   await clickSelector('[data-testid="home-btn-signin"]');
-  await waitFor(
-    `document.body.textContent.includes('Create an account')`,
-    { label: "Create an account link visible" },
-  );
-  await clickByText("Create an account");
 
   await waitForSelector('input[placeholder="Enter your email address"]');
   await fillSelector(
     'input[placeholder="Enter your email address"]',
     user.email,
   );
-  await clickByText("Send", { exact: true });
-  // The verification-code input/Verify-button row is always in the DOM
-  // but hidden via aria-hidden until `sent_code = true` (after the
-  // send-code-handler request resolves). Waiting for visibility avoids
-  // the race where the spec fills + clicks Verify while the row is
-  // still hidden (Verify is also `disabled: loading()` during that
-  // window — disabled buttons swallow click events in Chromium).
+  // First Continue → send the verification code.
+  await clickSelector('[data-testid="continue-button"]');
+  // The verification-code input is always in the DOM but hidden via
+  // aria-hidden until `show_code = true` (after send_code resolves).
   await waitForVisible(
     'input[placeholder="Enter the verification code"]',
     { timeout: 30_000 },
@@ -315,12 +310,10 @@ test("tauri smoke: signup → team → post → space", async () => {
     'input[placeholder="Enter the verification code"]',
     "000000",
   );
-  await clickByText("Verify", { exact: true });
-  // Send button disappears once server confirms code.
-  await waitFor(
-    `![...document.querySelectorAll('button')].some(b => b.textContent.trim() === 'Send')`,
-    { timeout: 10_000, label: "Send button hidden after verify" },
-  );
+  // Second Continue → verify + attempt login → routes into signup since the
+  // account doesn't exist yet. The display-name field confirms the switch.
+  await clickSelector('[data-testid="continue-button"]');
+  await waitForSelector('input[placeholder="Enter your display name"]');
 
   // Passwordless signup — no password / confirm-password fields anymore.
   await fillSelector(

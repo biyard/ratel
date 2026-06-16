@@ -55,16 +55,15 @@ test.describe.serial("Signup with email verification (event-driven notification)
     await expect(page).toHaveURL("/");
   });
 
-  // --- 2. Open Sign In modal and switch to signup ---
+  // --- 2. Open Sign In modal (unified email-code flow) ---
 
-  test("should open Sign In modal and navigate to signup form", async () => {
+  test("should open Sign In modal and show the email form", async () => {
     await click(page, { label: "Sign In" });
     await waitPopup(page, { visible: true });
 
-    // Switch to signup form via "Create an account" link
-    await click(page, { text: "Create an account" });
-
-    // Verify the signup form is visible by checking for the email placeholder
+    // Unified passwordless flow: the modal opens straight to the email
+    // field. There is no separate "Create an account" step anymore — a
+    // verified code for an unknown account routes into signup automatically.
     await getLocator(page, { placeholder: "Enter your email address" });
   });
 
@@ -79,31 +78,30 @@ test.describe.serial("Signup with email verification (event-driven notification)
       testUser.email,
     );
 
-    // Click "Send" to trigger verification code sending
-    await click(page, { text: "Send" });
+    // The single "Continue" button sends the code on the first press;
+    // the code input is revealed once send_code resolves.
+    await click(page, { testId: "continue-button" });
 
-    // After sending, the verification code input should appear
-    // (it is conditionally visible once sent_code is true)
     await getLocator(page, { placeholder: "Enter the verification code" });
   });
 
-  // --- 4. Verify the code ---
+  // --- 4. Verify the code and route into signup ---
   //     With the bypass feature enabled, "000000" is accepted as valid.
 
-  test("should verify the email with bypass code", async () => {
+  test("should verify the code and route to the signup form", async () => {
     await fill(
       page,
       { placeholder: "Enter the verification code" },
       "000000",
     );
 
-    await click(page, { text: "Verify" });
+    // The second "Continue" press verifies the code and attempts login;
+    // since this email has no account, the modal routes into signup with
+    // the email + code carried over (already verified). The signup form's
+    // display-name field appearing confirms the transition.
+    await click(page, { testId: "continue-button" });
 
-    // Wait for the "Send" button to disappear, indicating the email is verified.
-    // The "Send" button is only shown when is_valid_email is false.
-    await expect(page.getByText("Send", { exact: true })).toBeHidden({
-      timeout: 10000,
-    });
+    await getLocator(page, { placeholder: "Enter your display name" });
   });
 
   // --- 5. Fill signup details ---
