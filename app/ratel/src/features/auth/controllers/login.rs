@@ -17,6 +17,16 @@ pub enum LoginRequest {
 
         device_id: Option<String>,
     },
+    // Backward-compat: password login used by already-shipped mobile apps
+    // (the Android build currently in App Store review). Declared BEFORE the
+    // email-code `Email` variant so an untagged `{email,password}` body
+    // matches here instead of failing `Email{email,code}`.
+    EmailPassword {
+        email: String,
+        password: String,
+        #[serde(default)]
+        device_id: Option<String>,
+    },
     Email {
         email: String,
         code: String,
@@ -67,6 +77,11 @@ pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
             code,
             device_id: _,
         } => login_with_phone(cli, phone, code).await?,
+        LoginRequest::EmailPassword {
+            email,
+            password,
+            device_id: _,
+        } => login_with_email_password(cli, email, password).await?,
         LoginRequest::Email {
             email,
             code,
@@ -95,6 +110,7 @@ pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
 
     let device_id: Option<String> = match &req.clone() {
         LoginRequest::Phone { device_id, .. } => device_id.clone(),
+        LoginRequest::EmailPassword { device_id, .. } => device_id.clone(),
         LoginRequest::Email { device_id, .. } => device_id.clone(),
         LoginRequest::OAuth { device_id, .. } => device_id.clone(),
         LoginRequest::Telegram { device_id, .. } => device_id.clone(),
@@ -241,6 +257,27 @@ pub async fn login_with_email(
         User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     // Valid code but no account → caller (frontend) treats this as "go signup".
     users.into_iter().next().ok_or(AuthError::UserNotFound.into())
+}
+
+/// Backward-compat: password login for already-shipped mobile apps (the
+/// Android build in App Store review). Looks the user up by email + hashed
+/// password via gsi1. New clients use the email-code `login_with_email` path.
+#[cfg(feature = "server")]
+pub async fn login_with_email_password(
+    cli: &aws_sdk_dynamodb::Client,
+    email: String,
+    password: String,
+) -> Result<User> {
+    let hashed_password = crate::common::utils::password::hash_password(&password);
+    let (u, _) = User::find_by_email_and_password(
+        cli,
+        &email,
+        UserQueryOption::builder().sk(hashed_password),
+    )
+    .await?;
+    u.into_iter()
+        .next()
+        .ok_or(AuthError::InvalidCredentials.into())
 }
 
 #[cfg(feature = "server")]
