@@ -19,43 +19,12 @@ pub struct SendCodeResponse {
     pub expired_at: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
-pub struct SendPasswordResetCodeRequest {
-    pub email: String,
-}
-
 #[post("/api/auth/verification/send-verification-code")]
 pub async fn send_code_handler(req: SendCodeRequest) -> Result<SendCodeResponse> {
     match req {
         SendCodeRequest::Email { email } => send_email_code_handler(email).await,
         SendCodeRequest::SMS { phone } => send_phone_code_handler(phone).await,
     }
-}
-
-#[post("/api/auth/verification/send-password-reset-code")]
-pub async fn send_password_reset_code_handler(
-    req: SendPasswordResetCodeRequest,
-) -> Result<SendCodeResponse> {
-    send_password_reset_email_code_handler(req.email).await
-}
-
-#[cfg(feature = "server")]
-async fn send_password_reset_email_code_handler(email: String) -> Result<SendCodeResponse> {
-    use crate::features::auth::constants::EXPIRATION_TIME;
-
-    let cli = crate::features::auth::config::get().dynamodb();
-    let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
-
-    if users.is_empty() {
-        tracing::debug!("Skipping password reset verification email for non-registered email");
-        return Ok(SendCodeResponse {
-            expired_at: crate::common::utils::time::get_now_timestamp() + EXPIRATION_TIME as i64,
-        });
-    }
-
-    // Skip the duplicate email check since password reset requires an existing account
-    send_email_code(email).await
 }
 
 #[cfg(feature = "server")]
@@ -118,24 +87,13 @@ pub async fn send_phone_code_handler(phone: String) -> Result<SendCodeResponse> 
 
 #[cfg(feature = "server")]
 pub async fn send_email_code_handler(email: String) -> Result<SendCodeResponse> {
-    let cli = crate::features::auth::config::get().dynamodb();
-
-    // Check if email is already registered (signup only)
-    let (existing_users, _) =
-        User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
-    if !existing_users.is_empty() {
-        return Err(Error::Duplicate(format!(
-            "Email already registered: {}. Please use Forgot Password instead.",
-            email
-        )));
-    }
-
+    // No existence check: this code serves BOTH login (existing account) and
+    // signup (new account) in the unified passwordless flow.
     send_email_code(email).await
 }
 
 /// Sends an email verification code without checking for existing accounts.
-/// Used by both signup (via send_email_code_handler with duplicate check)
-/// and password reset (via send_password_reset_email_code_handler).
+/// Used by the unified passwordless flow (login + signup share one code).
 #[cfg(feature = "server")]
 async fn send_email_code(email: String) -> Result<SendCodeResponse> {
     use crate::common::models::notification::Notification;

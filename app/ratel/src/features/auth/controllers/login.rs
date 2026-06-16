@@ -19,8 +19,8 @@ pub enum LoginRequest {
     },
     Email {
         email: String,
-        password: String,
-
+        code: String,
+        #[serde(default)]
         device_id: Option<String>,
     },
     OAuth {
@@ -69,9 +69,9 @@ pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
         } => login_with_phone(cli, phone, code).await?,
         LoginRequest::Email {
             email,
-            password,
+            code,
             device_id: _,
-        } => login_with_email(cli, email, password).await?,
+        } => login_with_email(cli, email, code).await?,
         LoginRequest::OAuth {
             provider,
             access_token,
@@ -233,30 +233,14 @@ pub async fn login_with_oauth(
 pub async fn login_with_email(
     cli: &aws_sdk_dynamodb::Client,
     email: String,
-    password: String,
+    code: String,
 ) -> Result<User> {
-    let hashed_password = crate::common::utils::password::hash_password(&password);
-    let (u, _) = User::find_by_email_and_password(
-        cli,
-        &email,
-        UserQueryOption::builder().sk(hashed_password),
-    )
-    .await?;
-    let user = u.get(0).cloned().ok_or(AuthError::InvalidCredentials)?;
+    crate::features::auth::controllers::verify_code::verify_email_code(cli, &email, &code).await?;
 
-    // FIXME(migrate): fallback to tricky migration from postgres
-    // let user = if user.is_none() {
-    //     migrate_by_email_password(cli, pool, email, password)
-    //         .await
-    //         .map_err(|e| {
-    //             tracing::error!("Failed to migrate user by email: {}", e);
-    //             Error::Unauthorized("Invalid email or password".into())
-    //         })?
-    // } else {
-    //     user.unwrap()
-    // };
-
-    Ok(user)
+    let (users, _) =
+        User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
+    // Valid code but no account → caller (frontend) treats this as "go signup".
+    users.into_iter().next().ok_or(AuthError::UserNotFound.into())
 }
 
 #[cfg(feature = "server")]

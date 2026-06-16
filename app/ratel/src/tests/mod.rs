@@ -6,6 +6,7 @@ pub mod setup;
 pub use crate::axum;
 
 mod arcade_tests;
+mod auth_tests;
 mod cors_tests;
 mod cross_posting_tests;
 mod discussion_subscription_tests;

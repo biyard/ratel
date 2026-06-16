@@ -21,7 +21,6 @@ test.describe.serial("Character progression", () => {
     email: `e2e_character_${uniqueId}@biyard.co`,
     username: `ch${uniqueId}`,
     displayName: `Character ${uniqueId}`,
-    password: "Test!234",
   };
 
   test.beforeAll(async ({ browser }) => {
@@ -40,17 +39,14 @@ test.describe.serial("Character progression", () => {
     await click(page, { label: "Sign In" });
     await waitPopup(page, { visible: true });
 
-    await click(page, { text: "Create an account" });
+    // Passwordless email-code flow: email → Continue (sends code) →
+    // code "000000" → Continue (verifies). A new email surfaces UserNotFound,
+    // opening the signup modal with email + code already verified.
     await fill(page, { placeholder: "Enter your email address" }, testUser.email);
-    await click(page, { text: "Send" });
-    await fill(page, { placeholder: "Enter the verification code" }, "000000");
-    await click(page, { text: "Verify" });
-    await expect(page.getByText("Send", { exact: true })).toBeHidden({
-      timeout: 10000,
-    });
+    await click(page, { testId: "continue-button" });
+    await fill(page, { testId: "code-input" }, "000000");
+    await click(page, { testId: "continue-button" });
 
-    await fill(page, { placeholder: "Enter your password" }, testUser.password);
-    await fill(page, { placeholder: "Re-enter your password" }, testUser.password);
     await fill(page, { placeholder: "Enter your display name" }, testUser.displayName);
     await fill(page, { placeholder: "Enter your user name" }, testUser.username);
     await click(page, {

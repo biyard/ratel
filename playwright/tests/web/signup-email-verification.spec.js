@@ -16,7 +16,7 @@ import { click, fill, goto, getLocator, waitPopup } from "../utils";
  *   4. Enter email and click "Send" (triggers send_code_handler which now
  *      creates a Notification document instead of calling SES directly)
  *   5. Enter the bypass verification code "000000" and click "Verify"
- *   6. Fill password, confirm password, display name, username
+ *   6. Fill display name and username (passwordless — no password step)
  *   7. Agree to Terms of Service
  *   8. Submit signup ("Finished Sign-up")
  *   9. Verify the modal closes and the user is logged in
@@ -34,7 +34,6 @@ test.describe.serial("Signup with email verification (event-driven notification)
     email: `e2e_signup_notif_${uniqueId}@biyard.co`,
     username: `su${uniqueId}`,
     displayName: `Signup Test ${uniqueId}`,
-    password: "Test!234",
   };
 
   test.beforeAll(async ({ browser }) => {
@@ -56,16 +55,15 @@ test.describe.serial("Signup with email verification (event-driven notification)
     await expect(page).toHaveURL("/");
   });
 
-  // --- 2. Open Sign In modal and switch to signup ---
+  // --- 2. Open Sign In modal (unified email-code flow) ---
 
-  test("should open Sign In modal and navigate to signup form", async () => {
+  test("should open Sign In modal and show the email form", async () => {
     await click(page, { label: "Sign In" });
     await waitPopup(page, { visible: true });
 
-    // Switch to signup form via "Create an account" link
-    await click(page, { text: "Create an account" });
-
-    // Verify the signup form is visible by checking for the email placeholder
+    // Unified passwordless flow: the modal opens straight to the email
+    // field. There is no separate "Create an account" step anymore — a
+    // verified code for an unknown account routes into signup automatically.
     await getLocator(page, { placeholder: "Enter your email address" });
   });
 
@@ -80,50 +78,35 @@ test.describe.serial("Signup with email verification (event-driven notification)
       testUser.email,
     );
 
-    // Click "Send" to trigger verification code sending
-    await click(page, { text: "Send" });
+    // The single "Continue" button sends the code on the first press;
+    // the code input is revealed once send_code resolves.
+    await click(page, { testId: "continue-button" });
 
-    // After sending, the verification code input should appear
-    // (it is conditionally visible once sent_code is true)
     await getLocator(page, { placeholder: "Enter the verification code" });
   });
 
-  // --- 4. Verify the code ---
+  // --- 4. Verify the code and route into signup ---
   //     With the bypass feature enabled, "000000" is accepted as valid.
 
-  test("should verify the email with bypass code", async () => {
+  test("should verify the code and route to the signup form", async () => {
     await fill(
       page,
       { placeholder: "Enter the verification code" },
       "000000",
     );
 
-    await click(page, { text: "Verify" });
+    // The second "Continue" press verifies the code and attempts login;
+    // since this email has no account, the modal routes into signup with
+    // the email + code carried over (already verified). The signup form's
+    // display-name field appearing confirms the transition.
+    await click(page, { testId: "continue-button" });
 
-    // Wait for the "Send" button to disappear, indicating the email is verified.
-    // The "Send" button is only shown when is_valid_email is false.
-    await expect(page.getByText("Send", { exact: true })).toBeHidden({
-      timeout: 10000,
-    });
+    await getLocator(page, { placeholder: "Enter your display name" });
   });
 
   // --- 5. Fill signup details ---
 
-  test("should fill password, display name, and username", async () => {
-    // Password
-    await fill(
-      page,
-      { placeholder: "Enter your password" },
-      testUser.password,
-    );
-
-    // Confirm password
-    await fill(
-      page,
-      { placeholder: "Re-enter your password" },
-      testUser.password,
-    );
-
+  test("should fill display name and username", async () => {
     // Display name
     await fill(
       page,
@@ -138,11 +121,11 @@ test.describe.serial("Signup with email verification (event-driven notification)
       testUser.username,
     );
 
-    // Verify all fields are filled
-    const passwordInput = page.getByPlaceholder("Enter your password", {
+    // Verify the username field is filled (passwordless — no password input)
+    const usernameInput = page.getByPlaceholder("Enter your user name", {
       exact: true,
     });
-    await expect(passwordInput).toHaveValue(testUser.password);
+    await expect(usernameInput).toHaveValue(testUser.username);
   });
 
   // --- 6. Agree to Terms of Service and submit ---

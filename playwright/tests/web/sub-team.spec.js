@@ -33,7 +33,7 @@ import {
  *   • app-shell built with `full,bypass` (verification code "000000").
  */
 
-const USER2 = { email: "hi+user2@biyard.co", password: "admin!234" };
+const USER2 = { email: "hi+user2@biyard.co" };
 
 // ───────────────────────── helpers ───────────────────────────────────────
 
@@ -50,16 +50,13 @@ async function signInAs(browser, creds) {
   await expect(page.getByPlaceholder("Enter your email address")).toBeVisible({
     timeout: 15000,
   });
+  // Passwordless email-code login for an existing user: email → Continue
+  // (sends code) → code "000000" → Continue (verifies). The bypass code
+  // "000000" is accepted under --features bypass.
   await fill(page, { placeholder: "Enter your email address" }, creds.email);
-  await click(page, { text: "Continue" });
-  await fill(page, { placeholder: "Enter your password" }, creds.password);
-  await click(page, { text: "Continue" });
-  // Verification step uses 000000 under --features bypass.
-  const codeInput = page.getByPlaceholder("Enter the verification code");
-  if (await codeInput.isVisible().catch(() => false)) {
-    await codeInput.fill("000000");
-    await click(page, { text: "Verify" });
-  }
+  await click(page, { testId: "continue-button" });
+  await fill(page, { testId: "code-input" }, "000000");
+  await click(page, { testId: "continue-button" });
 
   return { context, page };
 }

@@ -7,7 +7,6 @@ use rmcp::schemars;
 use crate::features::auth::utils::evm::recover_address;
 #[cfg(feature = "server")]
 use crate::features::auth::utils::{
-    password::hash_password,
     referral_code::generate_referral_code,
     validator::{validate_image_url, validate_username},
 };
@@ -42,7 +41,6 @@ pub struct SignupRequest {
 pub enum SignupType {
     Email {
         email: String,
-        password: String,
         code: String,
     },
     Phone {
@@ -88,11 +86,9 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
     })?;
 
     let user = match req.signup_type.clone() {
-        SignupType::Email {
-            email,
-            password,
-            code,
-        } => signup_with_email_password(cli, req.clone(), email, password, code).await?,
+        SignupType::Email { email, code } => {
+            signup_with_email(cli, req.clone(), email, code).await?
+        }
         SignupType::Phone { phone, code } => signup_with_phone(cli, phone, code).await?,
         SignupType::OAuth {
             provider,
@@ -161,7 +157,7 @@ async fn ensure_username_available(cli: &aws_sdk_dynamodb::Client, username: &st
 }
 
 #[cfg(feature = "server")]
-async fn signup_with_email_password(
+async fn signup_with_email(
     cli: &aws_sdk_dynamodb::Client,
     SignupRequest {
         display_name,
@@ -172,38 +168,19 @@ async fn signup_with_email_password(
         ..
     }: SignupRequest,
     email: String,
-    password: String,
     code: String,
 ) -> Result<User> {
     tracing::debug!("Signing up with email: {}", email);
 
-    let is_invalid = EmailVerification::find_by_email_and_code(
-        cli,
-        email.clone(),
-        EmailVerificationQueryOption::builder()
-            .sk(code.clone())
-            .limit(1),
-    )
-    .await?
-    .0
-    .len()
-        == 0;
-
-    #[cfg(feature = "bypass")]
-    let is_invalid = is_invalid && !code.eq("000000");
-
-    if is_invalid {
-        return Err(Error::InvalidVerificationCode);
-    }
+    crate::features::auth::controllers::verify_code::verify_email_code(cli, &email, &code).await?;
 
     let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
-    if users.len() > 0 {
+    if !users.is_empty() {
         return Err(Error::Duplicate(format!(
             "Email already registered: {}",
             email
         )));
     }
-    let hashed_password = hash_password(&password);
 
     ensure_username_available(cli, &username).await?;
 
@@ -215,7 +192,7 @@ async fn signup_with_email_password(
         informed_agreed,
         UserType::Individual,
         username,
-        Some(hashed_password),
+        None, // passwordless
     );
 
     user.create(cli).await?;

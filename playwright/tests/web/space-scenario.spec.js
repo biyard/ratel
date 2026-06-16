@@ -78,20 +78,17 @@ async function signUpFromSpace(
   });
   await clickNoNav(page, { testId: "btn-signin" });
   await waitPopup(page, { visible: true });
-  // "Create an account" link is inside the modal — waiting for it implies modal is open
-  await click(page, { text: "Create an account" });
 
+  // Passwordless email-code flow: enter email → Continue (sends code) →
+  // enter code "000000" → Continue (verifies). For a brand-new account the
+  // login flow surfaces UserNotFound and opens the signup modal with the
+  // email + code already verified, so only profile fields remain.
   await fill(page, { placeholder: "Enter your email address" }, email);
-  await click(page, { text: "Send" });
-  await fill(page, { placeholder: "Enter the verification code" }, "000000");
-  await click(page, { text: "Verify" });
-  // "Send" disappears once server confirms the code is valid
-  await expect(page.getByText("Send", { exact: true })).toBeHidden({
-    timeout: 10000,
-  });
+  await click(page, { testId: "continue-button" });
+  await fill(page, { testId: "code-input" }, "000000");
+  await click(page, { testId: "continue-button" });
 
-  await fill(page, { placeholder: "Enter your password" }, password);
-  await fill(page, { placeholder: "Re-enter your password" }, password);
+  // Signup modal opens (code valid, account not found). Fill profile + ToS.
   await fill(page, { placeholder: "Enter your display name" }, name);
   await fill(page, { placeholder: "Enter your user name" }, username);
   await click(page, {

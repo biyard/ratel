@@ -3,15 +3,19 @@ import { waitPopup, click, fill, goto } from "./utils";
 
 test("create storage state", async ({ page }) => {
   const email = `admin@ratel.foundation`;
-  const password = "admin!234";
+  // Passwordless email-code login. The backend is built with --features
+  // bypass, so "000000" is always accepted as the verification code.
+  const code = "000000";
 
   await goto(page, "/");
 
   await click(page, { testId: "home-btn-signin" });
   await fill(page, { placeholder: "Enter your email address" }, email);
-  await click(page, { text: "Continue" });
-  await fill(page, { placeholder: "Enter your password" }, password);
-  await click(page, { text: "Continue" });
+  // Step 1: send the verification code (reveals the code field).
+  await click(page, { testId: "continue-button" });
+  // Step 2: enter the code and verify → existing user is logged in.
+  await fill(page, { testId: "code-input" }, code);
+  await click(page, { testId: "continue-button" });
 
   await waitPopup(page, { visible: false });
 
