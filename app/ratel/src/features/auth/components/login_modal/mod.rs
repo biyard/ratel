@@ -438,7 +438,13 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     }
                 }
             }
-            div { class: "font-light text-center rule-with-text align-center", {tr.or} }
+            // The "Or" divider only makes sense when a social login follows
+            // it. On iOS, Google (is_ios) and Wallet (max-mobile:hidden) are
+            // both hidden, leaving the divider stranded — so gate it on the
+            // same `!is_ios()` that shows Google.
+            if !is_ios() {
+                div { class: "font-light text-center rule-with-text align-center", {tr.or} }
+            }
             div { class: "flex flex-col gap-2.5",
                 if !is_ios() {
                     button {

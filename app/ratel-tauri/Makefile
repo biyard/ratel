@@ -175,8 +175,13 @@ apk.sha1:
 	"$$APKSIGNER" verify --print-certs "$$APK" | grep "SHA-1 digest" | awk '{print $$NF}'
 
 # Run `dx build` and copy the produced web bundle into ./dist for Tauri.
+# MOBILE_API_URL must be forwarded into the app/ratel build so the wasm
+# `api_base_url()` (option_env!("MOBILE_API_URL")) is baked with THIS build's
+# target backend. Without it, app/ratel falls back to its own default
+# (http://$(HOST_IP):$(PORT)) and every mobile build silently talks to a local
+# IP instead of the ENV-selected backend (dev/staging/prod).
 dx-build:
-	cd $(RATEL_DIR) && CARGO_TARGET_DIR=$(DX_CARGO_TARGET_DIR) make build-tauri
+	cd $(RATEL_DIR) && CARGO_TARGET_DIR=$(DX_CARGO_TARGET_DIR) MOBILE_API_URL=$(MOBILE_API_URL) make build-tauri
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
 
 run: run-android

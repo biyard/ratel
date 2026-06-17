@@ -46,6 +46,13 @@ pub fn App() -> Element {
     function update() {
       var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
       document.documentElement.style.setProperty("--kb-inset", kb + "px");
+      // iOS WKWebView shifts the *visual* viewport up (offsetTop > 0) to keep a
+      // focused input above the keyboard, dragging `position:fixed` elements up
+      // with it — so the scroll-locked body (topbar) jumps under the status bar
+      // when a modal input is focused. Expose the offset so the lock can apply
+      // an equal counter-translate and stay visually pinned. 0 on Android.
+      document.documentElement.style.setProperty(
+        "--vv-offset-top", Math.round(vv.offsetTop) + "px");
     }
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);

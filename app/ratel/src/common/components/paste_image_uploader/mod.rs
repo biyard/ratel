@@ -142,7 +142,40 @@ pub fn handle_paste_event(
     false
 }
 
-#[cfg(feature = "web")]
+// Tauri WebView: route the S3 PUT through the native `s3_put_object` command —
+// a direct in-WebView fetch to the presigned URL is cross-origin from
+// `tauri://localhost` and dies on the CORS preflight (403). `dx build
+// --platform web` also turns on `web`, so this must be gated more specifically
+// than the plain-web variant below and win when `tauri-web` is set.
+#[cfg(feature = "tauri-web")]
+async fn upload_blob_to_s3(file: web_sys::File) -> std::result::Result<String, String> {
+    let presigned = crate::common::controllers::get_put_object_uri(
+        Some(1),
+        Some("comment-images".to_string()),
+    )
+    .await
+    .map_err(|e| format!("Failed to get presigned URL: {e}"))?;
+
+    let presigned_url = presigned
+        .presigned_uris
+        .first()
+        .ok_or("No presigned URL returned")?
+        .to_string();
+    let public_url = presigned
+        .uris
+        .first()
+        .ok_or("No public URL returned")?
+        .to_string();
+
+    let content_type = file.type_();
+    crate::common::utils::web::s3_put_object_native(&presigned_url, &content_type, &file)
+        .await
+        .map_err(|e| format!("Native S3 upload failed: {e}"))?;
+
+    Ok(public_url)
+}
+
+#[cfg(all(feature = "web", not(feature = "tauri-web")))]
 async fn upload_blob_to_s3(file: web_sys::File) -> std::result::Result<String, String> {
     use wasm_bindgen::JsCast;
 

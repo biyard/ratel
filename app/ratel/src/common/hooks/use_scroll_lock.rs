@@ -50,10 +50,33 @@ fn lock_page_scroll() -> bool {
     });
 
     if should_apply_lock {
+        // `position:fixed` resolves against the initial containing block (the
+        // full viewport), bypassing `:root`'s safe-area padding. With the iOS
+        // WKWebView running edge-to-edge (full-height viewport), a bare `top:0`
+        // pushes the page under the status bar/notch (topbar jumps up). Pin the
+        // top to the safe-area inset and size to the padded area so the locked
+        // body occupies the same box as the unlocked one. env(...) is 0 on
+        // web/Android, so this stays a no-op there.
+        //
+        // Adding `var(--vv-offset-top)` to `top` counters iOS's keyboard-
+        // avoidance shift: when a modal input is focused, WKWebView moves the
+        // visual viewport up (offsetTop > 0) and drags this fixed body with it,
+        // so the topbar jumps under the status bar. The app.rs visualViewport
+        // handler publishes that offset as `--vv-offset-top`; pushing the body
+        // down by the same amount keeps it (topbar) visually pinned. The var is
+        // unset/0 on web/Android.
+        //
+        // NOTE: this MUST be done via `top`, never `transform`. A transform on
+        // the body establishes a containing block for its `position:fixed`
+        // descendants (CSS spec), which re-anchors the modal popup to the body
+        // box instead of the viewport — shoving the whole modal down. `top`
+        // does not create a containing block, so the modal keeps its
+        // viewport-relative centering and rides iOS's own offset (input stays
+        // above the keyboard) while only the body/topbar is compensated.
         let _ = body.set_attribute(
             "style",
             &format!(
-                "position:fixed;top:-{scroll_y}px;left:0;right:0;width:100%;overflow:hidden;overscroll-behavior:none;"
+                "position:fixed;top:calc(env(safe-area-inset-top) - {scroll_y}px + var(--vv-offset-top, 0px));left:env(safe-area-inset-left);right:env(safe-area-inset-right);width:auto;height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:hidden;overscroll-behavior:none;"
             ),
         );
     }
