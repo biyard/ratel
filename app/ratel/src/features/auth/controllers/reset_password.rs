@@ -1,10 +1,10 @@
-// Migrated from packages/main-api/src/controllers/v3/auth/reset_password.rs
+// Backward-compat: password reset for already-shipped mobile apps (the Android
+// build in App Store review). New passwordless clients never call this.
 use crate::features::auth::models::*;
 #[cfg(feature = "server")]
 #[allow(unused_imports)]
 use rmcp::schemars;
-#[cfg(feature = "server")]
-use crate::features::auth::utils::password::hash_password;
+
 use crate::features::auth::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,32 +22,16 @@ pub async fn reset_password_handler(req: ResetPasswordRequest) -> Result<User> {
     let email = req.email;
     let code = req.code;
     let password = req.password;
-    let is_invalid = EmailVerification::find_by_email_and_code(
-        cli,
-        email.clone(),
-        EmailVerificationQueryOption::builder()
-            .sk(code.clone())
-            .limit(1),
-    )
-    .await?
-    .0
-    .len()
-        == 0;
 
-    #[cfg(feature = "bypass")]
-    let is_invalid = is_invalid && !code.eq("000000");
+    crate::features::auth::controllers::verify_code::verify_email_code(cli, &email, &code).await?;
 
-    if is_invalid {
-        return Err(Error::InvalidVerificationCode);
-    }
+    let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
+    let user = users
+        .into_iter()
+        .next()
+        .ok_or(Error::NotFound(format!("Not Registered Email: {}", email)))?;
 
-    let (users, _) =
-        User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
-    if users.len() == 0 {
-        return Err(Error::NotFound(format!("Not Registered Email: {}", email)));
-    }
-    let user = users[0].clone();
-    let hashed_password = hash_password(&password);
+    let hashed_password = crate::common::utils::password::hash_password(&password);
 
     let user = User::updater(user.pk, user.sk)
         .with_password(hashed_password)

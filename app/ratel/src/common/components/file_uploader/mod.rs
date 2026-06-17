@@ -107,7 +107,7 @@ pub fn FileUploader(
     }
 }
 
-#[cfg(not(feature = "web"))]
+#[cfg(not(any(feature = "web", feature = "tauri-web")))]
 async fn upload_via_presigned(
     _accept: &str,
     _file: FileData,
@@ -117,7 +117,62 @@ async fn upload_via_presigned(
     Ok(())
 }
 
-#[cfg(feature = "web")]
+// Tauri WebView: PUT the bytes through the native `s3_put_object` command
+// instead of an in-WebView `fetch`. A direct fetch to the S3 presigned URL is
+// cross-origin from `tauri://localhost` and dies on the CORS preflight (403),
+// so the upload silently fails (logo upload, etc.). `dx build --platform web`
+// turns on `web` too, so this branch must be gated *more specifically* than the
+// plain-web one below and win when `tauri-web` is set.
+#[cfg(feature = "tauri-web")]
+async fn upload_via_presigned(
+    _accept: &str,
+    file: FileData,
+    on_upload_success: EventHandler<String>,
+    on_upload_meta: Option<EventHandler<UploadedFileMeta>>,
+) -> Result<()> {
+    use dioxus::web::WebFileExt;
+
+    let file_name = file.name();
+    let Some(web_file) = file.get_web_file() else {
+        return Err(Error::NotFound("Failed to get web file".to_string()));
+    };
+
+    if web_file.size() > 100_f64 * 1024_f64 * 1024_f64 {
+        return Err(FileUploadError::FileSizeLimitExceeded.into());
+    }
+
+    let file_type = guess_file_type(&file, &web_file);
+    let presigned = request_presigned_url(&file_type).await?;
+    let presigned_url = presigned
+        .presigned_uris
+        .get(0)
+        .ok_or_else(|| Error::NotFound("Missing presigned URL.".to_string()))?
+        .to_string();
+    let public_url = presigned
+        .uris
+        .get(0)
+        .ok_or_else(|| Error::NotFound("Missing public URL.".to_string()))?
+        .to_string();
+
+    let content_type = web_file.type_();
+    let size = format_file_size(web_file.size());
+
+    crate::common::utils::web::s3_put_object_native(&presigned_url, &content_type, &web_file)
+        .await
+        .map_err(|_| Error::from(FileUploadError::UploadFailed))?;
+
+    on_upload_success.call(public_url.clone());
+    if let Some(on_upload_meta) = on_upload_meta {
+        on_upload_meta.call(UploadedFileMeta {
+            url: public_url,
+            name: file_name,
+            size,
+        });
+    }
+    Ok(())
+}
+
+#[cfg(all(feature = "web", not(feature = "tauri-web")))]
 async fn upload_via_presigned(
     _accept: &str,
     file: FileData,

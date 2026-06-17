@@ -71,3 +71,21 @@ pub fn use_platform() -> Signal<Platform> {
 
     platform
 }
+
+/// True when running on an iOS device — the Tauri iOS WKWebView or iOS Safari
+/// (iPhone/iPad/iPod). Client-side user-agent check; always `false` on the
+/// server (and for non-iOS clients). Used to hide Google sign-in on iOS, where
+/// the in-WebView Google OAuth flow is unreliable and Apple's App Store
+/// guideline 4.8 would otherwise require offering Sign in with Apple.
+#[cfg(not(feature = "server"))]
+pub fn is_ios() -> bool {
+    web_sys::window()
+        .and_then(|w| w.navigator().user_agent().ok())
+        .map(|ua| ua.contains("iPhone") || ua.contains("iPad") || ua.contains("iPod"))
+        .unwrap_or(false)
+}
+
+#[cfg(feature = "server")]
+pub fn is_ios() -> bool {
+    false
+}

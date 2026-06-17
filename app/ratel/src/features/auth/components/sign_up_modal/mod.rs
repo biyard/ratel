@@ -12,6 +12,10 @@ use crate::features::auth::*;
 #[component]
 pub fn SignupModal(
     #[props(optional)] initial_email: Option<String>,
+    /// A verification code already validated by the unified login flow. When
+    /// present, the email is treated as verified and reused for signup.
+    #[props(optional)]
+    initial_email_code: Option<String>,
     #[props(optional)] initial_oauth_access_token: Option<String>,
     #[props(optional)] initial_wallet_address: Option<String>,
     #[props(optional)] on_success: Option<Callback<()>>,
@@ -19,26 +23,26 @@ pub fn SignupModal(
     let tr: SignupModalTranslate = use_translate();
     let is_wallet_signup = initial_wallet_address.is_some();
     let is_oauth_signup = initial_oauth_access_token.is_some();
+    // Email arriving from the login flow with a verified code: trust it.
+    let email_prefilled = initial_email_code.is_some();
     let wallet_address = use_signal(|| initial_wallet_address.clone().unwrap_or_default());
     let oauth_access_token =
         use_signal(|| initial_oauth_access_token.clone().unwrap_or_default());
     let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
-    let mut password = use_signal(|| String::new());
-    let mut confirm_password = use_signal(|| String::new());
-    let mut confirm_password_warning = use_signal(|| String::new());
     let mut display_name = use_signal(|| String::new());
     let mut username = use_signal(|| String::new());
-    let mut auth_code = use_signal(|| String::new());
+    let mut auth_code = use_signal(|| initial_email_code.clone().unwrap_or_default());
     let profile_url =
         use_signal(|| "https://metadata.ratel.foundation/ratel/default-profile.png".to_string());
     let mut agreed_tos = use_signal(|| false);
     let mut agreed_news = use_signal(|| false);
-    let mut sent_code = use_signal(|| false);
-    // OAuth-verified emails are trusted from the provider, so skip email verification entirely.
-    let mut is_valid_email = use_signal(|| is_oauth_signup);
+    let mut sent_code = use_signal(|| email_prefilled);
+    // OAuth-verified emails are trusted from the provider, so skip email
+    // verification entirely. A code passed from the unified login flow is
+    // also already verified.
+    let mut is_valid_email = use_signal(|| is_oauth_signup || email_prefilled);
     let mut loading = use_signal(|| false);
     let mut email_warning = use_signal(|| String::new());
-    let mut password_warning = use_signal(|| String::new());
     let mut username_warning = use_signal(|| String::new());
     let mut terms_error = use_signal(|| String::new());
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
@@ -60,15 +64,6 @@ pub fn SignupModal(
             && !domain.contains(char::is_whitespace)
     };
 
-    let is_valid_password = |pw: &str| -> bool {
-        pw.len() >= 8
-            && pw.chars().any(|c| c.is_ascii_alphabetic())
-            && pw.chars().any(|c| c.is_ascii_digit())
-            && pw
-                .chars()
-                .any(|c| "!@#$%^&*()_+{}[]:;<>,.?~\\/-".contains(c))
-    };
-
     let is_valid_username = |name: &str| -> bool {
         !name.is_empty()
             && name
@@ -80,8 +75,7 @@ pub fn SignupModal(
         || username().is_empty()
         || !is_valid_username(&username())
         || display_name().trim().is_empty()
-        || (!is_wallet_signup && !is_valid_email())
-        || (!is_wallet_signup && !is_oauth_signup && password() != confirm_password());
+        || (!is_wallet_signup && !is_valid_email());
 
     rsx! {
         div {
@@ -217,54 +211,6 @@ pub fn SignupModal(
                             },
                             {tr.verify}
                         }
-                    }
-                }
-
-                // Password (hidden for wallet or OAuth signup)
-                div { class: if is_wallet_signup || is_oauth_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
-                    label { class: "font-bold text-c-cg-30 text-base/7", {tr.password} }
-                    input {
-                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
-                        disabled: loading(),
-                        placeholder: "{tr.password_placeholder}",
-                        r#type: "password",
-                        value: password(),
-                        oninput: move |ev| {
-                            let val = ev.data().value();
-                            password.set(val.clone());
-                            if val.len() > 7 && !is_valid_password(&val) {
-                                password_warning.set(tr.invalid_password_format.to_string());
-                            } else {
-                                password_warning.set(String::new());
-                            }
-                        },
-                    }
-                    if !password_warning().is_empty() {
-                        p { class: "mt-1 text-sm text-red-500", {password_warning} }
-                    }
-                }
-
-                // Confirm Password (hidden for wallet or OAuth signup)
-                div { class: if is_wallet_signup || is_oauth_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
-                    label { class: "font-bold text-c-cg-30 text-base/7", {tr.confirm_password} }
-                    input {
-                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
-                        disabled: loading(),
-                        placeholder: "{tr.confirm_password_placeholder}",
-                        r#type: "password",
-                        value: confirm_password(),
-                        oninput: move |ev| {
-                            let val = ev.data().value();
-                            confirm_password.set(val.clone());
-                            if !val.is_empty() && val != password() {
-                                confirm_password_warning.set(tr.password_mismatch.to_string());
-                            } else {
-                                confirm_password_warning.set(String::new());
-                            }
-                        },
-                    }
-                    if !confirm_password_warning().is_empty() {
-                        p { class: "mt-1 text-sm text-red-500", {confirm_password_warning} }
                     }
                 }
 
@@ -440,7 +386,6 @@ pub fn SignupModal(
                             } else {
                                 SignupType::Email {
                                     email: email.read().clone(),
-                                    password: password.read().clone(),
                                     code: auth_code.read().clone(),
                                 }
                             };

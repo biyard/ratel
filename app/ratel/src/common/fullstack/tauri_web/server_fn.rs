@@ -150,7 +150,19 @@ async fn send<B: Serialize + ?Sized, R: DeserializeOwned>(
             resp.status,
             resp.body
         );
-        // Map HTTP semantics to existing Error variants where it matters.
+        // The backend serializes errors as {"message","code","data"} where
+        // `data` is the serialized `common::Error` (e.g. {"Auth":"UserNotFound"}).
+        // Recover that first so callers can match on specific variants — the
+        // login flow routes `Error::Auth(AuthError::UserNotFound)` into signup,
+        // which a blanket 401 -> UnauthorizedAccess mapping would break. Fall
+        // back to HTTP-status mapping only when the body isn't that shape.
+        #[derive(serde::Deserialize)]
+        struct ErrBody {
+            data: Error,
+        }
+        if let Ok(parsed) = serde_json::from_str::<ErrBody>(&resp.body) {
+            return Err(parsed.data);
+        }
         return Err(match resp.status {
             401 | 403 => Error::UnauthorizedAccess,
             _ => Error::Internal,

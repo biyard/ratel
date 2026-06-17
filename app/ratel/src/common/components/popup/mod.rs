@@ -41,6 +41,16 @@ pub fn PopupZone() -> Element {
     rsx! {
         div {
             class: "flex fixed top-0 left-0 justify-center items-center w-screen h-screen bg-popup-background backdrop-blur-[10px] z-[101] bg-no-s",
+            // Counter iOS WKWebView's keyboard-avoidance shift: focusing a modal
+            // input moves the visual viewport up (offsetTop > 0), dragging this
+            // fixed backdrop — and the centered modal box inside it — up under
+            // the status bar. The app.rs visualViewport handler publishes the
+            // offset as `--vv-offset-top`; translating the backdrop down by the
+            // same amount keeps the modal visually fixed while the input is
+            // focused. Safe here (no fixed descendants → no containing-block
+            // side effect); the var is unset/0 on web/Android, so it's a no-op
+            // there. Mirrors the body compensation in `use_scroll_lock`.
+            style: "transform: translateY(var(--vv-offset-top, 0px));",
             onclick: move |_| {
                 if backdrop_closable {
                     popup.close();

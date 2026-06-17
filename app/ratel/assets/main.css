@@ -25061,6 +25061,14 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   content: "";
   position: fixed;
   inset: 0;
+  /* The solid `var(--bg)` base fills the ENTIRE viewport — including the
+     safe-area strips (home indicator / status bar) that sit outside
+     `:root`'s padding box. The arena's own `background: var(--bg)` only
+     covers `100dvh - insets`, leaving the home-indicator strip showing the
+     white `html` background underneath (a band below the content). This
+     fixed, full-viewport layer paints that strip with the arena colour so
+     there's no band. Gradients layer on top; `var(--bg)` is the last (bottom)
+     background layer. 0-inset on desktop, so it's a harmless full-bleed bg. */
   background:
     radial-gradient(
       ellipse 80% 60% at 30% 0%,
@@ -25071,7 +25079,8 @@ html[data-theme="light"] .sga-modal__confirm-danger,
       ellipse 120% 100% at 80% 120%,
       rgba(252, 179, 0, 0.03) 0%,
       transparent 50%
-    );
+    ),
+    var(--bg);
   z-index: 0;
   pointer-events: none;
 }
@@ -26203,12 +26212,14 @@ body.comments-panel-resizing {
   /* Convert comments-panel to bottom sheet */
   .comments-panel {
     position: fixed;
-    /* Lift the whole sheet above the system navigation bar. The WebView is
-       edge-to-edge (`viewport-fit=cover`), so `bottom: 0` would tuck the
-       collapsed "Comments" handle (and, when expanded, the comment input)
-       behind the nav bar. `env(safe-area-inset-bottom)` clears it; falls back
-       to 0 on devices with no bottom inset. */
-    bottom: env(safe-area-inset-bottom, 0px);
+    /* Sheet background reaches the true screen bottom; `padding-bottom` (below)
+       keeps the content above the home indicator / nav bar. Using
+       `bottom: env(safe-area-inset-bottom)` instead lifted the WHOLE sheet
+       (background included) off the bottom, leaving a strip of page background
+       showing under it (looked like the sheet was floating with a line beneath
+       it). `bottom: 0` fills that strip with the sheet's own surface. */
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
     left: 0;
     right: 0;
     z-index: 100;
@@ -26225,7 +26236,10 @@ body.comments-panel-resizing {
     border-top: 1px solid var(--border);
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -4px 40px var(--shadow);
-    transform: translateY(calc(100% - 64px));
+    /* Collapsed peek = 64px handle, lifted by the bottom inset so the handle
+       clears the home indicator (now that the sheet extends to `bottom: 0`).
+       The inset-tall strip below the handle is filled by the sheet surface. */
+    transform: translateY(calc(100% - 64px - env(safe-area-inset-bottom, 0px)));
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
     will-change: transform;
     touch-action: none;
@@ -37727,6 +37741,24 @@ body.comments-panel-resizing {
   opacity: 1;
   filter: blur(0);
   box-shadow: 0 12px 60px var(--ha-shadow-card);
+}
+
+/* === src/views/index/space_card (My Posts carousel variant) ===
+   Posts reuse the FULL `.space-card` structure (ArenaSpaceCard) so a post
+   card looks identical to a space card. The only delta is taming the post
+   body HTML rendered into `.space-card__desc` so stray margins / images
+   don't break the fixed-height card. */
+.home-arena .space-card--post .space-card__desc * {
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  font-weight: inherit;
+  display: inline;
+}
+.home-arena .space-card--post .space-card__desc img {
+  display: none;
 }
 .home-arena .space-card--blazing.active {
   border-color: rgba(239, 68, 68, 0.20);

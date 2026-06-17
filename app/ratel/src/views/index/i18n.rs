@@ -103,6 +103,11 @@ translate! {
         ko: "내 스페이스",
     },
 
+    tab_posts: {
+        en: "My Posts",
+        ko: "내 게시물",
+    },
+
     empty_hot: {
         en: "No hot spaces yet. Check back soon.",
         ko: "아직 인기 스페이스가 없습니다.",
@@ -111,6 +116,36 @@ translate! {
     empty_mine: {
         en: "You haven't joined any spaces yet.",
         ko: "아직 참여한 스페이스가 없습니다.",
+    },
+
+    empty_posts: {
+        en: "You haven't written any posts yet.",
+        ko: "아직 작성한 게시물이 없습니다.",
+    },
+
+    post_badge: {
+        en: "Post",
+        ko: "게시물",
+    },
+
+    stat_likes: {
+        en: "Likes",
+        ko: "좋아요",
+    },
+
+    stat_comments: {
+        en: "Comments",
+        ko: "댓글",
+    },
+
+    stat_shares: {
+        en: "Shares",
+        ko: "공유",
+    },
+
+    view_post: {
+        en: "View Post",
+        ko: "게시물 보기",
     },
 
     heat_blazing: {

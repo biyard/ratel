@@ -8,7 +8,7 @@ use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
 use crate::sampling::error::SamplingError;
 use crate::sampling::types::ModelParams;
 use crate::voting::error::VotingError;
-use crate::voting::store::VoteData;
+use crate::voting::store::VoterBallotData;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -18,6 +18,7 @@ const MAX_VOTE_VALUE_SIZE: u32 = 2 * 1024 * 1024;
 
 const MEMORY_ID_MODELS: MemoryId = MemoryId::new(0);
 const MEMORY_ID_VOTES: MemoryId = MemoryId::new(1);
+const MEMORY_ID_VOTE_COUNTS: MemoryId = MemoryId::new(2);
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct StringKey(pub(crate) String);
@@ -76,31 +77,31 @@ impl Storable for StorableModelParams {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct StorableVoteData(pub(crate) VoteData);
+pub(crate) struct StorableBallot(pub(crate) VoterBallotData);
 
-impl StorableVoteData {
+impl StorableBallot {
     fn try_to_bytes(&self) -> Result<Vec<u8>, VotingError> {
         serde_cbor::to_vec(&self.0).map_err(|e| VotingError::EncodeFailed(e.to_string()))
     }
 
     fn try_from_bytes(bytes: &[u8]) -> Result<Self, VotingError> {
-        let data: VoteData =
+        let data: VoterBallotData =
             serde_cbor::from_slice(bytes).map_err(|e| VotingError::DecodeFailed(e.to_string()))?;
         Ok(Self(data))
     }
 }
 
-impl Storable for StorableVoteData {
+impl Storable for StorableBallot {
     fn to_bytes(&self) -> Cow<'_, [u8]> {
-        Cow::Owned(self.try_to_bytes().expect("encode VoteData"))
+        Cow::Owned(self.try_to_bytes().expect("encode VoterBallotData"))
     }
 
     fn into_bytes(self) -> Vec<u8> {
-        self.try_to_bytes().expect("encode VoteData")
+        self.try_to_bytes().expect("encode VoterBallotData")
     }
 
     fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
-        Self::try_from_bytes(&bytes).expect("decode VoteData")
+        Self::try_from_bytes(&bytes).expect("decode VoterBallotData")
     }
 
     const BOUND: Bound = Bound::Bounded {
@@ -118,8 +119,15 @@ thread_local! {
             StableBTreeMap::init(mm.borrow().get(MEMORY_ID_MODELS))
         }));
 
-    pub(crate) static VOTE_DATA: RefCell<StableBTreeMap<StringKey, StorableVoteData, Memory>> =
+    // 투표 1건당 키 1개: (vote_key + voter_tag) → ballot 전체(암호문 포함). O(1) 저장.
+    pub(crate) static BALLOTS: RefCell<StableBTreeMap<StringKey, StorableBallot, Memory>> =
         RefCell::new(MEMORY_MANAGER.with(|mm| {
             StableBTreeMap::init(mm.borrow().get(MEMORY_ID_VOTES))
+        }));
+
+    // 집계 카운터: (vote_key + question + option) → 득표 수. get_vote_counts 결과 보존.
+    pub(crate) static VOTE_COUNTS: RefCell<StableBTreeMap<StringKey, u64, Memory>> =
+        RefCell::new(MEMORY_MANAGER.with(|mm| {
+            StableBTreeMap::init(mm.borrow().get(MEMORY_ID_VOTE_COUNTS))
         }));
 }

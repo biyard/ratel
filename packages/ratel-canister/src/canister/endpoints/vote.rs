@@ -1,10 +1,15 @@
 use crate::canister::auth::require_controller;
 use crate::voting::error::VotingError;
-use crate::voting::store::VoteData;
+use crate::voting::store;
 use crate::voting::{QuestionOptionCount, SubmitVoteResult, VoteBallot, VoteKey, VoterTag};
 
 fn trap(err: VotingError) -> ! {
     ic_cdk::api::trap(&err.to_string())
+}
+
+#[cfg(feature = "perf")]
+thread_local! {
+    static LAST_UPSERT_INSTRUCTIONS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
 }
 
 #[ic_cdk::update]
@@ -12,9 +17,10 @@ fn upsert_vote(vote_key: String, voter_tag: String, ballot: VoteBallot) -> Submi
     require_controller();
 
     let voter_tag = VoterTag(voter_tag);
-    let mut data = VoteData::load(&vote_key);
-    data.upsert(&voter_tag, &ballot).unwrap_or_else(|e| trap(e));
-    data.save(&vote_key);
+    store::upsert(&vote_key, &voter_tag, &ballot).unwrap_or_else(|e| trap(e));
+
+    #[cfg(feature = "perf")]
+    LAST_UPSERT_INSTRUCTIONS.with(|c| c.set(crate::canister::perf::instruction_counter()));
 
     SubmitVoteResult {
         record_id: format!("{}:{}", vote_key, voter_tag),
@@ -22,13 +28,18 @@ fn upsert_vote(vote_key: String, voter_tag: String, ballot: VoteBallot) -> Submi
     }
 }
 
+#[cfg(feature = "perf")]
+#[ic_cdk::query]
+fn last_upsert_instructions() -> u64 {
+    LAST_UPSERT_INSTRUCTIONS.with(|c| c.get())
+}
+
 #[ic_cdk::query]
 fn get_vote_counts(vote_key: String) -> Vec<QuestionOptionCount> {
-    VoteData::load(&vote_key).counts()
+    store::counts(&vote_key)
 }
 
 #[ic_cdk::query]
 fn get_ballot_by_tag(vote_key: String, voter_tag: String) -> Option<VoteBallot> {
-    let voter_tag = VoterTag(voter_tag);
-    VoteData::load(&vote_key).ballot_by_voter(&voter_tag)
+    store::ballot_by_voter(&vote_key, &VoterTag(voter_tag))
 }

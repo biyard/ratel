@@ -1,12 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet};
-
 use serde::{Deserialize, Serialize};
 
 use super::error::VotingError;
 use super::types::{QuestionOptionCount, QuestionSelection, VoteBallot, VoterTag};
-use crate::canister::storage::{StorableVoteData, StringKey, VOTE_DATA};
+use crate::canister::storage::{StorableBallot, StringKey, BALLOTS, VOTE_COUNTS};
+
+const SEP: char = '\u{1f}';
 
 /// Per-voter ballot storage (internal representation).
+/// ciphertext_hash, ciphertext_blob(암호문), submitted_at_ms, selections.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub(crate) struct VoterBallotData {
     pub ciphertext_hash: String,
@@ -15,108 +16,104 @@ pub(crate) struct VoterBallotData {
     pub selections: Vec<QuestionSelection>,
 }
 
-/// Aggregate vote data stored as a single document per voting context (poll/quiz).
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub(crate) struct VoteData {
-    /// voter_tag → ballot data (ciphertext stored once per voter)
-    pub ballots: BTreeMap<VoterTag, VoterBallotData>,
-    /// question_index → option_index → set of voter tags (for fast counting)
-    pub counts: BTreeMap<u32, BTreeMap<u32, BTreeSet<VoterTag>>>,
+fn ballot_key(vote_key: &str, voter_tag: &VoterTag) -> StringKey {
+    StringKey(format!("{vote_key}{SEP}{}", voter_tag.0))
 }
 
-impl VoteData {
-    pub fn load(key: &str) -> Self {
-        VOTE_DATA.with(|m| {
-            m.borrow()
-                .get(&StringKey(key.to_string()))
-                .map(|v| v.0)
-                .unwrap_or_default()
-        })
+fn count_key(vote_key: &str, q: u32, o: u32) -> StringKey {
+    StringKey(format!("{vote_key}{SEP}{q}{SEP}{o}"))
+}
+
+pub(crate) fn upsert(
+    vote_key: &str,
+    voter_tag: &VoterTag,
+    ballot: &VoteBallot,
+) -> Result<bool, VotingError> {
+    if ballot.selections.is_empty() {
+        return Err(VotingError::EmptyVotes);
     }
 
-    pub fn save(&self, key: &str) {
-        VOTE_DATA.with(|m| {
-            m.borrow_mut()
-                .insert(StringKey(key.to_string()), StorableVoteData(self.clone()));
+    let bkey = ballot_key(vote_key, voter_tag);
+    let old = BALLOTS.with(|m| m.borrow().get(&bkey));
+    let is_update = old.is_some();
+
+    if let Some(old) = &old {
+        for sel in &old.0.selections {
+            let ckey = count_key(vote_key, sel.question_index, sel.option_index);
+            VOTE_COUNTS.with(|m| {
+                let mut m = m.borrow_mut();
+                let cur = m.get(&ckey).unwrap_or(0);
+                if cur <= 1 {
+                    m.remove(&ckey);
+                } else {
+                    m.insert(ckey.clone(), cur - 1);
+                }
+            });
+        }
+    }
+
+    // 새 선택의 카운트 증가
+    for sel in &ballot.selections {
+        let ckey = count_key(vote_key, sel.question_index, sel.option_index);
+        VOTE_COUNTS.with(|m| {
+            let mut m = m.borrow_mut();
+            let cur = m.get(&ckey).unwrap_or(0);
+            m.insert(ckey, cur + 1);
         });
     }
 
-    pub fn has_voter(&self, voter_tag: &VoterTag) -> bool {
-        self.ballots.contains_key(voter_tag)
-    }
+    // ballot 전체 저장 (암호문 ciphertext_blob 포함 — 콘텐츠 보존)
+    let data = VoterBallotData {
+        ciphertext_hash: ballot.ciphertext_hash.clone(),
+        ciphertext_blob: ballot.ciphertext_blob.clone(),
+        submitted_at_ms: ballot.submitted_at_ms,
+        selections: ballot.selections.clone(),
+    };
+    BALLOTS.with(|m| m.borrow_mut().insert(bkey, StorableBallot(data)));
 
-    /// Insert or replace a ballot for a voter.
-    pub fn upsert(
-        &mut self,
-        voter_tag: &VoterTag,
-        ballot: &VoteBallot,
-    ) -> Result<bool, VotingError> {
-        if ballot.selections.is_empty() {
-            return Err(VotingError::EmptyVotes);
-        }
+    Ok(is_update)
+}
 
-        let is_update = self.has_voter(voter_tag);
+/// 질문/옵션별 득표 수 — 기존 get_vote_counts 와 동일한 결과.
+pub(crate) fn counts(vote_key: &str) -> Vec<QuestionOptionCount> {
+    let start = StringKey(format!("{vote_key}{SEP}"));
+    // 0x1F 다음 바이트(0x20)를 상한으로 → 해당 vote_key 의 카운터 키만 범위 스캔
+    let end = StringKey(format!("{vote_key}\u{20}"));
+    let plen = start.0.len();
 
-        // Remove old selections from counts if updating
-        if is_update {
-            if let Some(old) = self.ballots.get(voter_tag) {
-                for sel in &old.selections {
-                    if let Some(options) = self.counts.get_mut(&sel.question_index) {
-                        if let Some(voters) = options.get_mut(&sel.option_index) {
-                            voters.remove(voter_tag);
-                        }
-                    }
+    VOTE_COUNTS.with(|m| {
+        m.borrow()
+            .range(start..end)
+            .filter_map(|entry| {
+                let count = entry.value();
+                if count == 0 {
+                    return None;
                 }
+                let k = entry.key();
+                let rest = &k.0[plen..]; // "{question}{SEP}{option}"
+                let mut it = rest.split(SEP);
+                let q: u32 = it.next()?.parse().ok()?;
+                let o: u32 = it.next()?.parse().ok()?;
+                Some(QuestionOptionCount {
+                    question_index: q,
+                    option_index: o,
+                    count,
+                })
+            })
+            .collect()
+    })
+}
+
+pub(crate) fn ballot_by_voter(vote_key: &str, voter_tag: &VoterTag) -> Option<VoteBallot> {
+    BALLOTS
+        .with(|m| m.borrow().get(&ballot_key(vote_key, voter_tag)))
+        .map(|sb| {
+            let d = sb.0;
+            VoteBallot {
+                ciphertext_hash: d.ciphertext_hash,
+                ciphertext_blob: d.ciphertext_blob,
+                submitted_at_ms: d.submitted_at_ms,
+                selections: d.selections,
             }
-        }
-
-        // Insert new selections into counts
-        for sel in &ballot.selections {
-            self.counts
-                .entry(sel.question_index)
-                .or_default()
-                .entry(sel.option_index)
-                .or_default()
-                .insert(voter_tag.clone());
-        }
-
-        // Store ballot (ciphertext stored once)
-        self.ballots.insert(
-            voter_tag.clone(),
-            VoterBallotData {
-                ciphertext_hash: ballot.ciphertext_hash.clone(),
-                ciphertext_blob: ballot.ciphertext_blob.clone(),
-                submitted_at_ms: ballot.submitted_at_ms,
-                selections: ballot.selections.clone(),
-            },
-        );
-
-        Ok(is_update)
-    }
-
-    pub fn counts(&self) -> Vec<QuestionOptionCount> {
-        let mut results = Vec::new();
-        for (&qi, options) in &self.counts {
-            for (&oi, voters) in options {
-                let count = voters.len() as u64;
-                if count > 0 {
-                    results.push(QuestionOptionCount {
-                        question_index: qi,
-                        option_index: oi,
-                        count,
-                    });
-                }
-            }
-        }
-        results
-    }
-
-    pub fn ballot_by_voter(&self, voter_tag: &VoterTag) -> Option<VoteBallot> {
-        self.ballots.get(voter_tag).map(|data| VoteBallot {
-            ciphertext_hash: data.ciphertext_hash.clone(),
-            ciphertext_blob: data.ciphertext_blob.clone(),
-            submitted_at_ms: data.submitted_at_ms,
-            selections: data.selections.clone(),
         })
-    }
 }

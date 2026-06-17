@@ -287,26 +287,26 @@ test("tauri smoke: signup → team → post → space", async () => {
   // multi-page signup → team → post → space flow can complete without
   // chasing transient slowness as if it were a real failure.
   test.setTimeout(120_000);
-  // ── 1. Sign up new user ───────────────────────────────────────────────
+  // ── 1. Sign up new user (unified passwordless email-code flow) ─────────
+  // The login modal opens straight to the email field — no "Create an
+  // account" step. A single "Continue" button sends the code, then verifies
+  // it; an unknown account routes into the signup form automatically.
   await clickSelector('[data-testid="home-btn-signin"]');
-  await waitFor(
-    `document.body.textContent.includes('Create an account')`,
-    { label: "Create an account link visible" },
-  );
-  await clickByText("Create an account");
 
   await waitForSelector('input[placeholder="Enter your email address"]');
   await fillSelector(
     'input[placeholder="Enter your email address"]',
     user.email,
   );
-  await clickByText("Send", { exact: true });
-  // The verification-code input/Verify-button row is always in the DOM
-  // but hidden via aria-hidden until `sent_code = true` (after the
-  // send-code-handler request resolves). Waiting for visibility avoids
-  // the race where the spec fills + clicks Verify while the row is
-  // still hidden (Verify is also `disabled: loading()` during that
-  // window — disabled buttons swallow click events in Chromium).
+  // First Continue → send the verification code. Use clickByText (not
+  // clickSelector) because the button is `disabled: loading()` and shows
+  // "Loading..." while the request is in flight — clickByText filters out
+  // disabled elements and retries, so it waits until the button settles
+  // back to "Continue" instead of firing a swallowed click on the slow
+  // software-rendered emulator WebView.
+  await clickByText("Continue", { exact: true });
+  // The verification-code input is always in the DOM but hidden via
+  // aria-hidden until `show_code = true` (after send_code resolves).
   await waitForVisible(
     'input[placeholder="Enter the verification code"]',
     { timeout: 30_000 },
@@ -315,18 +315,12 @@ test("tauri smoke: signup → team → post → space", async () => {
     'input[placeholder="Enter the verification code"]',
     "000000",
   );
-  await clickByText("Verify", { exact: true });
-  // Send button disappears once server confirms code.
-  await waitFor(
-    `![...document.querySelectorAll('button')].some(b => b.textContent.trim() === 'Send')`,
-    { timeout: 10_000, label: "Send button hidden after verify" },
-  );
+  // Second Continue → verify + attempt login → routes into signup since the
+  // account doesn't exist yet. The display-name field confirms the switch.
+  await clickByText("Continue", { exact: true });
+  await waitForSelector('input[placeholder="Enter your display name"]');
 
-  await fillSelector('input[placeholder="Enter your password"]', user.password);
-  await fillSelector(
-    'input[placeholder="Re-enter your password"]',
-    user.password,
-  );
+  // Passwordless signup — no password / confirm-password fields anymore.
   await fillSelector(
     'input[placeholder="Enter your display name"]',
     user.nickname,
@@ -390,22 +384,30 @@ test("tauri smoke: signup → team → post → space", async () => {
     { timeout: 15_000, label: `navigated to /${team.username}` },
   );
 
-  // ── 3. Create post + space via REST (from inside the WebView) ────────
-  // `fetch` runs in the WebView's origin context (tauri.localhost), so
-  // the session cookie that was set on dev.ratel.foundation during
-  // signup rides along automatically via credentials: 'include'.
+  // ── 3. Create post + space via REST (through the native transport) ───
+  // The session cookie lives in the NATIVE reqwest cookie jar (the app
+  // routes every API call through the `api_request` Tauri command), NOT
+  // in the WebView — iOS WKWebView (ITP) and the cross-site origin pair
+  // (tauri.localhost -> ratel.foundation) mean a plain in-WebView `fetch`
+  // never carries the session and gets 401. So these calls must invoke
+  // the same `api_request` command the app uses; it returns { status, body }.
   const apiBase = JSON.stringify(API_BASE);
+  // Helper (defined in the page) that proxies a request through api_request
+  // and throws on non-2xx, mirroring server_fn::send.
+  const apiRequest = `async (method, path, body) => {
+    const res = await window.__TAURI_INTERNALS__.invoke('api_request', {
+      method, url: ${apiBase} + path, body,
+    });
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(method + ' ' + path + ' -> ' + res.status + ' ' + res.body);
+    }
+    return res.body ? JSON.parse(res.body) : null;
+  }`;
 
   const postId = await evalJs(`
     (async () => {
-      const r = await fetch(${apiBase} + '/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: '{}',
-      });
-      if (!r.ok) throw new Error('POST /api/posts -> ' + r.status);
-      const data = await r.json();
+      const apiRequest = ${apiRequest};
+      const data = await apiRequest('POST', '/api/posts', '{}');
       const pk = data.post_pk;
       return pk.includes('#') ? pk.split('#')[1] : pk;
     })()
@@ -414,28 +416,21 @@ test("tauri smoke: signup → team → post → space", async () => {
 
   const spaceId = await evalJs(`
     (async () => {
-      const r = await fetch(${apiBase} + '/api/spaces/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ req: { post_id: ${JSON.stringify(postId)} } }),
-      });
-      if (!r.ok) throw new Error('POST /api/spaces/create -> ' + r.status);
-      const data = await r.json();
+      const apiRequest = ${apiRequest};
+      const data = await apiRequest(
+        'POST', '/api/spaces/create',
+        JSON.stringify({ req: { post_id: ${JSON.stringify(postId)} } }),
+      );
       return data.space_id;
     })()
   `);
   expect(spaceId, "space creation must return space_id").toBeTruthy();
 
-  // ── 4. Verify space is queryable from the WebView ─────────────────────
+  // ── 4. Verify space is queryable through the native transport ─────────
   const spaceTitle = await evalJs(`
     (async () => {
-      const r = await fetch(${apiBase} + '/api/spaces/' + ${JSON.stringify(spaceId)}, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      if (!r.ok) throw new Error('GET /api/spaces/' + ${JSON.stringify(spaceId)} + ' -> ' + r.status);
-      const data = await r.json();
+      const apiRequest = ${apiRequest};
+      const data = await apiRequest('GET', '/api/spaces/' + ${JSON.stringify(spaceId)}, undefined);
       return data.title ?? null;
     })()
   `);
