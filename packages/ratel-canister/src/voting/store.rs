@@ -2,12 +2,13 @@ use serde::{Deserialize, Serialize};
 
 use super::error::VotingError;
 use super::types::{QuestionOptionCount, QuestionSelection, VoteBallot, VoterTag};
-use crate::canister::storage::{StorableBallot, StringKey, BALLOTS, VOTE_COUNTS};
+use crate::canister::storage::{BALLOTS, VOTE_COUNTS};
 
 const SEP: char = '\u{1f}';
 
 /// Per-voter ballot storage (internal representation).
 /// ciphertext_hash, ciphertext_blob(암호문), submitted_at_ms, selections.
+/// 저장 콘텐츠는 stable 버전과 동일 — 보관 위치만 heap(RAM).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub(crate) struct VoterBallotData {
     pub ciphertext_hash: String,
@@ -16,14 +17,18 @@ pub(crate) struct VoterBallotData {
     pub selections: Vec<QuestionSelection>,
 }
 
-fn ballot_key(vote_key: &str, voter_tag: &VoterTag) -> StringKey {
-    StringKey(format!("{vote_key}{SEP}{}", voter_tag.0))
+/// 투표 1건 = `(vote_key, voter_tag)` 개별 키. heap HashMap 을 그 자리에서 변경 → 직렬화/클론 없이 O(1).
+fn ballot_key(vote_key: &str, voter_tag: &VoterTag) -> String {
+    format!("{vote_key}{SEP}{}", voter_tag.0)
 }
 
-fn count_key(vote_key: &str, q: u32, o: u32) -> StringKey {
-    StringKey(format!("{vote_key}{SEP}{q}{SEP}{o}"))
+/// 집계 카운터 키 = `(vote_key, question, option)`.
+fn count_key(vote_key: &str, q: u32, o: u32) -> String {
+    format!("{vote_key}{SEP}{q}{SEP}{o}")
 }
 
+/// 투표 저장(insert/replace). heap 을 그 자리에서 변경 → O(1).
+/// 저장 내용·집계 결과는 stable 버전과 동일하게 유지된다.
 pub(crate) fn upsert(
     vote_key: &str,
     voter_tag: &VoterTag,
@@ -34,19 +39,20 @@ pub(crate) fn upsert(
     }
 
     let bkey = ballot_key(vote_key, voter_tag);
-    let old = BALLOTS.with(|m| m.borrow().get(&bkey));
+    let old = BALLOTS.with(|m| m.borrow().get(&bkey).cloned());
     let is_update = old.is_some();
 
+    // 재투표면 이전 선택의 카운트를 감소(한 voter는 옵션당 1표)
     if let Some(old) = &old {
-        for sel in &old.0.selections {
+        for sel in &old.selections {
             let ckey = count_key(vote_key, sel.question_index, sel.option_index);
             VOTE_COUNTS.with(|m| {
                 let mut m = m.borrow_mut();
-                let cur = m.get(&ckey).unwrap_or(0);
+                let cur = m.get(&ckey).copied().unwrap_or(0);
                 if cur <= 1 {
                     m.remove(&ckey);
                 } else {
-                    m.insert(ckey.clone(), cur - 1);
+                    m.insert(ckey, cur - 1);
                 }
             });
         }
@@ -57,7 +63,7 @@ pub(crate) fn upsert(
         let ckey = count_key(vote_key, sel.question_index, sel.option_index);
         VOTE_COUNTS.with(|m| {
             let mut m = m.borrow_mut();
-            let cur = m.get(&ckey).unwrap_or(0);
+            let cur = m.get(&ckey).copied().unwrap_or(0);
             m.insert(ckey, cur + 1);
         });
     }
@@ -69,28 +75,25 @@ pub(crate) fn upsert(
         submitted_at_ms: ballot.submitted_at_ms,
         selections: ballot.selections.clone(),
     };
-    BALLOTS.with(|m| m.borrow_mut().insert(bkey, StorableBallot(data)));
+    BALLOTS.with(|m| m.borrow_mut().insert(bkey, data));
 
     Ok(is_update)
 }
 
 /// 질문/옵션별 득표 수 — 기존 get_vote_counts 와 동일한 결과.
+/// heap HashMap 은 정렬이 없으므로 prefix(`{vote_key}{SEP}`)로 필터링한다.
 pub(crate) fn counts(vote_key: &str) -> Vec<QuestionOptionCount> {
-    let start = StringKey(format!("{vote_key}{SEP}"));
-    // 0x1F 다음 바이트(0x20)를 상한으로 → 해당 vote_key 의 카운터 키만 범위 스캔
-    let end = StringKey(format!("{vote_key}\u{20}"));
-    let plen = start.0.len();
+    let prefix = format!("{vote_key}{SEP}");
+    let plen = prefix.len();
 
     VOTE_COUNTS.with(|m| {
         m.borrow()
-            .range(start..end)
-            .filter_map(|entry| {
-                let count = entry.value();
-                if count == 0 {
+            .iter()
+            .filter_map(|(k, &count)| {
+                if count == 0 || !k.starts_with(&prefix) {
                     return None;
                 }
-                let k = entry.key();
-                let rest = &k.0[plen..]; // "{question}{SEP}{option}"
+                let rest = &k[plen..]; // "{question}{SEP}{option}"
                 let mut it = rest.split(SEP);
                 let q: u32 = it.next()?.parse().ok()?;
                 let o: u32 = it.next()?.parse().ok()?;
@@ -105,15 +108,14 @@ pub(crate) fn counts(vote_key: &str) -> Vec<QuestionOptionCount> {
 }
 
 pub(crate) fn ballot_by_voter(vote_key: &str, voter_tag: &VoterTag) -> Option<VoteBallot> {
-    BALLOTS
-        .with(|m| m.borrow().get(&ballot_key(vote_key, voter_tag)))
-        .map(|sb| {
-            let d = sb.0;
-            VoteBallot {
-                ciphertext_hash: d.ciphertext_hash,
-                ciphertext_blob: d.ciphertext_blob,
+    BALLOTS.with(|m| {
+        m.borrow()
+            .get(&ballot_key(vote_key, voter_tag))
+            .map(|d| VoteBallot {
+                ciphertext_hash: d.ciphertext_hash.clone(),
+                ciphertext_blob: d.ciphertext_blob.clone(),
                 submitted_at_ms: d.submitted_at_ms,
-                selections: d.selections,
-            }
-        })
+                selections: d.selections.clone(),
+            })
+    })
 }

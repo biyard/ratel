@@ -1,10 +1,17 @@
 mod error;
 pub use error::FileUploadError;
 
-#[cfg(feature = "web")]
-use crate::common::{
-    controllers::AssetPresignedUris, wasm_bindgen, wasm_bindgen_futures, web_sys, Error,
-};
+// Shared by both the plain-web (`fetch` PUT) and tauri-web (native PUT) upload
+// paths. `dx build --platform web` enables `web`, but a bare
+// `cargo check --features tauri-web` does NOT — so anything the tauri-web
+// branch touches must be gated on `any(web, tauri-web)`, not just `web`.
+#[cfg(any(feature = "web", feature = "tauri-web"))]
+use crate::common::{controllers::AssetPresignedUris, web_sys, Error};
+// Only the plain-web branch uses these (JsCast / JsFuture for the in-WebView
+// `fetch`). The tauri-web branch hands bytes to a native command instead, so
+// gating them out of tauri-web avoids unused-import errors under `-D warnings`.
+#[cfg(all(feature = "web", not(feature = "tauri-web")))]
+use crate::common::{wasm_bindgen, wasm_bindgen_futures};
 use crate::*;
 use dioxus::html::FileData;
 use dioxus::html::HasFileData;
@@ -268,7 +275,7 @@ async fn upload_via_presigned(
 //         .any(|allowed| !allowed.is_empty() && allowed == ext)
 // }
 
-#[cfg(feature = "web")]
+#[cfg(any(feature = "web", feature = "tauri-web"))]
 fn format_file_size(size_bytes: f64) -> String {
     let mb = size_bytes / (1024_f64 * 1024_f64);
     if mb >= 1_f64 {
@@ -279,12 +286,12 @@ fn format_file_size(size_bytes: f64) -> String {
     }
 }
 
-#[cfg(feature = "web")]
+#[cfg(any(feature = "web", feature = "tauri-web"))]
 async fn request_presigned_url(file_type: &str) -> Result<AssetPresignedUris> {
     crate::common::controllers::get_put_object_uri(Some(1), Some(file_type.to_string())).await
 }
 
-#[cfg(feature = "web")]
+#[cfg(any(feature = "web", feature = "tauri-web"))]
 fn guess_file_type(file: &FileData, web_file: &web_sys::File) -> String {
     let name = file.name().to_lowercase();
     if let Some(ext) = name.split('.').last() {
@@ -304,12 +311,15 @@ fn guess_file_type(file: &FileData, web_file: &web_sys::File) -> String {
     }
 }
 
-#[cfg(feature = "web")]
+// Only the plain-web `fetch` branch logs JS errors; gate to match it exactly so
+// these aren't dead (and don't reference the `wasm_bindgen` import that's also
+// gated out) in the tauri-web build.
+#[cfg(all(feature = "web", not(feature = "tauri-web")))]
 fn web_log_error(message: &str) {
     web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(message));
 }
 
-#[cfg(feature = "web")]
+#[cfg(all(feature = "web", not(feature = "tauri-web")))]
 fn js_error_to_string(err: wasm_bindgen::JsValue) -> String {
     if let Some(msg) = err.as_string() {
         msg

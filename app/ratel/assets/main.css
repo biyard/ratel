@@ -38257,14 +38257,17 @@ body.comments-panel-resizing {
   flex: 0 0 auto;
 }
 
-/* Desktop only: vertically center the carousel.
+/* Tablet & desktop: vertically center the carousel.
    The footer (.bottom-bar) has `margin-top: auto`, which on its own eats ALL
    the free vertical space and pins the carousel to the top (justify-content
    can't override an auto margin). Giving the carousel its own `margin-top:auto`
    makes the free space split evenly between the two auto margins → the carousel
-   ends up centered while the footer stays pinned at the bottom. Mobile keeps
-   the original top-packed, footer-pinned layout. */
-@media (min-width: 1177px) {
+   ends up centered while the footer stays pinned at the bottom.
+   Phones keep the original top-packed, footer-pinned layout; the breakpoint is
+   `768px` (md) so iPad (≈1032pt portrait, below the 1177 desktop breakpoint)
+   centers too instead of stranding the carousel at the top with a tall empty
+   gap below. */
+@media (min-width: 768px) {
   .home-arena .home-arena__scroll > .carousel-wrapper {
     margin-top: auto;
   }
