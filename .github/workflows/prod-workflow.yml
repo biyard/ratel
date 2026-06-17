@@ -451,6 +451,32 @@ jobs:
           # `make gen-xcodeproj` regenerates the pbxproj from project.yml.
           command -v xcodegen >/dev/null || brew install xcodegen
 
+      - name: Ensure openssl@3 dylib for prebuilt dx
+        run: |
+          # The prebuilt `dx` from cargo-binstall is dynamically linked against
+          # `/usr/local/opt/openssl@3/lib/libssl.3.dylib`. On the macos-15
+          # (Apple Silicon) runner Homebrew lives at `/opt/homebrew`, and a
+          # runner-image update left no openssl under `/usr/local`, so `dx`
+          # aborts at launch with `dyld: Library not loaded` (Abort trap: 6)
+          # before it can build. Install openssl@3 and symlink it to the exact
+          # path the binary hard-codes. (libssl 3.x is ABI-stable, so the
+          # current 3.x satisfies the `libssl.3.dylib` soname.)
+          brew install openssl@3 || brew upgrade openssl@3 || true
+          PREFIX="$(brew --prefix openssl@3)"
+          sudo mkdir -p /usr/local/opt
+          sudo ln -sfn "$PREFIX" /usr/local/opt/openssl@3
+          test -f /usr/local/opt/openssl@3/lib/libssl.3.dylib
+          # If the prebuilt `dx` still can't launch (e.g. it's x86_64 and the
+          # symlinked openssl is arm64, an arch mismatch), rebuild dioxus-cli
+          # from source so it links against THIS host's openssl. Slower, but
+          # only runs when the fast path fails.
+          if ! dx --version >/dev/null 2>&1; then
+            echo "prebuilt dx failed to launch — rebuilding dioxus-cli from source"
+            cargo install --locked --force dioxus-cli
+          fi
+          # Fail fast here (not 200 lines into the build) if dx still can't run.
+          dx --version
+
       - name: Import signing certificate & provisioning profile
         env:
           IOS_DIST_CERT_BASE64: ${{ secrets.IOS_DIST_CERT_BASE64 }}
