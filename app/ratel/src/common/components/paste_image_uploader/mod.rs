@@ -147,7 +147,11 @@ pub fn handle_paste_event(
 // `tauri://localhost` and dies on the CORS preflight (403). `dx build
 // --platform web` also turns on `web`, so this must be gated more specifically
 // than the plain-web variant below and win when `tauri-web` is set.
-#[cfg(feature = "tauri-web")]
+// Gated on `web` too (not just `tauri-web`): the only caller,
+// `handle_paste_event`, is `#[cfg(feature = "web")]`, so a bare `tauri-web`
+// gate would leave this unused (— and `-D warnings` would reject it) in a
+// `cargo check --features tauri-web` build where `web` is off.
+#[cfg(all(feature = "web", feature = "tauri-web"))]
 async fn upload_blob_to_s3(file: web_sys::File) -> std::result::Result<String, String> {
     let presigned = crate::common::controllers::get_put_object_uri(
         Some(1),
