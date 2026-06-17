@@ -12515,6 +12515,8 @@ dependencies = [
 name = "ratel-tauri"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
+ "objc2 0.6.3",
  "reqwest 0.13.2",
  "serde",
  "serde_json",

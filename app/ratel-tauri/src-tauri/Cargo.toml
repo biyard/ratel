@@ -28,6 +28,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 
+# Decode the base64 file body the WebView passes to the `s3_put_object`
+# command (raw binary can't cross the JS invoke bridge cleanly).
+base64 = { workspace = true }
+
 # Native HTTP transport for the WebView. iOS WKWebView blocks the cross-site
 # session cookie (ITP), so API calls route through the `api_request` command
 # using a persistent reqwest cookie jar in the app process instead of the
@@ -50,3 +54,10 @@ reqwest = { version = "0.13", default-features = false, features = [
     "http2",
     "native-tls-vendored",
 ] }
+
+# iOS only: used to disable the WKWebView scrollView's automatic safe-area
+# contentInset (see lib.rs). WKWebView already subtracts the safe area from the
+# viewport AND the CSS env(safe-area-inset) padding subtracts it again → double
+# inset (body 666 vs 759). objc2 0.6 matches what tauri 2.9 / wry resolve.
+[target.'cfg(target_os = "ios")'.dependencies]
+objc2 = "0.6"
