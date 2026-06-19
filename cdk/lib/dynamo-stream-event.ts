@@ -28,6 +28,14 @@ export interface DynamoStreamEventStackProps extends StackProps {
   /// (bsky.social / api.linkedin.com); the default `lambdaFunction`
   /// lives in a VPC without NAT and times out on every dispatch.
   crossPostingLambda?: lambda.Function;
+  /// Optional dedicated Lambda for the `InboxPushFanoutRule`. When
+  /// omitted it falls back to `lambdaFunction`. Used to route push
+  /// fan-out to a non-VPC Lambda that can reach Google's FCM endpoints
+  /// (oauth2.googleapis.com / fcm.googleapis.com); the default
+  /// `lambdaFunction` lives in a VPC without NAT, so the FCM OAuth
+  /// token request fails ("error sending request") and no push is sent
+  /// (emails still work — SES is reachable via a VPC endpoint).
+  pushLambda?: lambda.Function;
 }
 
 export class DynamoStreamEventStack extends Stack {
@@ -47,6 +55,9 @@ export class DynamoStreamEventStack extends Stack {
     // reuses the default. See prop docstring for the why.
     const crossPostingLambdaFunction =
       props.crossPostingLambda ?? props.lambdaFunction;
+    // Resolves to the non-VPC svc Lambda when provided, otherwise
+    // reuses the default. FCM needs public internet egress. See docstring.
+    const pushLambdaFunction = props.pushLambda ?? props.lambdaFunction;
 
     // Import the existing EventBridge bus
     const eventBus = events.EventBus.fromEventBusName(
@@ -521,7 +532,9 @@ export class DynamoStreamEventStack extends Stack {
         source: ["ratel.dynamodb.stream"],
         detailType: ["InboxPushFanout"],
       },
-      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+      // Non-VPC svc Lambda: FCM (oauth2.googleapis.com / fcm.googleapis.com)
+      // needs internet egress the VPC `lambdaFunction` lacks.
+      targets: [new eventsTargets.LambdaFunction(pushLambdaFunction)],
     });
 
     // ── Pipe 7: Space Activity Insert → ActivityScoreAggregate ──────
