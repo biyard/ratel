@@ -49,7 +49,9 @@ user.json
 .davia/
 .github/instructions/davia.instructions.md
 
-# Google Cloud Secret
+# Google Cloud Secret (service-account keys — never commit)
+.gcp/
+**/.gcp/
 */.gcp/*
 
 # Generated Css

@@ -52,6 +52,9 @@ fn NotificationsBootstrap() -> Element {
     // login state so logged-out users don't hit /api/inbox. See the
     // installer/consumer split in `use_inbox.rs`.
     let _ = crate::features::notifications::hooks::use_provide_inbox()?;
+    // Android push: register the native FCM token (once logged in) + route
+    // notification-tap deep links. No-op on web/server.
+    crate::features::notifications::hooks::use_push();
     rsx! {
         Outlet::<Route> {}
     }
