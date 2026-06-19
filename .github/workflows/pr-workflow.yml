@@ -520,6 +520,47 @@ jobs:
           cargo binstall -y --locked --force dioxus-cli
           cargo binstall -y --locked --force --version "^2.0.0" tauri-cli
 
+      # google-services.json is gitignored (Firebase client config) and absent
+      # on a clean checkout, but `make build-android-debug` → `gs-copy` copies
+      # it for the google-services Gradle plugin, which fails the build if it's
+      # missing. This APK is a smoke-test build that never sends a push, so
+      # write a minimal valid placeholder (the plugin only requires the
+      # structure + a client whose package_name matches applicationId
+      # `co.biyard.ratel`) instead of pulling the real secret — keeps the job
+      # working on forks / without secrets.
+      - name: Write placeholder google-services.json (smoke build, no push)
+        working-directory: app/ratel-tauri
+        run: |
+          cat > google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "ratel-ci-placeholder"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "co.biyard.ratel"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  { "current_key": "AIzaSyPLACEHOLDER0000000000000000000000000" }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+          echo "Wrote placeholder google-services.json ($(wc -c < google-services.json) bytes)"
+
       - name: Build x86_64 debug APK
         working-directory: app/ratel-tauri
         env:
