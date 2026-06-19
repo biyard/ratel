@@ -112,6 +112,13 @@ pub async fn handle_stream_record(
                 if let Err(e) = notification.process().await {
                     tracing::error!(error = %e, "stream: NotificationSend failed");
                 }
+            } else if sk.starts_with("USER_INBOX_NOTIFICATION#") {
+                // InboxPush: fan a new in-app notification out to the recipient's
+                // registered device push tokens (FCM). Best-effort inside the
+                // service (errors logged, not propagated).
+                let notification: crate::common::models::notification::UserInboxNotification =
+                    deserialize(image)?;
+                crate::features::notifications::services::fan_out_push(notification).await;
             } else if sk.starts_with("SPACE_ACTIVITY#") {
                 {
                     let activity = deserialize(image)?;

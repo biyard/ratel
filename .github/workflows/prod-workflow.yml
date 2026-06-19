@@ -17,11 +17,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      # - name: Write Firebase service account (prod)
-      #   run: |
-      #     mkdir -p cdk/main-api/.gcp
-      #     echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
-      #       | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
 
       - uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -46,6 +41,24 @@ jobs:
           unzip -o /tmp/lambda/app-shell-lambda.zip -d cdk/.build/app-shell
           chmod +x cdk/.build/app-shell/bootstrap
           ls -la cdk/.build/app-shell
+
+      # FCM push: inject the Firebase service-account key (SECRET) into the
+      # lambda bundle at the runtime-read path
+      # (GOOGLE_APPLICATION_CREDENTIALS=.gcp/firebase-service-account.json).
+      # After extract (rm -rf), before deploy (CDK zips the dir). Guarded so a
+      # missing secret just disables push (fcm.rs skips gracefully).
+      - name: Write Firebase service account into lambda bundle
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
+            mkdir -p cdk/.build/app-shell/.gcp
+            echo "$FIREBASE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d \
+              > cdk/.build/app-shell/.gcp/firebase-service-account.json
+            echo "firebase service account written ($(wc -c < cdk/.build/app-shell/.gcp/firebase-service-account.json) bytes)"
+          else
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 not set — push disabled (graceful skip)"
+          fi
 
       - name: Deploy
         env:
@@ -310,6 +323,21 @@ jobs:
           storeFile=$(pwd)/upload-keystore.jks
           EOF
 
+      # google-services.json is gitignored (Firebase client config), absent on a
+      # clean checkout. `make release-aab` → `gs-copy` copies it for the
+      # google-services Gradle plugin (FCM push), so decode it from a secret.
+      - name: Write google-services.json (Android Firebase client config)
+        working-directory: app/ratel-tauri
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICES_JSON_BASE64 secret not set — Android build needs google-services.json (gitignored). Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > google-services.json
+          echo "Wrote google-services.json ($(wc -c < google-services.json) bytes)"
+
       - name: Build signed release AAB (prod)
         working-directory: app/ratel-tauri
         env:
@@ -508,6 +536,21 @@ jobs:
         run: |
           mkdir -p "$HOME/.appstoreconnect/private_keys"
           echo "$ASC_API_KEY_BASE64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+
+      # GoogleService-Info.plist is gitignored (Firebase client config), absent
+      # on a clean checkout. `make testflight` → `gsi-copy` bundles it for
+      # [FIRApp configure] (FCM push), so decode it from a secret first.
+      - name: Write GoogleService-Info.plist (iOS Firebase client config)
+        working-directory: app/ratel-tauri
+        env:
+          GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_INFO_PLIST_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICE_INFO_PLIST_BASE64 secret not set — iOS build needs GoogleService-Info.plist (gitignored). Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > GoogleService-Info.plist
+          echo "Wrote GoogleService-Info.plist ($(wc -c < GoogleService-Info.plist) bytes)"
 
       - name: Build & upload to TestFlight (prod)
         working-directory: app/ratel-tauri

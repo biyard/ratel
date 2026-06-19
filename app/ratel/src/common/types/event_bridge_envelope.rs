@@ -99,6 +99,14 @@ pub enum DetailType {
     /// arena rather than a half-built Post detail. No-op when the Space
     /// is not tied to a sub-team announcement.
     SpacePublished,
+    /// Fires on `USER_INBOX_NOTIFICATION#` INSERT. Fans a freshly-created
+    /// in-app notification out to the recipient's registered device push
+    /// tokens (FCM → APNs on iOS / FCM on Android). Best-effort inside the
+    /// service (errors logged, never propagated — the inbox row already
+    /// persisted the notification). The local-dev stream poller calls the
+    /// same `fan_out_push` directly via `stream_handler`; this is the prod
+    /// (EventBridge) path. See conventions/implementing-event-bridge.md.
+    InboxPushFanout,
     #[serde(other)]
     Unknown,
 }
@@ -401,6 +409,14 @@ impl EventBridgeEnvelope {
                 let job: crate::features::cross_posting::models::SyndicationJob =
                     DetailType::parse_detail(&self.detail)?;
                 crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
+            }
+            DetailType::InboxPushFanout => {
+                let notification: crate::common::models::notification::UserInboxNotification =
+                    DetailType::parse_detail(&self.detail)?;
+                // Best-effort: `fan_out_push` logs and swallows its own errors
+                // (the inbox row is already written), so it returns `()`.
+                crate::features::notifications::services::fan_out_push(notification).await;
+                Ok(())
             }
             DetailType::Unknown => {
                 tracing::warn!(

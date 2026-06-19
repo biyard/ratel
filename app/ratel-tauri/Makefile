@@ -111,7 +111,7 @@ DEV_URL ?= http://$(HOST_IP):$(PORT)
 # narrows back down to known origins. Pass via cargo tauri's --config flag
 # at build/run time (see build-android / run-android below).
 ifeq ($(ENV),prod)
-  CSP_CONNECT := 'self' tauri: ipc: http://tauri.localhost http://localhost:8000 https://ratel.foundation https://*.ratel.foundation https://*.amazonaws.com https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com https://*.portone.io https://*.iamport.co https://*.iamport.kr
+  CSP_CONNECT := 'self' tauri: ipc: http://ipc.localhost http://tauri.localhost http://localhost:8000 https://ratel.foundation https://*.ratel.foundation https://*.amazonaws.com https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com https://*.portone.io https://*.iamport.co https://*.iamport.kr
 else
   CSP_CONNECT := 'self' tauri: ipc: http: https: wss:
 endif
@@ -225,8 +225,17 @@ $(IOS_CARGO_CONFIG): FORCE
 # bundle — only take effect after this runs. Required before the App Store
 # build. Needs `xcodegen` (installed by `cargo tauri ios init`; otherwise
 # `brew install xcodegen`).
+# Firebase ([FIRApp configure]) loads `GoogleService-Info.plist` from the app
+# bundle. The committed source lives at app/ratel-tauri/GoogleService-Info.plist
+# (gitignored, same policy as google-services.json); project.yml bundles the
+# copy under gen/apple as a resource. Copy it in before any iOS build/xcodegen
+# so fresh checkouts and project regeneration pick it up.
+.PHONY: gsi-copy
+gsi-copy:
+	@cp -f GoogleService-Info.plist src-tauri/gen/apple/GoogleService-Info.plist
+
 .PHONY: gen-xcodeproj
-gen-xcodeproj:
+gen-xcodeproj: gsi-copy
 	# xcodegen validates that every source dir exists. `Externals` (holds the
 	# Rust `libapp.a`) and `assets` (the web bundle) are produced later by the
 	# build/preBuildScript, so on a fresh checkout (CI) they don't exist yet and
@@ -242,7 +251,7 @@ ios-init: install-tauri-cli
 
 # Live-reload dev on a booted Simulator. Run `cd ../ratel && PORT=8000 make
 # run-tauri` in another terminal first (serves the web bundle the WebView loads).
-run-ios: install-tauri-cli $(IOS_CARGO_CONFIG) $(TAURI_OVERRIDE_FILE)
+run-ios: install-tauri-cli $(IOS_CARGO_CONFIG) gsi-copy $(TAURI_OVERRIDE_FILE)
 	cd src-tauri && $(IOS_ENV) cargo tauri ios dev --config $(TAURI_OVERRIDE_FILE)
 
 # Release .ipa for App Store / TestFlight. Requires a configured Apple
@@ -260,7 +269,7 @@ build-ios: install-tauri-cli $(IOS_CARGO_CONFIG) gen-xcodeproj dx-build
 
 # Simulator build — no Apple team / code signing needed. Verifies the iOS
 # app compiles + bundles and produces a .app runnable on the Simulator.
-build-ios-sim: install-tauri-cli $(IOS_CARGO_CONFIG) dx-build
+build-ios-sim: install-tauri-cli $(IOS_CARGO_CONFIG) gsi-copy dx-build
 	cd src-tauri && $(IOS_ENV) cargo tauri ios build --target aarch64-sim --debug
 
 # ── TestFlight (App Store Connect) ───────────────────────────────────
@@ -342,11 +351,11 @@ $(TAURI_OVERRIDE_FILE): FORCE
 FORCE:
 
 
-run-android: install-tauri-cli ndk-shims $(TAURI_OVERRIDE_FILE)
+run-android: install-tauri-cli ndk-shims gs-copy $(TAURI_OVERRIDE_FILE)
 	@echo "Run 'cd ../ratel && PORT=8000 make run-tauri' in another terminal first."
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev --config $(TAURI_OVERRIDE_FILE)
 
-build-android: install-tauri-cli ndk-shims dx-build
+build-android: install-tauri-cli ndk-shims gs-copy dx-build
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk
 	@$(MAKE) sign-apk
 	@echo
@@ -370,7 +379,7 @@ build-android: install-tauri-cli ndk-shims dx-build
 #
 # Bump the version in tauri.conf.json before each upload — Play requires a
 # strictly increasing versionCode.
-release-aab: install-tauri-cli ndk-shims dx-build
+release-aab: install-tauri-cli ndk-shims gs-copy dx-build
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --aab
 	@echo
 	@echo "AAB output (upload this .aab to Play Console):"
@@ -404,7 +413,15 @@ run-apk: build-android
 # enables: WebView chrome://inspect, lldb attach, BuildConfig.DEBUG=true,
 # no R8 minify. Useful when you need Chrome DevTools on the WebView or to
 # attach a debugger. Slower compile + larger APK than the release variant.
-build-android-debug: install-tauri-cli ndk-shims
+# The google-services gradle plugin (FCM push) reads
+# `gen/android/app/google-services.json`, which is gitignored in gen/. Copy the
+# committed source into place before any android build so CI / fresh checkouts
+# pick it up.
+.PHONY: gs-copy
+gs-copy:
+	@cp -f google-services.json src-tauri/gen/android/app/google-services.json
+
+build-android-debug: install-tauri-cli ndk-shims gs-copy
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug
 	@echo
 	@echo "APK output:"

@@ -49,6 +49,7 @@ pub enum EntityType {
     PhoneVerification,
     UserRelationship(String),
     UserRefreshToken(String),
+    UserDeviceToken(String), // device_id — push (FCM/APNs) token registration
 
     // Migration framework
     LastBackfillVersion,
