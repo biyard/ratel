@@ -220,4 +220,10 @@ new DynamoStreamEventStack(app, `ratel-${env}-stream-ap-northeast-2`, {
   // with the lock held. Remove this override once NAT is added to
   // the shared VPC.
   crossPostingLambda: ap_northeast_2_svc.lambdaFunction,
+  // Push fan-out (FCM) needs internet egress to Google's APIs, which
+  // the VPC `lambdaFunction` lacks (no NAT) — the FCM OAuth token
+  // request fails and no push is delivered (emails still send via the
+  // SES VPC endpoint). Route it to the non-VPC svc Lambda. Remove once
+  // NAT is added to the shared VPC.
+  pushLambda: ap_northeast_2_svc.lambdaFunction,
 });
