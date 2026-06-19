@@ -160,6 +160,11 @@ pub fn DiscussionArenaPage(
             deep_link_done.set(true);
             return;
         };
+        // Deep-link to a specific comment (notification tap): open the comments
+        // sheet so the highlighted target is actually visible — the scroll-to
+        // below only centers an element inside an already-open sheet. The user
+        // can still collapse it afterward via the handle / slide.
+        sheet_expanded.set(true);
         #[cfg(feature = "web")]
         {
             let Some(window) = web_sys::window() else {

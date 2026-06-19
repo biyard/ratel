@@ -388,6 +388,14 @@ jobs:
           releaseFiles: app/ratel-tauri/src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
           track: internal
           status: completed
+          # Commit the edit WITHOUT auto-submitting for review. Google Play
+          # rejects automatic review submission for apps not yet in a
+          # reviewable state (e.g. first release / incomplete store setup),
+          # failing edits.commit with "Changes cannot be sent for review
+          # automatically". With this true the upload succeeds; submit the
+          # release for review manually from the Play Console once the app's
+          # store listing / content rating / countries are completed.
+          changesNotSentForReview: true
 
       - name: Save cache
         if: always()
