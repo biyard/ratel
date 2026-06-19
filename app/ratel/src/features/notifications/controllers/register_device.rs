@@ -30,8 +30,14 @@ pub async fn register_device_handler(req: RegisterDeviceRequest) -> Result<()> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
+    // Upsert, not create: re-registering the same device (re-login, app
+    // restart, FCM token rotation, reinstall) must OVERWRITE the existing row
+    // to refresh the token + TTL. `.create()` is a conditional put that fails
+    // with ConditionalCheckFailedException once the row exists, so every
+    // registration after the first silently failed and the stored token went
+    // stale (push stopped reaching the device).
     UserDeviceToken::new(user.pk.clone(), &req.device_id, req.token, req.platform)
-        .create(cli)
+        .upsert(cli)
         .await
         .map_err(|e| {
             crate::error!("register_device failed: {e}");

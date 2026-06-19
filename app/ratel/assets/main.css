@@ -19894,6 +19894,16 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   .breadcrumb--ae-topbar {
     display: none;
   }
+  /* Hide the action-type badge (e.g. "DISCUSSION") on mobile — with the title
+     input also hidden below, it sits right against the right-side actions
+     ("Import from overview" / Cancel) and overlaps them on narrow screens.
+     Marker-scoped so the analyze views' shared `.type-badge` is unaffected.
+     The `.arena-topbar` descendant bumps specificity (0,2,0) above the bare
+     `.type-badge { display: inline-flex }` base rule, which is defined LATER
+     in source and would otherwise win the equal-specificity tie. */
+  .arena-topbar .type-badge--ae-topbar {
+    display: none;
+  }
   /* `.arena-topbar` descendant selector bumps specificity above the bare
      `.topbar-title-input { flex: 1 }` base rule (defined later in source), so
      the hide wins regardless of cascade order. */

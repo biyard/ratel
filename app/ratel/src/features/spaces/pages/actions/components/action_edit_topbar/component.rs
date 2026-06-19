@@ -50,7 +50,15 @@ pub fn ActionEditTopbar(
                     span { class: "breadcrumb__sep", "\u{203A}" }
                     span { class: "breadcrumb__item breadcrumb__current", "{tr.actions_breadcrumb}" }
                 }
-                span { class: "type-badge", "data-action-type": action_type_key, "{action_type_label}" }
+                // `type-badge--ae-topbar` marker so we can hide just this badge
+                // on mobile (it overlaps the right-side actions on narrow
+                // screens). `.type-badge` is shared with the analyze views,
+                // which scope their own mobile hide separately.
+                span {
+                    class: "type-badge type-badge--ae-topbar",
+                    "data-action-type": action_type_key,
+                    "{action_type_label}"
+                }
                 if editable_title {
                     input {
                         class: "topbar-title-input",
