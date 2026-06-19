@@ -17,11 +17,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      # - name: Write Firebase service account (prod)
-      #   run: |
-      #     mkdir -p cdk/main-api/.gcp
-      #     echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
-      #       | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
 
       - uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -46,6 +41,24 @@ jobs:
           unzip -o /tmp/lambda/app-shell-lambda.zip -d cdk/.build/app-shell
           chmod +x cdk/.build/app-shell/bootstrap
           ls -la cdk/.build/app-shell
+
+      # FCM push: inject the Firebase service-account key (SECRET) into the
+      # lambda bundle at the runtime-read path
+      # (GOOGLE_APPLICATION_CREDENTIALS=.gcp/firebase-service-account.json).
+      # After extract (rm -rf), before deploy (CDK zips the dir). Guarded so a
+      # missing secret just disables push (fcm.rs skips gracefully).
+      - name: Write Firebase service account into lambda bundle
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
+            mkdir -p cdk/.build/app-shell/.gcp
+            echo "$FIREBASE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d \
+              > cdk/.build/app-shell/.gcp/firebase-service-account.json
+            echo "firebase service account written ($(wc -c < cdk/.build/app-shell/.gcp/firebase-service-account.json) bytes)"
+          else
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 not set — push disabled (graceful skip)"
+          fi
 
       - name: Deploy
         env:
