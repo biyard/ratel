@@ -1,4 +1,15 @@
 name: ratel-tauri
+# Firebase via Swift Package Manager (NOT CocoaPods). SPM integrates straight
+# into the pbxproj that xcodegen owns, so `make gen-xcodeproj` keeps it and
+# `cargo tauri ios build` resolves it during the normal xcodebuild — whereas
+# CocoaPods would wrap the project into a .xcworkspace that this hand-tuned
+# xcodegen/Externals/libapp.a setup doesn't build, and `pod install` rewrites
+# the pbxproj that xcodegen regenerates. FirebaseMessaging gives FCM tokens +
+# APNs relay; FirebaseCore provides FIRApp (configure / proxy swizzling).
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 11.4.0
 options:
   bundleIdPrefix: co.biyard.ratel
   deploymentTarget:
@@ -48,6 +59,11 @@ targets:
         buildPhase: resources
         type: folder
       - path: LaunchScreen.storyboard
+      # Firebase reads this from the app bundle on [FIRApp configure]. The file
+      # is copied in from app/ratel-tauri/GoogleService-Info.plist by the
+      # Makefile `gsi-copy` step (gitignored, same policy as google-services.json).
+      - path: GoogleService-Info.plist
+        buildPhase: resources
     info:
       path: ratel-tauri_iOS/Info.plist
       properties:
@@ -65,8 +81,19 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.1.0
         CFBundleVersion: 0.1.0
+        # `remote-notification` lets the app process background data pushes and
+        # token refreshes; alert pushes work without it, but FCM recommends it.
+        UIBackgroundModes:
+          - remote-notification
     entitlements:
       path: ratel-tauri_iOS/ratel-tauri_iOS.entitlements
+      # xcodegen OWNS this file (regenerates it from these properties on every
+      # `make gen-xcodeproj`), so the push entitlement must live here — a manual
+      # edit to the .entitlements file gets wiped. `production` matches the
+      # "Ratel Tauri AppStore" distribution profile (TestFlight/App Store use
+      # the production APNs gateway).
+      properties:
+        aps-environment: production
     scheme:
       environmentVariables:
         RUST_BACKTRACE: full
@@ -74,6 +101,10 @@ targets:
     settings:
       base:
         ENABLE_BITCODE: false
+        # `@import FirebaseCore;` / `@import FirebaseMessaging;` in RatelPush.mm
+        # need Clang module imports (default on, pinned here so a project-wide
+        # override can't silently break the Firebase import).
+        CLANG_ENABLE_MODULES: true
         ARCHS: [arm64]
         VALID_ARCHS: arm64 
         LIBRARY_SEARCH_PATHS[arch=x86_64]: $(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
@@ -99,6 +130,10 @@ targets:
     dependencies:
       - framework: libapp.a
         embed: false
+      - package: Firebase
+        product: FirebaseCore
+      - package: Firebase
+        product: FirebaseMessaging
       - sdk: CoreGraphics.framework
       - sdk: Metal.framework
       - sdk: MetalKit.framework

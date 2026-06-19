@@ -7,15 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		23AF57E978C60FF28D579B92 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 620AD1B66431037624B2D114 /* FirebaseMessaging */; };
 		3C016E4FD94228EF2907534F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE09D73CF90A5A4D3950882E /* CoreGraphics.framework */; };
+		4028B86EFEAF0DE0F23ABB31 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 9D3194FFC40E8462D72D7F85 /* FirebaseCore */; };
 		51B81BC8E0E04E68E1B7B35D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BBD276977EB7092E0020C1A6 /* Assets.xcassets */; };
 		62FF042B494B5F1232BDF0F8 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 664273033048DA3C3D793070 /* UIKit.framework */; };
+		6B0A813C948DA76079F73BE4 /* RatelPush.m in Sources */ = {isa = PBXBuildFile; fileRef = EF189BDBF1806DDFB6AF6FD4 /* RatelPush.m */; };
 		6DEA5A3D47FDA7DDF2CF079C /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FA037AA9E84FCAF46F8FBF1 /* MetalKit.framework */; };
 		7A8312E661A219C747AE133E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC4A1C31D6E66A6DF9D05789 /* Security.framework */; };
 		929874E24CFEF13107D3EF26 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3EE62939993AE48C0B60B7C5 /* main.mm */; };
 		AA585790DDD9EEF0F9D3347A /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EE45108411E5695E16A951D7 /* libapp.a */; };
 		AF1734053640E606F3449553 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B8BC8179C7AA7C8D3DF44714 /* LaunchScreen.storyboard */; };
 		BADC6E7D7C29DA34C4F88954 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = C31F339FA6CB9CACA3469EF5 /* assets */; };
+		BAF9F6426516702FCB522632 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 54C503CF3C873A001778519C /* GoogleService-Info.plist */; };
 		CA19BBC1BECDD433FEECFAEA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2148B053F1145A4998766460 /* QuartzCore.framework */; };
 		F8074408E2867A15E54F7345 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 42E0170BC7B708738009965A /* WebKit.framework */; };
 		FAAE06B4167D983D9A1FDDD2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB41E927741900D756A53273 /* Metal.framework */; };
@@ -26,14 +30,17 @@
 		1B12D617578B12B42BF7FD16 /* google_sign_in.rs */ = {isa = PBXFileReference; path = google_sign_in.rs; sourceTree = "<group>"; };
 		2148B053F1145A4998766460 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		2CFBB20B7CA2AD2E4EF9809C /* ratel-tauri_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ratel-tauri_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3966ED413B46A1F09A688487 /* s3_upload.rs */ = {isa = PBXFileReference; path = s3_upload.rs; sourceTree = "<group>"; };
 		3EE62939993AE48C0B60B7C5 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		3FA037AA9E84FCAF46F8FBF1 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		42E0170BC7B708738009965A /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		54C503CF3C873A001778519C /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		664273033048DA3C3D793070 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		6868E527D75F99B21DF296E4 /* ratel-tauri_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ratel-tauri_iOS.entitlements"; sourceTree = "<group>"; };
 		7919E83D04F32BF05F58C1B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9582E37C43D9EA551D68D22B /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		A97E3C62ECE252854E69463E /* external_url.rs */ = {isa = PBXFileReference; path = external_url.rs; sourceTree = "<group>"; };
+		ABF8E4879F690F62B670C4AF /* RatelPush.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RatelPush.h; sourceTree = "<group>"; };
 		B8BC8179C7AA7C8D3DF44714 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BBD276977EB7092E0020C1A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BC1B2C30D3469BCC3F337601 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
@@ -45,6 +52,7 @@
 		CE09D73CF90A5A4D3950882E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		DB41E927741900D756A53273 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		EE45108411E5695E16A951D7 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		EF189BDBF1806DDFB6AF6FD4 /* RatelPush.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RatelPush.m; sourceTree = "<group>"; };
 		F26C2FECF1BDE1F0290C5A27 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -54,6 +62,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA585790DDD9EEF0F9D3347A /* libapp.a in Frameworks */,
+				4028B86EFEAF0DE0F23ABB31 /* FirebaseCore in Frameworks */,
+				23AF57E978C60FF28D579B92 /* FirebaseMessaging in Frameworks */,
 				3C016E4FD94228EF2907534F /* CoreGraphics.framework in Frameworks */,
 				FAAE06B4167D983D9A1FDDD2 /* Metal.framework in Frameworks */,
 				6DEA5A3D47FDA7DDF2CF079C /* MetalKit.framework in Frameworks */,
@@ -124,6 +134,7 @@
 			children = (
 				C31F339FA6CB9CACA3469EF5 /* assets */,
 				BBD276977EB7092E0020C1A6 /* Assets.xcassets */,
+				54C503CF3C873A001778519C /* GoogleService-Info.plist */,
 				B8BC8179C7AA7C8D3DF44714 /* LaunchScreen.storyboard */,
 				AF4155F3738DF7E9B6CDF305 /* Externals */,
 				AD20FCA0DCEDB22D44366DBB /* ratel-tauri_iOS */,
@@ -181,6 +192,7 @@
 				A97E3C62ECE252854E69463E /* external_url.rs */,
 				1B12D617578B12B42BF7FD16 /* google_sign_in.rs */,
 				C6230B9309E8A70016DB426B /* mod.rs */,
+				3966ED413B46A1F09A688487 /* s3_upload.rs */,
 			);
 			path = commands;
 			sourceTree = "<group>";
@@ -189,12 +201,14 @@
 			isa = PBXGroup;
 			children = (
 				3EE62939993AE48C0B60B7C5 /* main.mm */,
+				ABF8E4879F690F62B670C4AF /* RatelPush.h */,
+				EF189BDBF1806DDFB6AF6FD4 /* RatelPush.m */,
 				52B1E8D9FC20D3250AFB992E /* bindings */,
 			);
 			path = "ratel-tauri";
 			sourceTree = "<group>";
 		};
-		"TEMP_D9FA4E3E-8AE2-42E9-AFED-85A6EFEBCEE4" /* x86_64 */ = {
+		"TEMP_A4F24421-E09E-4C75-BF4F-C92D5BDB9301" /* x86_64 */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -219,6 +233,8 @@
 			);
 			name = "ratel-tauri_iOS";
 			packageProductDependencies = (
+				9D3194FFC40E8462D72D7F85 /* FirebaseCore */,
+				620AD1B66431037624B2D114 /* FirebaseMessaging */,
 			);
 			productName = "ratel-tauri_iOS";
 			productReference = 2CFBB20B7CA2AD2E4EF9809C /* ratel-tauri_iOS.app */;
@@ -244,6 +260,9 @@
 			);
 			mainGroup = 72FC49E399E863A4903C455B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				95790B2244F55AFE8A0EF377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41D60FD0001225B8D1B12B96 /* Products */;
 			projectDirPath = "";
@@ -260,6 +279,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				51B81BC8E0E04E68E1B7B35D /* Assets.xcassets in Resources */,
+				BAF9F6426516702FCB522632 /* GoogleService-Info.plist in Resources */,
 				AF1734053640E606F3449553 /* LaunchScreen.storyboard in Resources */,
 				BADC6E7D7C29DA34C4F88954 /* assets in Resources */,
 			);
@@ -296,6 +316,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B0A813C948DA76079F73BE4 /* RatelPush.m in Sources */,
 				929874E24CFEF13107D3EF26 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -311,6 +332,7 @@
 					arm64,
 				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "ratel-tauri_iOS/ratel-tauri_iOS.entitlements";
 				CODE_SIGN_IDENTITY = BC325439AFB2CCD00BEDF434DB1ABF2BA65CE345;
 				CODE_SIGN_STYLE = Manual;
@@ -408,6 +430,7 @@
 					arm64,
 				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "ratel-tauri_iOS/ratel-tauri_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
@@ -509,6 +532,30 @@
 			defaultConfigurationName = debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		95790B2244F55AFE8A0EF377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		620AD1B66431037624B2D114 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 95790B2244F55AFE8A0EF377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		9D3194FFC40E8462D72D7F85 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 95790B2244F55AFE8A0EF377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F8195304BD277A5531B7AC92 /* Project object */;
 }

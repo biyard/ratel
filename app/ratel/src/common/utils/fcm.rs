@@ -186,6 +186,15 @@ pub async fn send_to_token(device_token: &str, msg: &PushMessage) -> PushOutcome
             "android": {
                 "priority": "high",
                 "notification": { "default_sound": true }
+            },
+            // iOS: FCM relays via APNs. The top-level `notification` maps to
+            // `aps.alert`, and the `data` keys merge into the notification
+            // userInfo — so `userInfo["url"]` reaches RatelPush's tap handler
+            // (mirror of Android's intent-extra deep link). `sound: default`
+            // plays the standard tone; `priority 10` = immediate delivery.
+            "apns": {
+                "headers": { "apns-priority": "10" },
+                "payload": { "aps": { "sound": "default" } }
             }
         }
     });

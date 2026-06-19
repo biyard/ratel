@@ -71,6 +71,7 @@ user.json
 /playwright/admin.json
 /.claude/worktrees/
 google-services.json
+GoogleService-Info.plist
 /app/ratel/env.sh
 
 # Migration source data (supplied via env vars at runtime; never committed)

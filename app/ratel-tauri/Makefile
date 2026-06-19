@@ -225,8 +225,17 @@ $(IOS_CARGO_CONFIG): FORCE
 # bundle — only take effect after this runs. Required before the App Store
 # build. Needs `xcodegen` (installed by `cargo tauri ios init`; otherwise
 # `brew install xcodegen`).
+# Firebase ([FIRApp configure]) loads `GoogleService-Info.plist` from the app
+# bundle. The committed source lives at app/ratel-tauri/GoogleService-Info.plist
+# (gitignored, same policy as google-services.json); project.yml bundles the
+# copy under gen/apple as a resource. Copy it in before any iOS build/xcodegen
+# so fresh checkouts and project regeneration pick it up.
+.PHONY: gsi-copy
+gsi-copy:
+	@cp -f GoogleService-Info.plist src-tauri/gen/apple/GoogleService-Info.plist
+
 .PHONY: gen-xcodeproj
-gen-xcodeproj:
+gen-xcodeproj: gsi-copy
 	# xcodegen validates that every source dir exists. `Externals` (holds the
 	# Rust `libapp.a`) and `assets` (the web bundle) are produced later by the
 	# build/preBuildScript, so on a fresh checkout (CI) they don't exist yet and
@@ -242,7 +251,7 @@ ios-init: install-tauri-cli
 
 # Live-reload dev on a booted Simulator. Run `cd ../ratel && PORT=8000 make
 # run-tauri` in another terminal first (serves the web bundle the WebView loads).
-run-ios: install-tauri-cli $(IOS_CARGO_CONFIG) $(TAURI_OVERRIDE_FILE)
+run-ios: install-tauri-cli $(IOS_CARGO_CONFIG) gsi-copy $(TAURI_OVERRIDE_FILE)
 	cd src-tauri && $(IOS_ENV) cargo tauri ios dev --config $(TAURI_OVERRIDE_FILE)
 
 # Release .ipa for App Store / TestFlight. Requires a configured Apple
@@ -260,7 +269,7 @@ build-ios: install-tauri-cli $(IOS_CARGO_CONFIG) gen-xcodeproj dx-build
 
 # Simulator build — no Apple team / code signing needed. Verifies the iOS
 # app compiles + bundles and produces a .app runnable on the Simulator.
-build-ios-sim: install-tauri-cli $(IOS_CARGO_CONFIG) dx-build
+build-ios-sim: install-tauri-cli $(IOS_CARGO_CONFIG) gsi-copy dx-build
 	cd src-tauri && $(IOS_ENV) cargo tauri ios build --target aarch64-sim --debug
 
 # ── TestFlight (App Store Connect) ───────────────────────────────────
