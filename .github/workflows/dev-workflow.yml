@@ -18,12 +18,6 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      # - name: Write Firebase service account (dev)
-      #   run: |
-      #     mkdir -p cdk/app-shell/.gcp
-      #     echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
-      #       | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -47,6 +41,26 @@ jobs:
           unzip -o /tmp/lambda/app-shell-lambda.zip -d cdk/.build/app-shell
           chmod +x cdk/.build/app-shell/bootstrap
           ls -la cdk/.build/app-shell
+
+      # FCM push: the backend signs FCM HTTP v1 requests with a Firebase
+      # service-account key. It's a SECRET (never committed) — inject it from a
+      # GitHub secret into the lambda bundle at the path the runtime reads
+      # (GOOGLE_APPLICATION_CREDENTIALS=.gcp/firebase-service-account.json, set
+      # by cdk/lib/regional-lambda-stack.ts). Must run AFTER the extract (which
+      # rm -rf's the dir) and BEFORE deploy (CDK zips this dir). Guarded so a
+      # missing secret just disables push (fcm.rs skips gracefully).
+      - name: Write Firebase service account into lambda bundle
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
+            mkdir -p cdk/.build/app-shell/.gcp
+            echo "$FIREBASE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d \
+              > cdk/.build/app-shell/.gcp/firebase-service-account.json
+            echo "firebase service account written ($(wc -c < cdk/.build/app-shell/.gcp/firebase-service-account.json) bytes)"
+          else
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 not set — push disabled (graceful skip)"
+          fi
 
       - name: Deploy
         env:
@@ -761,6 +775,21 @@ jobs:
           # aborts with "binary already exists in destination".
           cargo binstall -y --locked --force dioxus-cli
           cargo binstall -y --locked --force --version "^2.0.0" tauri-cli
+
+      # google-services.json is gitignored (Firebase client config), so it is
+      # absent on a clean checkout. The google-services Gradle plugin (FCM push)
+      # reads it via the Makefile's `gs-copy`, so decode it from a secret first.
+      - name: Write google-services.json (Android Firebase client config)
+        working-directory: app/ratel-tauri
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICES_JSON_BASE64 secret not set — Android build needs google-services.json (gitignored). Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > google-services.json
+          echo "Wrote google-services.json ($(wc -c < google-services.json) bytes)"
 
       - name: Build arm64 debug APK (dev)
         working-directory: app/ratel-tauri

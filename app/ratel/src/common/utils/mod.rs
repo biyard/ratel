@@ -12,6 +12,8 @@ pub mod aead;
 #[cfg(feature = "server")]
 pub mod aws;
 #[cfg(feature = "server")]
+pub mod fcm;
+#[cfg(feature = "server")]
 pub mod inbox;
 #[cfg(feature = "server")]
 pub mod password;

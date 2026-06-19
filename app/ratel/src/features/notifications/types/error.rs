@@ -14,6 +14,14 @@ pub enum NotificationsError {
     #[error("list failed")]
     #[translate(en = "Failed to load notifications", ko = "알림 불러오기에 실패했습니다")]
     ListFailed,
+
+    #[error("device register failed")]
+    #[translate(en = "Failed to register device", ko = "기기 등록에 실패했습니다")]
+    DeviceRegisterFailed,
+
+    #[error("device unregister failed")]
+    #[translate(en = "Failed to unregister device", ko = "기기 등록 해제에 실패했습니다")]
+    DeviceUnregisterFailed,
 }
 
 #[cfg(feature = "server")]
@@ -22,9 +30,10 @@ impl NotificationsError {
         use crate::axum::http::StatusCode;
         match self {
             NotificationsError::InboxEntryNotFound => StatusCode::NOT_FOUND,
-            NotificationsError::MarkReadFailed | NotificationsError::ListFailed => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
+            NotificationsError::MarkReadFailed
+            | NotificationsError::ListFailed
+            | NotificationsError::DeviceRegisterFailed
+            | NotificationsError::DeviceUnregisterFailed => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

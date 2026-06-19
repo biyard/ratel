@@ -27948,10 +27948,17 @@ body.comments-panel-resizing {
   text-align: center;
   margin-bottom: 8px;
   text-shadow: 0 0 40px rgba(252,179,0,0.15);
-  max-width: 100%;
+  /* Bound to the screen so a long title can't overflow the viewport (with
+     `nowrap` + center it was clipped on BOTH sides, showing only the middle).
+     Wrap normally, break unbroken tokens (e.g. long ids), and clamp to 3 lines
+     with an ellipsis for extreme cases. */
+  max-width: calc(100vw - 32px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   padding: 0 16px;
   box-sizing: border-box;
 }

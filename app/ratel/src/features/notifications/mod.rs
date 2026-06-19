@@ -3,6 +3,9 @@ pub mod types;
 pub mod controllers;
 
 #[cfg(feature = "server")]
+pub mod services;
+
+#[cfg(feature = "server")]
 pub mod route;
 
 pub mod hooks;

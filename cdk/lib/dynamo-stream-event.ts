@@ -473,6 +473,57 @@ export class DynamoStreamEventStack extends Stack {
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
 
+    // ── Pipe: UserInboxNotification Insert → InboxPushFanout ───────
+    // Triggers when a new in-app notification row is inserted, so the lambda
+    // fans it out to the recipient's registered device push tokens (FCM →
+    // APNs on iOS / FCM on Android). Mirrors the local-dev stream poller's
+    // USER_INBOX_NOTIFICATION# branch in stream_handler.rs.
+    new pipes.CfnPipe(this, "InboxPushPipe", {
+      name: `ratel-${stage}-inbox-push-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "USER_INBOX_NOTIFICATION#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "InboxPushFanout",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route InboxPushFanout events to app-shell Lambda ─────
+    new events.Rule(this, "InboxPushFanoutRule", {
+      eventBus,
+      description:
+        "Route new in-app notifications to app-shell for device push fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["InboxPushFanout"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
     // ── Pipe 7: Space Activity Insert → ActivityScoreAggregate ──────
     // Triggers when a new SpaceActivity record is inserted (user performs an action)
     new pipes.CfnPipe(this, "ActivityScorePipe", {
