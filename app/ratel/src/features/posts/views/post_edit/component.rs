@@ -6,8 +6,10 @@ use super::posting_as::PostingAs;
 use crate::common::components::editor::Editor as RichEditor;
 use crate::common::contexts::use_team_context;
 use crate::common::types::{SpacePartition, TeamPartition, UserType};
-use crate::features::auth::hooks::use_user_context;
+use crate::features::auth::hooks::{use_user_context, use_user_membership};
 use crate::features::cross_posting::components::CrossPostSidebar;
+use crate::features::posts::components::ai_draft::{AiDraftButton, AiDraftModal, UpsellModal};
+use crate::features::posts::types::AiDraftLanguage;
 use crate::features::cross_posting::hooks::{use_cross_posting_provider, UseCrossPosting};
 use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
@@ -67,6 +69,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     // surface the "syndicated copies remain visible" notice.
     let already_published_public =
         post.status == PostStatus::Published && initial_visibility == Visibility::Public;
+    let initial_ai_draft_used = post.ai_draft_used;
     let Post {
         title: init_title,
         body: init_body,
@@ -119,6 +122,25 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     let mut title = use_signal(move || init_title.clone());
     let mut content = use_signal(move || html_contents.clone());
     let mut status = use_signal(|| EditorStatus::Idle);
+
+    // AI draft state — flipped to true once a successful generation lands.
+    // Hides the AI entry point (AC-13) and is also enforced server-side
+    // via the conditional update on Post.ai_draft_used.
+    let mut ai_draft_used = use_signal(move || initial_ai_draft_used);
+    // Bumped whenever we need the rich-text editor to remount and pick up
+    // a programmatically-changed `content` (e.g. AI draft replaces body).
+    // The editor snapshots its initial HTML on mount and never re-applies
+    // it, so a `key=` change is the only way to force fresh content in
+    // without disrupting IME composition on regular edits.
+    let mut editor_remount_key = use_signal(|| 0u64);
+    let user_membership = use_user_membership();
+    let is_paid_user = user_membership.as_ref().map(|m| m.is_paid()).unwrap_or(false);
+    // Default the AI form language to the user's current UI locale.
+    let initial_ai_language = match use_language()() {
+        Language::En => AiDraftLanguage::En,
+        Language::Ko => AiDraftLanguage::Ko,
+    };
+    let nav_for_ai = use_navigator();
 
     let initial_categories_for_signal = initial_categories.clone();
     let mut last_saved =
@@ -458,6 +480,62 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                 }
                 div { class: "arena-topbar__right",
                     span { class: "autosave", "{autosave_label}" }
+
+                    if !*ai_draft_used.read() {
+                        AiDraftButton {
+                            on_click: move |_| {
+                                if !is_paid_user {
+                                    popup.open(rsx! {
+                                        UpsellModal {
+                                            on_close: move |_| popup.close(),
+                                            on_upgrade: move |_| {
+                                                popup.close();
+                                                nav_for_ai.push("/membership");
+                                            },
+                                        }
+                                    });
+                                } else {
+                                    popup.open(rsx! {
+                                        AiDraftModal {
+                                            post_id: post_id(),
+                                            initial_language: initial_ai_language,
+                                            on_close: move |_| popup.close(),
+                                            on_success: move |
+                                                resp: crate::features::posts::controllers::generate_ai_draft::GenerateAiDraftResponse|
+                                            {
+                                                let new_body = resp.body_html.clone();
+                                                title.set(resp.title);
+                                                content.set(resp.body_html);
+                                                ai_draft_used.set(true);
+                                                // The RichEditor snapshots its initial
+                                                // HTML on mount and never re-applies the
+                                                // `content` prop (caret-jump avoidance
+                                                // during Korean IME composition — see
+                                                // editor/component.rs). For programmatic
+                                                // content swaps we inject the new HTML
+                                                // directly into `.re-content` and
+                                                // dispatch a synthetic `input` event so
+                                                // the bridge resyncs `content` via the
+                                                // normal autosave path.
+                                                let next = editor_remount_key.peek().wrapping_add(1);
+                                                editor_remount_key.set(next);
+                                                let body_lit = serde_json::to_string(&new_body)
+                                                    .unwrap_or_else(|_| "\"\"".to_string());
+                                                let script = format!(
+                                                    "(function() {{ var el = document.querySelector('.ratel-editor .re-content'); if (!el) return; el.innerHTML = {body_lit}; el.dataset.empty = 'false'; var bridge = el.parentElement && el.parentElement.querySelector('.re-bridge'); if (bridge) {{ bridge.value = el.innerHTML; bridge.dispatchEvent(new Event('input', {{ bubbles: true }})); }} }})();",
+                                                );
+                                                spawn(async move {
+                                                    let _ = dioxus::document::eval(&script).await;
+                                                });
+                                                popup.close();
+                                            },
+                                        }
+                                    });
+                                }
+                            },
+                        }
+                    }
+
                     button {
                         class: "topbar-btn",
                         disabled: status() == EditorStatus::Saving || status() == EditorStatus::Publishing,
@@ -613,6 +691,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     }
 
                     RichEditor {
+                        key: "{editor_remount_key()}",
                         class: "w-full",
                         content: content(),
                         editable: true,

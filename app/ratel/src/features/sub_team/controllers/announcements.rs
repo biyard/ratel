@@ -425,6 +425,7 @@ pub async fn publish_announcement_handler(
         // the pin so the target child's wall isn't permanently locked
         // to this card.
         pinned_as_announcement: !is_direct,
+        ai_draft_used: false,
     };
     if let Err(e) = anchor_post.create(cli).await {
         crate::error!("publish_announcement: anchor post create failed: {e}");

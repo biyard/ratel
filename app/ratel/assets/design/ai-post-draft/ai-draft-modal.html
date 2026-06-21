@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — AI Post Draft / Modal flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.06);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .stage{position:relative;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 32px}
+    .stage::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(252,179,0,0.05) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.04) 0%,transparent 50%);z-index:-1;pointer-events:none}
+
+    /* Blurred editor backdrop */
+    .bg-editor{position:fixed;inset:0;padding:32px;filter:blur(8px) brightness(0.5);pointer-events:none;z-index:0}
+    .bg-editor__title{font-size:30px;font-weight:700;color:var(--text-muted);margin-top:80px}
+    .bg-editor__line{height:14px;border-radius:6px;background:rgba(255,255,255,0.04);margin-top:14px}
+    .bg-editor__line.s{width:60%}
+    .bg-editor__line.m{width:85%}
+    .bg-editor__line.l{width:95%}
+
+    .scrim{position:fixed;inset:0;background:rgba(6,6,14,0.65);backdrop-filter:blur(12px);z-index:50}
+
+    /* ─── Modal ─────────────────────────────────────────── */
+    .modal{position:relative;z-index:60;width:100%;max-width:600px;background:linear-gradient(180deg,rgba(20,20,40,0.85),rgba(12,12,26,0.92));backdrop-filter:blur(28px);border:1px solid var(--border-strong);border-radius:20px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.7),0 0 60px rgba(252,179,0,0.06);display:flex;flex-direction:column;max-height:calc(100vh - 96px)}
+
+    .modal__head{position:relative;padding:22px 26px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:14px}
+    .modal__head-icon{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,rgba(252,179,0,0.20),rgba(110,237,216,0.10));border:1px solid rgba(252,179,0,0.30);display:flex;align-items:center;justify-content:center;color:var(--accent-gold);flex-shrink:0;box-shadow:inset 0 0 12px rgba(252,179,0,0.1)}
+    .modal__head-icon svg{width:18px;height:18px;filter:drop-shadow(0 0 6px rgba(252,179,0,0.5))}
+    .modal__head-text{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+    .modal__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .modal__title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+
+    .modal__close{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-subtle);background:var(--bg-glass);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s ease}
+    .modal__close:hover{border-color:rgba(252,179,0,0.30);color:var(--accent-gold)}
+    .modal__close svg{width:13px;height:13px}
+
+    /* Step indicator */
+    .stepper{display:flex;align-items:center;gap:6px;padding:14px 26px;border-bottom:1px solid var(--border-subtle);background:rgba(6,6,14,0.4)}
+    .step{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+    .step__dot{width:24px;height:24px;border-radius:50%;border:1px solid var(--border-strong);background:transparent;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:10px;font-weight:700;color:var(--text-dim);flex-shrink:0;transition:all 0.3s ease}
+    .step__label{font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color 0.3s ease}
+    .step__bar{flex:1;height:1px;background:var(--border-subtle);margin:0 4px}
+    .step[data-active="true"] .step__dot{border-color:var(--accent-gold);background:rgba(252,179,0,0.15);color:var(--accent-gold);box-shadow:0 0 12px rgba(252,179,0,0.3)}
+    .step[data-active="true"] .step__label{color:var(--accent-gold)}
+    .step[data-done="true"] .step__dot{border-color:rgba(110,237,216,0.40);background:rgba(110,237,216,0.10);color:var(--accent-teal)}
+    .step[data-done="true"] .step__label{color:var(--text-muted)}
+
+    /* Body — scrollable area for each pane */
+    .modal__body{padding:24px 26px 20px;overflow-y:auto;flex:1}
+
+    /* ─── Pane: template picker ──────────────────────────── */
+    .pane{display:none}
+    body[data-step="picker"] .pane[data-pane="picker"]{display:block}
+    body[data-step="form"] .pane[data-pane="form"]{display:block}
+    body[data-step="loading"] .pane[data-pane="loading"]{display:flex}
+    body[data-step="error"] .pane[data-pane="error"]{display:block}
+
+    .pane-intro{margin-bottom:18px;display:flex;flex-direction:column;gap:6px}
+    .pane-intro__title{font-size:17px;font-weight:600;color:var(--text-primary);letter-spacing:-0.005em}
+    .pane-intro__sub{font-size:13px;color:var(--text-muted);line-height:1.55}
+
+    .template-grid{display:flex;flex-direction:column;gap:12px}
+    .template-card{position:relative;display:flex;gap:14px;padding:18px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s ease;text-align:left}
+    .template-card:hover{background:var(--bg-input-focus);border-color:rgba(252,179,0,0.30)}
+    .template-card[aria-selected="true"]{border-color:rgba(252,179,0,0.50);background:linear-gradient(135deg,rgba(252,179,0,0.06),rgba(110,237,216,0.03));box-shadow:0 0 24px rgba(252,179,0,0.10)}
+    .template-card[data-disabled="true"]{opacity:0.4;cursor:not-allowed}
+    .template-card[data-disabled="true"]:hover{background:var(--bg-input);border-color:var(--border-subtle)}
+
+    .template-card__icon{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,rgba(252,179,0,0.16),rgba(110,237,216,0.08));border:1px solid rgba(252,179,0,0.20);display:flex;align-items:center;justify-content:center;color:var(--accent-gold);flex-shrink:0}
+    .template-card__icon svg{width:20px;height:20px}
+    .template-card__text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+    .template-card__title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .template-card__title{font-size:14.5px;font-weight:600;color:var(--text-primary);letter-spacing:-0.005em}
+    .template-card__pill{padding:2px 7px;border-radius:5px;background:rgba(110,237,216,0.10);border:1px solid rgba(110,237,216,0.18);font-family:var(--font-display);font-size:8.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-teal)}
+    .template-card__pill--soon{background:rgba(255,255,255,0.04);border-color:var(--border-subtle);color:var(--text-dim)}
+    .template-card__desc{font-size:12.5px;color:var(--text-muted);line-height:1.55}
+    .template-card__check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.25s ease}
+    .template-card[aria-selected="true"] .template-card__check{border-color:var(--accent-gold);background:var(--accent-gold)}
+    .template-card[aria-selected="true"] .template-card__check svg{display:block;color:#0a0a0a}
+    .template-card__check svg{width:12px;height:12px;display:none}
+
+    /* ─── Pane: form ─────────────────────────────────────── */
+    .form{display:flex;flex-direction:column;gap:16px}
+    .form-field{display:flex;flex-direction:column;gap:6px}
+    .form-field__label{font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+    .form-field__label .req{color:var(--accent-gold);font-size:10px;font-weight:800}
+    .form-field__hint{font-size:11.5px;color:var(--text-dim);line-height:1.5;font-weight:400}
+    .form-field input,.form-field textarea{width:100%;padding:12px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);font-family:var(--font-body);font-size:14px;color:var(--text-primary);outline:none;transition:all 0.2s ease;resize:vertical}
+    .form-field input::placeholder,.form-field textarea::placeholder{color:var(--text-dim)}
+    .form-field input:focus,.form-field textarea:focus{background:var(--bg-input-focus);border-color:rgba(252,179,0,0.45);box-shadow:0 0 0 3px rgba(252,179,0,0.10)}
+    .form-field textarea{min-height:84px;line-height:1.55}
+
+    .form-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end}
+
+    .lang-select{position:relative;display:flex;flex-direction:column;gap:6px;min-width:160px}
+    .lang-select select{appearance:none;-webkit-appearance:none;padding:11px 38px 11px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);font-family:var(--font-body);font-size:13.5px;font-weight:500;color:var(--text-primary);cursor:pointer;outline:none;transition:all 0.2s ease}
+    .lang-select select:hover{background:var(--bg-input-focus)}
+    .lang-select select:focus{border-color:rgba(252,179,0,0.45);box-shadow:0 0 0 3px rgba(252,179,0,0.10)}
+    .lang-select::after{content:'';position:absolute;right:14px;bottom:14px;width:8px;height:8px;border-right:1.5px solid var(--text-muted);border-bottom:1.5px solid var(--text-muted);transform:rotate(45deg);pointer-events:none}
+
+    /* ─── Pane: loading ──────────────────────────────────── */
+    .pane[data-pane="loading"]{flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:48px 12px;text-align:center}
+
+    .gen-orb{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+    .gen-orb::before,.gen-orb::after{content:'';position:absolute;border-radius:50%;border:1px solid rgba(252,179,0,0.25);animation:orb-pulse 2.4s ease-in-out infinite}
+    .gen-orb::before{inset:0}
+    .gen-orb::after{inset:14px;animation-delay:0.6s;border-color:rgba(110,237,216,0.30)}
+    @keyframes orb-pulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:0;transform:scale(1.20)}}
+    .gen-orb__inner{width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(252,179,0,0.30) 0%,rgba(252,179,0,0.05) 70%,transparent 100%);display:flex;align-items:center;justify-content:center;animation:orb-spin 8s linear infinite}
+    @keyframes orb-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .gen-orb__inner svg{width:30px;height:30px;color:var(--accent-gold);filter:drop-shadow(0 0 12px rgba(252,179,0,0.7))}
+
+    .gen-status{display:flex;flex-direction:column;gap:6px;align-items:center}
+    .gen-status__title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-gold)}
+    .gen-status__sub{font-size:13px;color:var(--text-muted);max-width:340px;line-height:1.55}
+    .gen-status__steps{display:flex;flex-direction:column;gap:8px;margin-top:14px;font-size:12px;color:var(--text-dim);min-width:240px}
+    .gen-step{display:flex;align-items:center;gap:10px}
+    .gen-step__dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .gen-step[data-state="done"] .gen-step__dot{border-color:var(--accent-teal);background:rgba(110,237,216,0.12)}
+    .gen-step[data-state="done"] .gen-step__dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal)}
+    .gen-step[data-state="active"] .gen-step__dot{border-color:var(--accent-gold);background:rgba(252,179,0,0.15)}
+    .gen-step[data-state="active"] .gen-step__dot::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-gold);animation:pulse-dot 1.2s ease-in-out infinite}
+    .gen-step[data-state="done"]{color:var(--text-muted)}
+    .gen-step[data-state="active"]{color:var(--text-primary)}
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.7)}}
+
+    /* ─── Pane: error ────────────────────────────────────── */
+    .err-card{padding:20px 22px;border-radius:14px;background:linear-gradient(135deg,rgba(239,68,68,0.06),rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.25);display:flex;gap:14px;margin-bottom:18px}
+    .err-card__icon{width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.30);display:flex;align-items:center;justify-content:center;color:var(--accent-coral);flex-shrink:0}
+    .err-card__icon svg{width:18px;height:18px}
+    .err-card__text{display:flex;flex-direction:column;gap:4px}
+    .err-card__title{font-size:14px;font-weight:600;color:var(--accent-coral)}
+    .err-card__msg{font-size:13px;color:var(--text-muted);line-height:1.55}
+    .err-card__detail{margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(0,0,0,0.30);font-family:'SFMono-Regular',monospace;font-size:11px;color:var(--text-dim);line-height:1.45;overflow-x:auto}
+
+    .err-summary{font-size:12.5px;color:var(--text-muted);line-height:1.55;padding:0 2px}
+    .err-summary strong{color:var(--text-primary);font-weight:600}
+
+    /* ─── Footer (actions) ──────────────────────────────── */
+    .modal__foot{padding:18px 26px;border-top:1px solid var(--border-subtle);background:rgba(6,6,14,0.4);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-shrink:0}
+    .modal__foot-info{font-size:11.5px;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .modal__foot-info svg{width:13px;height:13px;color:var(--text-muted)}
+    .modal__foot-actions{display:flex;gap:8px}
+
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 18px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .btn svg{width:13px;height:13px}
+    .btn--ghost{background:transparent;border-color:transparent}
+    .btn--ghost:hover{background:var(--bg-glass);color:var(--text-primary)}
+    .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+    .btn--primary:hover{background:linear-gradient(135deg,#ffd24a,var(--accent-gold));color:#0a0a0a;box-shadow:0 4px 22px rgba(252,179,0,0.40);transform:translateY(-1px)}
+    .btn[disabled]{opacity:0.40;cursor:not-allowed;pointer-events:none}
+
+    /* ─── Demo state toggle (mockup-only) ────────────────── */
+    .demo-toggle{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:8px;padding:14px 16px;background:var(--bg-glass);backdrop-filter:blur(20px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+    .demo-toggle__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim)}
+    .demo-toggle__opts{display:flex;gap:6px;flex-wrap:wrap;max-width:280px}
+    .demo-toggle__btn{padding:7px 11px;border-radius:7px;border:1px solid var(--border-subtle);background:transparent;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer}
+    .demo-toggle__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);border-color:rgba(252,179,0,0.30)}
+  </style>
+</head>
+<body data-step="form">
+  <div class="stage">
+
+    <!-- Background editor (blurred) -->
+    <div class="bg-editor">
+      <div class="bg-editor__title">제목을 입력하세요…</div>
+      <div class="bg-editor__line s"></div>
+      <div class="bg-editor__line m"></div>
+      <div class="bg-editor__line l"></div>
+      <div class="bg-editor__line m"></div>
+      <div class="bg-editor__line s"></div>
+      <div class="bg-editor__line l"></div>
+    </div>
+
+    <div class="scrim"></div>
+
+    <section class="modal" role="dialog" aria-labelledby="ai-modal-title" aria-modal="true">
+
+      <!-- Header -->
+      <header class="modal__head">
+        <div class="modal__head-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+            <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+          </svg>
+        </div>
+        <div class="modal__head-text">
+          <div class="modal__eyebrow">AI Draft</div>
+          <h2 class="modal__title" id="ai-modal-title">의견수렴 포스트 초안 작성</h2>
+        </div>
+        <button class="modal__close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <!-- Stepper -->
+      <div class="stepper" aria-label="Progress">
+        <div class="step" data-step-id="picker">
+          <div class="step__dot">1</div>
+          <div class="step__label">템플릿</div>
+        </div>
+        <div class="step__bar"></div>
+        <div class="step" data-step-id="form">
+          <div class="step__dot">2</div>
+          <div class="step__label">입력</div>
+        </div>
+        <div class="step__bar"></div>
+        <div class="step" data-step-id="loading">
+          <div class="step__dot">3</div>
+          <div class="step__label">생성</div>
+        </div>
+      </div>
+
+      <!-- ─── Pane: Template picker ──────────────────────── -->
+      <div class="modal__body">
+        <div class="pane" data-pane="picker">
+          <div class="pane-intro">
+            <div class="pane-intro__title">템플릿을 선택하세요</div>
+            <div class="pane-intro__sub">현재는 <strong style="color:var(--text-primary)">의견수렴 (Opinion gathering)</strong> 템플릿만 지원합니다. 다른 템플릿은 곧 추가될 예정입니다.</div>
+          </div>
+
+          <div class="template-grid" role="radiogroup">
+            <button class="template-card" aria-selected="true" role="radio">
+              <div class="template-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 14l4-4 4 4 4-7 6 8"/>
+                  <circle cx="7" cy="10" r="1.2"/>
+                </svg>
+              </div>
+              <div class="template-card__text">
+                <div class="template-card__title-row">
+                  <div class="template-card__title">의견수렴</div>
+                  <span class="template-card__pill">Available</span>
+                </div>
+                <div class="template-card__desc">정책·사안에 대한 시민 의견을 모으기 위한 5개 섹션 구조 — 추진배경 / 추진목적 / 추진내용 / 의견수렴 사항 / 참여 안내.</div>
+              </div>
+              <div class="template-card__check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>
+              </div>
+            </button>
+
+            <div class="template-card" data-disabled="true" role="radio" aria-selected="false">
+              <div class="template-card__icon" style="color:var(--text-dim)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+              </div>
+              <div class="template-card__text">
+                <div class="template-card__title-row">
+                  <div class="template-card__title">성명서</div>
+                  <span class="template-card__pill template-card__pill--soon">Coming soon</span>
+                </div>
+                <div class="template-card__desc">조직·단체의 공식 입장을 명확하게 정리한 성명서 형식.</div>
+              </div>
+              <div class="template-card__check"></div>
+            </div>
+
+            <div class="template-card" data-disabled="true" role="radio" aria-selected="false">
+              <div class="template-card__icon" style="color:var(--text-dim)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+              </div>
+              <div class="template-card__text">
+                <div class="template-card__title-row">
+                  <div class="template-card__title">행사 안내</div>
+                  <span class="template-card__pill template-card__pill--soon">Coming soon</span>
+                </div>
+                <div class="template-card__desc">밋업·세미나·공청회 등 오프라인 이벤트 안내 포스트.</div>
+              </div>
+              <div class="template-card__check"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Pane: Form ─────────────────────────────────── -->
+        <div class="pane" data-pane="form">
+          <div class="pane-intro">
+            <div class="pane-intro__title">의견수렴 초안을 위한 짧은 정보를 알려주세요</div>
+            <div class="pane-intro__sub">아래 정보를 바탕으로 AI 가 5개 섹션이 채워진 초안을 작성합니다. 입력하신 정보는 저장되지 않고 초안 생성에만 사용됩니다.</div>
+          </div>
+
+          <form class="form" onsubmit="event.preventDefault()">
+            <div class="form-field">
+              <label class="form-field__label" for="ai-topic">
+                <span>주제</span>
+                <span class="req">*</span>
+              </label>
+              <div class="form-field__hint">한 줄로 무엇에 대한 의견을 모으려는지 적어주세요.</div>
+              <input id="ai-topic" type="text" placeholder="예: 공공장소 흡연 구역 재배치" value="공공장소 흡연 구역 재배치" />
+            </div>
+
+            <div class="form-field">
+              <label class="form-field__label" for="ai-background">
+                <span>배경 / 문제의식</span>
+                <span class="req">*</span>
+              </label>
+              <div class="form-field__hint">왜 지금 이 의견수렴이 필요한지, 어떤 문제가 있는지 2-3 문장으로.</div>
+              <textarea id="ai-background" rows="3" placeholder="예: 최근 주거지·학교 근처 흡연 구역에 대한 민원이 늘었습니다. 위치 적정성을 재검토하고 합리적 재배치 방안을 마련할 필요가 있습니다.">최근 주거지·학교 근처 흡연 구역에 대한 민원이 늘었습니다. 위치 적정성을 재검토하고 합리적 재배치 방안을 마련할 필요가 있습니다.</textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="form-field__label" for="ai-feedback">
+                <span>듣고 싶은 의견</span>
+                <span class="req">*</span>
+              </label>
+              <div class="form-field__hint">시민들에게 어떤 질문을 던지고 싶은지, 어떤 쟁점에 대한 답을 듣고 싶은지 자유롭게.</div>
+              <textarea id="ai-feedback" rows="3" placeholder="예: 현재 흡연 구역 위치에 대한 평가, 대안 후보지에 대한 선호, 흡연 구역 운영 시 가장 중요한 가치(위생/접근성/안전 등).">현재 흡연 구역 위치 적정성, 대안 후보지에 대한 선호, 흡연 구역 운영 시 가장 중요하게 고려할 가치(위생·접근성·안전).</textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="form-field__label" for="ai-notes">
+                <span>참여 안내 (선택)</span>
+              </label>
+              <div class="form-field__hint">참여 방법·기한·익명 옵션 등 특별히 알리고 싶은 내용이 있다면.</div>
+              <textarea id="ai-notes" rows="2" placeholder="예: 향후 2주간 진행. 댓글 또는 익명 폼으로 참여 가능."></textarea>
+            </div>
+
+            <div class="form-field">
+              <div class="lang-select">
+                <label class="form-field__label" for="ai-lang">출력 언어</label>
+                <select id="ai-lang">
+                  <option value="ko" selected>한국어 (현재 locale)</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- ─── Pane: Loading ──────────────────────────────── -->
+        <div class="pane" data-pane="loading">
+          <div class="gen-orb">
+            <div class="gen-orb__inner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="gen-status">
+            <div class="gen-status__title">초안을 작성하고 있습니다</div>
+            <div class="gen-status__sub">평균 3-8초 정도 소요됩니다. 잠시만 기다려 주세요. 취소를 누르면 사용량이 차감되지 않습니다.</div>
+          </div>
+
+          <div class="gen-status__steps">
+            <div class="gen-step" data-state="done">
+              <div class="gen-step__dot"></div>
+              <span>입력 검증 완료</span>
+            </div>
+            <div class="gen-step" data-state="done">
+              <div class="gen-step__dot"></div>
+              <span>프롬프트 구성 완료</span>
+            </div>
+            <div class="gen-step" data-state="active">
+              <div class="gen-step__dot"></div>
+              <span>AI 모델 호출 중…</span>
+            </div>
+            <div class="gen-step" data-state="pending">
+              <div class="gen-step__dot"></div>
+              <span>응답 정리 및 에디터 반영</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Pane: Error ────────────────────────────────── -->
+        <div class="pane" data-pane="error">
+          <div class="err-card">
+            <div class="err-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 9v4M12 17h.01"/>
+                <path d="M10.3 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              </svg>
+            </div>
+            <div class="err-card__text">
+              <div class="err-card__title">초안 생성에 실패했습니다</div>
+              <div class="err-card__msg">AI 모델 응답을 받지 못했습니다. 일시적인 네트워크 또는 모델 문제일 가능성이 높습니다.</div>
+              <div class="err-card__detail">BedrockFailed: connection timed out after 30s</div>
+            </div>
+          </div>
+
+          <div class="err-summary">
+            입력하신 내용은 그대로 유지됩니다. 다시 시도해도 같은 문제가 반복되면 잠시 후에 시도하거나 직접 작성해 주세요. <strong>이 실패는 포스트의 1회 사용량에 차감되지 않습니다.</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Footer (changes by step) ───────────────────── -->
+      <footer class="modal__foot">
+
+        <!-- Picker step -->
+        <div class="modal__foot-info" data-show-on="picker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span>포스트당 1회만 사용할 수 있습니다.</span>
+        </div>
+        <div class="modal__foot-actions" data-show-on="picker">
+          <button class="btn btn--ghost">취소</button>
+          <button class="btn btn--primary">
+            <span>다음</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Form step -->
+        <div class="modal__foot-info" data-show-on="form">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-12V5l-8-3-8 3v5c0 8 8 12 8 12z"/></svg>
+          <span>입력 정보는 저장되지 않습니다.</span>
+        </div>
+        <div class="modal__foot-actions" data-show-on="form">
+          <button class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            <span>이전</span>
+          </button>
+          <button class="btn btn--primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+            </svg>
+            <span>초안 생성</span>
+          </button>
+        </div>
+
+        <!-- Loading step -->
+        <div class="modal__foot-info" data-show-on="loading">
+          <span style="display:inline-flex;align-items:center;gap:6px;color:var(--accent-teal)">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 1.2s ease-in-out infinite"></span>
+            <span>요청 처리 중…</span>
+          </span>
+        </div>
+        <div class="modal__foot-actions" data-show-on="loading">
+          <button class="btn">취소</button>
+        </div>
+
+        <!-- Error step -->
+        <div class="modal__foot-info" data-show-on="error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span style="color:var(--accent-coral)">사용량은 차감되지 않았습니다.</span>
+        </div>
+        <div class="modal__foot-actions" data-show-on="error">
+          <button class="btn btn--ghost">닫기</button>
+          <button class="btn btn--primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>
+            <span>다시 시도</span>
+          </button>
+        </div>
+
+      </footer>
+
+    </section>
+
+  </div>
+
+  <!-- Mockup-only state toggle (not shipped to Dioxus) -->
+  <aside class="demo-toggle">
+    <div class="demo-toggle__label">Modal step</div>
+    <div class="demo-toggle__opts">
+      <button class="demo-toggle__btn" data-step="picker">1. Picker</button>
+      <button class="demo-toggle__btn" data-step="form" aria-selected="true">2. Form</button>
+      <button class="demo-toggle__btn" data-step="loading">3. Loading</button>
+      <button class="demo-toggle__btn" data-step="error">4. Error</button>
+    </div>
+  </aside>
+
+  <style>
+    /* Footer visibility per step */
+    .modal__foot > [data-show-on]{display:none}
+    body[data-step="picker"] .modal__foot > [data-show-on="picker"]{display:flex}
+    body[data-step="form"] .modal__foot > [data-show-on="form"]{display:flex}
+    body[data-step="loading"] .modal__foot > [data-show-on="loading"]{display:flex}
+    body[data-step="error"] .modal__foot > [data-show-on="error"]{display:flex}
+    .modal__foot-info{flex:1}
+
+    /* Stepper "active" / "done" state computed from body[data-step] */
+    body[data-step="picker"] .step[data-step-id="picker"]{--ds:active}
+    body[data-step="form"] .step[data-step-id="picker"]{--ds:done}
+    body[data-step="form"] .step[data-step-id="form"]{--ds:active}
+    body[data-step="loading"] .step[data-step-id="picker"]{--ds:done}
+    body[data-step="loading"] .step[data-step-id="form"]{--ds:done}
+    body[data-step="loading"] .step[data-step-id="loading"]{--ds:active}
+    body[data-step="error"] .step[data-step-id="picker"]{--ds:done}
+    body[data-step="error"] .step[data-step-id="form"]{--ds:done}
+    body[data-step="error"] .step[data-step-id="loading"]{--ds:active}
+  </style>
+
+  <script>
+    (function(){
+      var btns = document.querySelectorAll('.demo-toggle__btn');
+      // apply stepper data-active / data-done from body[data-step]
+      function syncStepper(){
+        var s = document.body.getAttribute('data-step');
+        var order = ['picker','form','loading'];
+        var idx = order.indexOf(s === 'error' ? 'loading' : s);
+        document.querySelectorAll('.step').forEach(function(el){
+          var stepId = el.getAttribute('data-step-id');
+          var i = order.indexOf(stepId);
+          el.removeAttribute('data-active');
+          el.removeAttribute('data-done');
+          if (i < idx) el.setAttribute('data-done','true');
+          else if (i === idx) el.setAttribute('data-active','true');
+        });
+      }
+      btns.forEach(function(b){
+        b.addEventListener('click', function(){
+          var step = b.getAttribute('data-step');
+          document.body.setAttribute('data-step', step);
+          btns.forEach(function(x){ x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+          syncStepper();
+        });
+      });
+      syncStepper();
+    })();
+  </script>
+</body>
+</html>

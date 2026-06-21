@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — AI Post Draft / Entry point</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.03) 0%,transparent 50%);z-index:-1;pointer-events:none}
+
+    /* ─── Top bar ────────────────────────────────────────── */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted)}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.14);font-size:11px;font-weight:600;letter-spacing:0.04em;color:var(--accent-teal);margin-right:4px}
+    .autosave::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+    .topbar-btn--primary:hover{background:linear-gradient(135deg,#ffd24a,var(--accent-gold));color:#0a0a0a;box-shadow:0 4px 22px rgba(252,179,0,0.40);transform:translateY(-1px)}
+
+    /* ─── AI button (the new addition) ───────────────────── */
+    .ai-btn{position:relative;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:1px solid rgba(252,179,0,0.30);background:linear-gradient(135deg,rgba(252,179,0,0.08),rgba(110,237,216,0.05));font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-gold);cursor:pointer;transition:all 0.3s ease;overflow:hidden}
+    .ai-btn::before{content:'';position:absolute;top:0;left:-40%;width:30%;height:100%;background:linear-gradient(90deg,transparent,rgba(252,179,0,0.18),transparent);animation:shimmer 3.5s ease-in-out infinite;pointer-events:none}
+    @keyframes shimmer{0%{left:-40%}50%{left:120%}100%{left:120%}}
+    .ai-btn:hover{border-color:rgba(252,179,0,0.55);background:linear-gradient(135deg,rgba(252,179,0,0.14),rgba(110,237,216,0.08));box-shadow:0 0 24px rgba(252,179,0,0.18);transform:translateY(-1px)}
+    .ai-btn svg{width:13px;height:13px}
+    .ai-btn__sparkle{filter:drop-shadow(0 0 4px rgba(252,179,0,0.6))}
+    .ai-btn__badge{margin-left:2px;padding:2px 6px;border-radius:4px;background:rgba(252,179,0,0.22);color:var(--accent-gold);font-size:8px;font-weight:800;letter-spacing:0.10em}
+
+    /* AC-13: After successful generation, AI button is hidden */
+    body[data-state="after-generation"] .ai-btn{display:none}
+
+    /* ─── Layout ─────────────────────────────────────────── */
+    .composer-page{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;gap:20px;padding:32px 28px 100px;max-width:980px;margin:0 auto;width:100%}
+
+    .type-segmented{display:inline-flex;align-self:flex-start;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:12px;padding:4px;gap:2px}
+    .type-seg{padding:9px 18px;border-radius:9px;background:transparent;border:none;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease;display:inline-flex;align-items:center;gap:7px}
+    .type-seg svg{width:13px;height:13px}
+    .type-seg:hover{color:var(--text-primary)}
+    .type-seg[aria-selected="true"]{background:rgba(252,179,0,0.10);color:var(--accent-gold);box-shadow:inset 0 0 0 1px rgba(252,179,0,0.20)}
+
+    .title-input{width:100%;padding:14px 0;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:34px;font-weight:700;color:var(--text-primary);line-height:1.2;letter-spacing:-0.01em}
+    .title-input::placeholder{color:var(--text-dim);font-weight:600}
+    .title-divider{height:1px;background:linear-gradient(90deg,var(--border-subtle),transparent);margin:0 0 4px}
+
+    .body-editor{min-height:340px;padding:22px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:15.5px;line-height:1.75;color:var(--text-primary);outline:none}
+    .body-editor:focus,.body-editor:hover{background:var(--bg-input-focus);border-color:rgba(252,179,0,0.18)}
+    .body-editor:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic}
+
+    /* When the editor is empty, show a faint hint encouraging AI use */
+    .empty-hint{margin-top:12px;padding:16px 18px;border-radius:12px;border:1px dashed rgba(252,179,0,0.20);background:linear-gradient(135deg,rgba(252,179,0,0.04),rgba(110,237,216,0.02));display:flex;align-items:center;gap:14px;color:var(--text-muted);font-size:13px}
+    .empty-hint svg{width:18px;height:18px;color:var(--accent-gold);flex-shrink:0}
+    .empty-hint strong{color:var(--accent-gold);font-weight:600}
+    body[data-state="after-generation"] .empty-hint{display:none}
+
+    /* ─── After-generation state: 5 sections rendered ─── */
+    .draft-content{display:none}
+    body[data-state="after-generation"] .draft-content{display:block}
+    body[data-state="after-generation"] .body-editor-empty{display:none}
+    .draft-content h2{font-family:var(--font-body);font-size:20px;font-weight:700;color:var(--accent-gold);margin-top:24px;margin-bottom:10px;letter-spacing:-0.005em}
+    .draft-content h2:first-child{margin-top:0}
+    .draft-content p{margin-bottom:12px;color:var(--text-primary);line-height:1.75}
+
+    /* ─── Demo state toggle (mockup-only) ───────────────── */
+    .demo-toggle{position:fixed;bottom:24px;right:24px;z-index:100;display:flex;flex-direction:column;gap:8px;padding:14px 16px;background:var(--bg-glass);backdrop-filter:blur(20px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+    .demo-toggle__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim)}
+    .demo-toggle__opts{display:flex;gap:6px}
+    .demo-toggle__btn{padding:7px 11px;border-radius:7px;border:1px solid var(--border-subtle);background:transparent;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer}
+    .demo-toggle__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);border-color:rgba(252,179,0,0.30)}
+  </style>
+</head>
+<body data-state="empty">
+  <div class="arena">
+
+    <!-- ─── Top bar ─────────────────────────────────────── -->
+    <header class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18L9 12l6-6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <div class="topbar-title__eyebrow">Compose</div>
+          <div class="topbar-title__main">New post</div>
+        </div>
+      </div>
+
+      <div class="arena-topbar__right">
+        <div class="autosave">Autosaved</div>
+
+        <!-- AC-1: AI button visible to every authenticated user -->
+        <button class="ai-btn" aria-label="AI 로 작성">
+          <svg class="ai-btn__sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+            <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+          </svg>
+          <span>AI 로 작성</span>
+          <span class="ai-btn__badge">Pro</span>
+        </button>
+
+        <button class="topbar-btn topbar-btn--primary">
+          <span>Publish</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ─── Composer ───────────────────────────────────── -->
+    <main class="composer-page">
+      <div class="type-segmented" role="tablist">
+        <button class="type-seg" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span>Post</span>
+        </button>
+        <button class="type-seg" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+          <span>Repost</span>
+        </button>
+        <button class="type-seg" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M4 16l5-5 5 5 6-6"/></svg>
+          <span>Artwork</span>
+        </button>
+      </div>
+
+      <!-- Title input — empty state has placeholder; after-generation has the AI title -->
+      <input class="title-input" placeholder="제목을 입력하세요…" value="" data-empty-placeholder="제목을 입력하세요…" />
+      <div class="title-divider"></div>
+
+      <!-- Body editor — empty state -->
+      <div class="body-editor body-editor-empty" contenteditable="true" data-placeholder="여기에 본문을 작성하세요…"></div>
+
+      <!-- Body editor — after-generation state -->
+      <div class="body-editor draft-content" contenteditable="true">
+        <h2>추진배경</h2>
+        <p>최근 도심 곳곳의 흡연 구역이 주거지나 학교 근처에 위치해 있어 주민과 학부모들의 민원이 지속적으로 제기되어 왔습니다. 본 의견수렴은 이러한 배경에서 흡연 구역의 위치를 재검토하고 합리적인 재배치 방안을 모색하기 위한 공론의 장입니다.</p>
+
+        <h2>추진목적</h2>
+        <p>본 의견수렴의 목적은 시민과 흡연자 양측의 권익을 균형 있게 반영한 흡연 구역 운영 원칙을 마련하는 것입니다. 위치 선정 기준, 시설 운영 방식, 향후 관리 책임 주체에 대한 의견을 폭넓게 수렴하고자 합니다.</p>
+
+        <h2>추진내용</h2>
+        <p>1) 현재 운영 중인 공공 흡연 구역의 위치 데이터 공유, 2) 주민 / 학부모 / 흡연자 / 인근 상인 등 주요 이해관계자 그룹별 의견 청취, 3) 대안 후보지 3-5곳에 대한 비교 검토안 공개, 4) 수렴된 의견을 바탕으로 한 정책 권고안 도출의 4단계로 진행됩니다.</p>
+
+        <h2>의견수렴 사항</h2>
+        <p>다음 항목에 대한 시민 여러분의 의견을 듣고자 합니다. 첫째, 현재 흡연 구역 위치의 적정성에 대한 평가. 둘째, 대안 후보지에 대한 선호와 그 이유. 셋째, 흡연 구역 운영에 있어 가장 중요하게 고려되어야 할 가치 (위생, 접근성, 가시성, 안전 등). 넷째, 자유로운 보완 의견.</p>
+
+        <h2>참여 안내</h2>
+        <p>본 의견수렴은 향후 2주간 진행되며, 본 게시물의 댓글로 자유롭게 의견을 남겨주실 수 있습니다. 익명 참여를 원하시는 경우 별도 폼을 통한 제출도 가능합니다. 수렴된 의견은 정책 권고안에 익명으로 인용되며 개별 신원은 공개되지 않습니다.</p>
+      </div>
+
+      <!-- AC-1 supporting copy: empty state nudge -->
+      <div class="empty-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/></svg>
+        <div>
+          백지에서 시작하기 막막하시다면 <strong>AI 로 작성</strong> 버튼을 눌러 짧은 입력만으로 의견수렴 초안을 받아보세요.
+          <span style="display:block;color:var(--text-dim);font-size:12px;margin-top:2px">Pro 이상 멤버십 전용. 포스트당 1회 사용 가능.</span>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Mockup-only state toggle (not shipped to Dioxus) -->
+  <aside class="demo-toggle">
+    <div class="demo-toggle__label">Mockup state</div>
+    <div class="demo-toggle__opts">
+      <button class="demo-toggle__btn" data-state="empty" aria-selected="true">Empty draft</button>
+      <button class="demo-toggle__btn" data-state="after-generation" aria-selected="false">After AI generation</button>
+    </div>
+  </aside>
+
+  <script>
+    (function(){
+      var btns = document.querySelectorAll('.demo-toggle__btn');
+      btns.forEach(function(b){
+        b.addEventListener('click', function(){
+          var state = b.getAttribute('data-state');
+          document.body.setAttribute('data-state', state);
+          btns.forEach(function(x){ x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+          // Populate the title only in after-generation state.
+          var title = document.querySelector('.title-input');
+          if (state === 'after-generation') {
+            title.value = '공공장소 흡연 구역 재배치에 대한 의견수렴';
+          } else {
+            title.value = '';
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

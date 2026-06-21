@@ -1,3 +1,4 @@
+pub mod ai_draft;
 pub mod author;
 pub mod booster_type;
 mod error;
@@ -12,6 +13,7 @@ pub mod space_type;
 pub mod team_group_permission;
 pub mod visibility;
 
+pub use ai_draft::*;
 pub use author::*;
 pub use booster_type::*;
 pub use post_status::*;
@@ -19,6 +21,6 @@ pub use post_type::*;
 pub use space_publish_state::*;
 pub use space_status::*;
 pub use space_type::*;
-pub use error::PostError;
+pub use error::{AiPostDraftError, PostError};
 pub use team_group_permission::*;
 pub use visibility::*;

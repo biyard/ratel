@@ -1,4 +1,6 @@
 #![allow(unused_imports)]
+#[cfg(feature = "server")]
+pub mod ai;
 pub mod assets;
 pub mod components;
 pub mod config;

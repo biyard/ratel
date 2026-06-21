@@ -1,3 +1,4 @@
+pub mod ai_draft;
 mod create_post_button;
 mod feed_card;
 mod feed_list;

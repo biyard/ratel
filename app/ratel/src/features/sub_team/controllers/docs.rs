@@ -123,6 +123,7 @@ pub async fn create_sub_team_doc_handler(
                 announcement_id: None,
                 announcement_parent_team_id: None,
                 pinned_as_announcement: false,
+                ai_draft_used: false,
             };
             if let Err(e) = backing_post.create(cli).await {
                 crate::error!("create_sub_team_doc backing post create failed: {e}");

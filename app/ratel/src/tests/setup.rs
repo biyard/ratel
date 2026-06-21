@@ -21,6 +21,14 @@ impl TestContext {
             .with_env_filter("error")
             .try_init();
 
+        // Tests must never hit real Bedrock / Ollama. Force the AI writer
+        // backend to the bypass-only `fixture` impl. Safe because the
+        // global `writer_ai()` resolves only on first call and the env
+        // is set here before any tests can make an AI request.
+        if std::env::var_os("RATEL_AI_WRITER_TYPE").is_none() {
+            std::env::set_var("RATEL_AI_WRITER_TYPE", "fixture");
+        }
+
         let config = crate::config::get();
         let cli = config.common.dynamodb();
 
