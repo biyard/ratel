@@ -102,6 +102,8 @@ pub enum Partition {
 
     Category, // CATEGORY - shared pk for all categories
 
+    TestAccount, // TEST_ACCOUNT - shared pk for all reviewer test accounts
+
     /// Singleton row keyed for migration framework state.
     /// Pairs with `EntityType::LastBackfillVersion` to form a single
     /// (pk, sk) row at `MIGRATION` + `LAST_BACKFILL_VERSION`.

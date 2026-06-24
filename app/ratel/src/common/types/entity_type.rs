@@ -229,6 +229,8 @@ pub enum EntityType {
 
     Category(String), // CATEGORY#${name}
 
+    TestAccount(String), // TEST_ACCOUNT#${email}
+
     TimelineEntry(String), // TIMELINE_ENTRY#${timestamp}#${post_pk_inner}
 
     // AI Moderator

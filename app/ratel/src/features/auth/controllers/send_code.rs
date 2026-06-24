@@ -104,6 +104,14 @@ async fn send_email_code(email: String) -> Result<SendCodeResponse> {
 
     let cli = crate::features::auth::config::get().dynamodb();
 
+    // Reviewer test accounts never receive a real verification email; the fixed
+    // code "000000" is accepted at verification time (see `verify_email_code`).
+    // Return a normal future expiry so the client's code-entry UI behaves as usual.
+    if crate::common::models::auth::TestAccount::is_test_account(cli, &email).await {
+        let expired_at = crate::common::utils::time::get_now_timestamp() + EXPIRATION_TIME as i64;
+        return Ok(SendCodeResponse { expired_at });
+    }
+
     let (verification_list, _) = EmailVerification::find_by_email(
         cli,
         &email,

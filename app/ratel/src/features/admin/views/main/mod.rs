@@ -7,9 +7,10 @@ use crate::common::RewardCondition;
 use crate::common::RewardPeriod;
 use crate::common::RewardUserBehavior;
 use crate::features::admin::controllers::{
-    create_reward, get_analyze_quota, grant_enterprise_membership, list_enterprise_memberships,
-    list_rewards, update_analyze_quota, update_reward, AnalyzeQuotaResponse,
-    CreateGlobalRewardRequest, GrantEnterpriseMembershipRequest, MembershipGrantTargetType,
+    create_reward, create_test_account, delete_test_account, get_analyze_quota,
+    grant_enterprise_membership, list_enterprise_memberships, list_rewards, list_test_accounts,
+    update_analyze_quota, update_reward, AnalyzeQuotaResponse, CreateGlobalRewardRequest,
+    CreateTestAccountRequest, GrantEnterpriseMembershipRequest, MembershipGrantTargetType,
     RewardResponse, UpdateAnalyzeQuotaRequest, UpdateGlobalRewardRequest,
 };
 use crate::features::admin::models::reward_types::{
@@ -166,6 +167,9 @@ pub fn AdminMainPage() -> Element {
         div { class: "admin-arena__container",
             // ── Analyze quota section (arena card) ──────────
             AnalyzeQuotaSection {}
+
+            // ── Reviewer test-account section (arena card) ──────────
+            TestAccountsSection {}
 
             // ── Reward management section (arena card) ──────────
             section { class: "admin-arena__section",
@@ -569,6 +573,141 @@ fn AnalyzeQuotaSection() -> Element {
                 if let Some((text, ok)) = message_val {
                     span { class: if ok { "admin-arena__status admin-arena__status--ok" } else { "admin-arena__status admin-arena__status--err" },
                         "{text}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Reviewer test-account management. Listed emails skip verification-email
+/// delivery and log in with the fixed code "000000" (runtime allowlist; no
+/// `bypass` compile feature in production).
+#[component]
+fn TestAccountsSection() -> Element {
+    let mut accounts_resource = use_loader(move || async move { list_test_accounts().await })?;
+    let mut email = use_signal(String::new);
+    let mut note = use_signal(String::new);
+    let mut saving = use_signal(|| false);
+    let mut message = use_signal::<Option<(String, bool)>>(|| None);
+
+    let accounts = accounts_resource();
+
+    let on_add = move |_| async move {
+        let e = email().trim().to_lowercase();
+        if e.is_empty() || !e.contains('@') {
+            message.set(Some(("유효한 이메일을 입력하세요".to_string(), false)));
+            return;
+        }
+        saving.set(true);
+        message.set(None);
+        let result = create_test_account(CreateTestAccountRequest {
+            email: e,
+            note: note(),
+        })
+        .await;
+        saving.set(false);
+        match result {
+            Ok(_) => {
+                email.set(String::new());
+                note.set(String::new());
+                message.set(Some(("추가되었습니다".to_string(), true)));
+                accounts_resource.restart();
+            }
+            Err(err) => message.set(Some((format!("추가 실패: {err}"), false))),
+        }
+    };
+
+    let saving_val = saving();
+    let message_val = message();
+
+    rsx! {
+        section { class: "admin-arena__section",
+            div { class: "admin-arena__section-head",
+                span { class: "admin-arena__section-title", "테스트 계정 (스토어 심사용)" }
+                span { class: "admin-arena__section-meta", "{accounts.len()}개" }
+            }
+            div { class: "admin-arena__form admin-arena__form--stretch",
+                div { class: "admin-arena__form-row",
+                    input {
+                        class: "admin-arena__form-input",
+                        r#type: "email",
+                        placeholder: "reviewer@example.com",
+                        value: "{email}",
+                        oninput: move |e| email.set(e.value()),
+                    }
+                    input {
+                        class: "admin-arena__form-input",
+                        r#type: "text",
+                        placeholder: "메모 (예: App Store 심사)",
+                        value: "{note}",
+                        oninput: move |e| note.set(e.value()),
+                    }
+                    button {
+                        class: "admin-arena__btn",
+                        r#type: "button",
+                        disabled: saving_val,
+                        onclick: on_add,
+                        if saving_val {
+                            "추가 중…"
+                        } else {
+                            "추가"
+                        }
+                    }
+                }
+                span { class: "admin-arena__form-hint",
+                    "등록된 이메일은 인증 메일 없이 코드 000000 으로 로그인됩니다."
+                }
+                if let Some((text, ok)) = message_val {
+                    span { class: if ok { "admin-arena__status admin-arena__status--ok" } else { "admin-arena__status admin-arena__status--err" },
+                        "{text}"
+                    }
+                }
+            }
+            div { class: "admin-arena__table-wrap",
+                table { class: "admin-arena__table",
+                    thead {
+                        tr {
+                            th { "이메일" }
+                            th { "메모" }
+                            th { class: "text-right", "관리" }
+                        }
+                    }
+                    tbody {
+                        if accounts.is_empty() {
+                            tr {
+                                td {
+                                    class: "admin-arena__table-empty",
+                                    colspan: "3",
+                                    "등록된 테스트 계정이 없습니다."
+                                }
+                            }
+                        } else {
+                            for acc in accounts.iter() {
+                                tr { key: "{acc.email}",
+                                    td { "{acc.email}" }
+                                    td { "{acc.note}" }
+                                    td { class: "text-right",
+                                        button {
+                                            class: "admin-arena__table-link",
+                                            style: "color: #ef4444;",
+                                            r#type: "button",
+                                            onclick: {
+                                                let acc_email = acc.email.clone();
+                                                move |_| {
+                                                    let acc_email = acc_email.clone();
+                                                    async move {
+                                                        let _ = delete_test_account(acc_email).await;
+                                                        accounts_resource.restart();
+                                                    }
+                                                }
+                                            },
+                                            "삭제"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

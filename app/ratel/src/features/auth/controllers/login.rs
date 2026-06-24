@@ -256,7 +256,12 @@ pub async fn login_with_email(
     let (users, _) =
         User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     // Valid code but no account → caller (frontend) treats this as "go signup".
-    users.into_iter().next().ok_or(AuthError::UserNotFound.into())
+    // A tombstoned (soft-deleted) row is treated the same as "no account".
+    let user = users.into_iter().next().ok_or(AuthError::UserNotFound)?;
+    if user.deleted_at.is_some() {
+        return Err(AuthError::UserNotFound.into());
+    }
+    Ok(user)
 }
 
 /// Backward-compat: password login for already-shipped mobile apps (the

@@ -452,6 +452,14 @@ pub fn SignupModal(
                         },
                         {tr.terms_of_service}
                     }
+                    button {
+                        class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
+                        onclick: move |_| {
+                            popup.close();
+                            navigator.push("/child-safety");
+                        },
+                        {tr.child_safety}
+                    }
                 }
             }
         }
@@ -572,6 +580,10 @@ translate! {
     terms_of_service: {
         en: "Terms of Service",
         ko: "서비스 이용약관",
+    },
+    child_safety: {
+        en: "Child Safety",
+        ko: "아동 안전 기준",
     },
     failed_send_code: {
         en: "Failed to send verification code",

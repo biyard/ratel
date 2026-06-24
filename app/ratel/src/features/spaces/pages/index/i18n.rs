@@ -150,6 +150,11 @@ translate! {
         ko: "로그아웃",
     },
 
+    delete_account: {
+        en: "Delete Account",
+        ko: "회원 탈퇴",
+    },
+
     consent_heading: {
         en: "Confirm Participation",
         ko: "참여 확인",

@@ -83,6 +83,11 @@ pub async fn refresh_session_handler(
         })?
         .ok_or(Error::NoSessionFound)?;
 
+    // A soft-deleted account must not be revivable via a lingering refresh token.
+    if user.deleted_at.is_some() {
+        return Err(Error::NoSessionFound);
+    }
+
     // Mint a fresh session cookie for this client.
     session
         .insert(SESSION_KEY_USER_ID, user.pk.to_string())
