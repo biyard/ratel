@@ -282,14 +282,14 @@ pub fn PrivacyPolicyPage() -> Element {
     );
 
     rsx! {
-        div { class: "w-full min-h-screen bg-bg text-text-primary",
-            div { class: "px-4 py-12 mx-auto w-full max-w-desktop",
+        div { class: "overflow-y-auto w-full h-screen bg-bg text-text-primary",
+            div { class: "py-12 px-4 mx-auto w-full max-w-desktop",
                 div { class: "flex flex-col gap-8",
                     div { class: "text-center",
-                        h1 { class: "mb-4 text-3xl font-bold text-text-primary md:text-4xl",
+                        h1 { class: "mb-4 text-3xl font-bold md:text-4xl text-text-primary",
                             "{data.title}"
                         }
-                        p { class: "text-sm text-muted-foreground md:text-base",
+                        p { class: "text-sm md:text-base text-muted-foreground",
                             "{data.last_updated}: {data.effective_date}"
                         }
                     }
@@ -297,10 +297,10 @@ pub fn PrivacyPolicyPage() -> Element {
                     div { class: "flex flex-col gap-6 mt-8",
                         for section in data.sections.iter() {
                             section {
-                                h2 { class: "mb-3 text-xl font-semibold text-text-primary md:text-2xl",
+                                h2 { class: "mb-3 text-xl font-semibold md:text-2xl text-text-primary",
                                     "{section.title}"
                                 }
-                                p { class: "leading-7 text-text-primary whitespace-pre-wrap",
+                                p { class: "leading-7 whitespace-pre-wrap text-text-primary",
                                     "{section.content}"
                                 }
                                 if !section.items.is_empty() {
@@ -314,10 +314,10 @@ pub fn PrivacyPolicyPage() -> Element {
                         }
 
                         section {
-                            h2 { class: "mb-3 text-xl font-semibold text-text-primary md:text-2xl",
+                            h2 { class: "mb-3 text-xl font-semibold md:text-2xl text-text-primary",
                                 "{data.contact.title}"
                             }
-                            p { class: "mb-4 leading-7 text-text-primary whitespace-pre-wrap",
+                            p { class: "mb-4 leading-7 whitespace-pre-wrap text-text-primary",
                                 "{data.contact.content}"
                             }
                             div { class: "flex flex-col gap-2 pl-4",
@@ -325,15 +325,15 @@ pub fn PrivacyPolicyPage() -> Element {
                                     span { class: "font-semibold", "{data.company_name}" }
                                 }
                                 p { class: "text-text-primary",
-                                    span { class: "font-semibold", "{data.contact.email_label}: " }
+                                    span { class: "font-semibold", "{data.contact.email_label}:" }
                                     a {
-                                        class: "text-primary hover:underline",
+                                        class: "hover:underline text-primary",
                                         href: mailto_href,
                                         "{CONTACT_EMAIL}"
                                     }
                                 }
                                 p { class: "text-text-primary",
-                                    span { class: "font-semibold", "{data.contact.address_label}: " }
+                                    span { class: "font-semibold", "{data.contact.address_label}:" }
                                     "{data.address}"
                                 }
                             }

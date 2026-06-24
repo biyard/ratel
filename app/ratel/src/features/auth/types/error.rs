@@ -120,6 +120,13 @@ pub enum AuthError {
         ko = "모바일에서는 Google 로그인을 지원하지 않습니다. 이메일 로그인을 이용해주세요."
     )]
     SignInUnsupportedOnPlatform,
+
+    #[error("account deletion failed")]
+    #[translate(
+        en = "We couldn't delete your account. Please try again.",
+        ko = "회원 탈퇴에 실패했습니다. 다시 시도해 주세요."
+    )]
+    AccountDeletionFailed,
 }
 
 #[cfg(feature = "server")]
@@ -150,7 +157,8 @@ impl AuthError {
             | AuthError::UserInfoParseFailed
             | AuthError::EmailTemplateFailed
             | AuthError::TelegramBotTokenMissing
-            | AuthError::SignInUnsupportedOnPlatform => StatusCode::INTERNAL_SERVER_ERROR,
+            | AuthError::SignInUnsupportedOnPlatform
+            | AuthError::AccountDeletionFailed => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

@@ -26,5 +26,6 @@ translate! {
     login: { en: "Log in", ko: "로그인" },
     sign_up: { en: "Sign up", ko: "회원가입" },
     logout: { en: "Log out", ko: "로그아웃" },
+    delete_account: { en: "Delete account", ko: "회원 탈퇴" },
     team_settings_link: { en: "Team Settings", ko: "팀 설정" },
 }

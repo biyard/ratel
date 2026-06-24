@@ -29611,6 +29611,9 @@ body.comments-panel-resizing {
   margin-top: auto;
   padding-top: 24px;
   border-top: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .settings-logout__btn {

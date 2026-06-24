@@ -17,6 +17,36 @@ translate! {
         en: "Log Out",
         ko: "로그아웃",
     },
+
+    delete_account: {
+        en: "Delete Account",
+        ko: "회원 탈퇴",
+    },
+
+    delete_account_title: {
+        en: "Delete your account?",
+        ko: "회원 탈퇴하시겠습니까?",
+    },
+
+    delete_account_warning: {
+        en: "Your account and profile will be permanently deleted and cannot be recovered. You won't be able to restore your account information, and signing in again will create a new, empty account.",
+        ko: "계정과 프로필이 영구적으로 삭제되며 복구할 수 없습니다. 회원 정보는 다시 복구되지 않으며, 같은 정보로 다시 가입하면 새로운 빈 계정이 생성됩니다.",
+    },
+
+    cancel: {
+        en: "Cancel",
+        ko: "취소",
+    },
+
+    confirm_delete: {
+        en: "Delete Account",
+        ko: "탈퇴하기",
+    },
+
+    delete_failed: {
+        en: "Failed to delete your account. Please try again.",
+        ko: "회원 탈퇴에 실패했습니다. 다시 시도해 주세요.",
+    },
 }
 
 #[component]
@@ -44,7 +74,7 @@ pub fn ProfileDropdown() -> Element {
         div { class: "relative",
             // Trigger button
             button {
-                class: "flex flex-col items-center justify-center p-2.5 group cursor-pointer",
+                class: "flex flex-col justify-center items-center p-2.5 cursor-pointer group",
                 onclick: move |_| {
                     open.set(!open());
                 },
@@ -52,12 +82,12 @@ pub fn ProfileDropdown() -> Element {
                     img {
                         src: "{profile_url}",
                         alt: "User Profile",
-                        class: "w-6 h-6 rounded-full object-cover",
+                        class: "object-cover w-6 h-6 rounded-full",
                     }
                 } else {
-                    div { class: "w-6 h-6 bg-neutral-500 rounded-full" }
+                    div { class: "w-6 h-6 rounded-full bg-neutral-500" }
                 }
-                span { class: "text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-colors max-w-20 truncate",
+                span { class: "font-medium transition-colors text-menu-text text-[15px] max-w-20 truncate group-hover:text-menu-text/80",
                     "{display_name}"
                 }
             }
@@ -72,15 +102,15 @@ pub fn ProfileDropdown() -> Element {
                     },
                 }
 
-                div { class: "absolute right-0 top-full w-[250px] rounded-lg border border-divider bg-bg p-2.5 z-999",
+                div { class: "absolute right-0 top-full p-2.5 rounded-lg border w-[250px] border-divider bg-bg z-999",
                     // Teams label
-                    div { class: "text-xs text-c-secondary px-2 py-1", "{tr.teams}" }
+                    div { class: "px-2 text-xs text-c-secondary py-1", "{tr.teams}" }
 
                     // Scrollable team list
-                    div { class: "max-h-[300px] overflow-y-auto pr-2 -mr-2",
+                    div { class: "overflow-y-auto pr-2 -mr-2 max-h-[300px]",
                         // User entry (index 0)
                         Link {
-                            class: "flex items-center gap-2 w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer",
+                            class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
                             to: format!("/"),
                             onclick: move |_| {
                                 open.set(false);
@@ -89,10 +119,10 @@ pub fn ProfileDropdown() -> Element {
                                 img {
                                     src: "{user.profile_url}",
                                     alt: "{user.display_name}",
-                                    class: "w-6 h-6 rounded-full object-cover object-top",
+                                    class: "object-cover object-top w-6 h-6 rounded-full",
                                 }
                             } else {
-                                div { class: "w-6 h-6 bg-neutral-600 rounded-full" }
+                                div { class: "w-6 h-6 rounded-full bg-neutral-600" }
                             }
                             span { class: "text-sm text-c-secondary truncate", "{user.display_name}" }
                         }
@@ -100,7 +130,7 @@ pub fn ProfileDropdown() -> Element {
                         // Team entries
                         for team in teams.iter() {
                             Link {
-                                class: "flex items-center gap-2 w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer",
+                                class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
                                 to: format!("/{}/home", team.username),
                                 onclick: move |_| {
                                     open.set(false);
@@ -109,10 +139,10 @@ pub fn ProfileDropdown() -> Element {
                                     img {
                                         src: "{team.profile_url}",
                                         alt: "{team.nickname}",
-                                        class: "w-6 h-6 rounded-full object-cover object-top",
+                                        class: "object-cover object-top w-6 h-6 rounded-full",
                                     }
                                 } else {
-                                    div { class: "w-6 h-6 bg-neutral-600 rounded-full" }
+                                    div { class: "w-6 h-6 rounded-full bg-neutral-600" }
                                 }
                                 span { class: "text-sm text-c-secondary truncate", "{team.nickname}" }
                             }
@@ -120,11 +150,11 @@ pub fn ProfileDropdown() -> Element {
                     }
 
                     // Separator
-                    div { class: "my-2 bg-divider h-px" }
+                    div { class: "my-2 h-px bg-divider" }
 
                     // Create Team
                     button {
-                        class: "w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-c-secondary cursor-pointer text-left",
+                        class: "py-1.5 px-2 w-full text-sm text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
                         onclick: move |_| {
                             open.set(false);
                             popup.open(rsx! {
@@ -137,7 +167,7 @@ pub fn ProfileDropdown() -> Element {
 
                     // Logout
                     button {
-                        class: "w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-c-secondary cursor-pointer text-left",
+                        class: "py-1.5 px-2 w-full text-sm text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
                         onclick: move |_| {
                             open.set(false);
                             spawn(async move {
@@ -147,6 +177,79 @@ pub fn ProfileDropdown() -> Element {
                         },
                         "{tr.logout}"
                     }
+
+                    // Delete account (destructive)
+                    button {
+                        class: "py-1.5 px-2 w-full text-sm text-left text-red-500 rounded-md cursor-pointer hover:bg-hover",
+                        onclick: move |_| {
+                            open.set(false);
+                            popup.open(rsx! {
+                                AccountDeletionConfirm {}
+                            });
+                            popup.with_title(tr.delete_account);
+                        },
+                        "{tr.delete_account}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Confirmation dialog for irreversible account deletion. On confirm it calls
+/// the soft-delete server function, then clears client session state and
+/// redirects home.
+#[component]
+pub fn AccountDeletionConfirm() -> Element {
+    let tr: ProfileDropdownTranslate = use_translate();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let mut popup = use_popup();
+    let nav = use_navigator();
+    let mut loading = use_signal(|| false);
+    let mut error_message: Signal<Option<String>> = use_signal(|| None);
+
+    rsx! {
+        div { class: "flex flex-col gap-5 max-w-full w-100",
+            div { class: "flex flex-col gap-2",
+                h3 { class: "text-lg font-bold text-text-primary", "{tr.delete_account_title}" }
+                p { class: "text-sm leading-6 whitespace-pre-wrap text-c-secondary",
+                    "{tr.delete_account_warning}"
+                }
+            }
+
+            if let Some(err) = error_message() {
+                p { class: "text-sm text-red-500", "{err}" }
+            }
+
+            div { class: "flex flex-col gap-2.5 w-full",
+                button {
+                    class: "py-2.5 px-4 w-full text-sm font-bold text-white rounded-lg cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none",
+                    style: "background-color: #ef4444;",
+                    disabled: loading(),
+                    onclick: move |_| async move {
+                        error_message.set(None);
+                        loading.set(true);
+                        match crate::features::auth::controllers::delete_account_handler().await {
+                            Ok(_) => {
+                                crate::features::auth::services::sign_out(user_ctx).await;
+                                nav.push("/");
+                            }
+                            Err(e) => {
+                                crate::error!("delete account failed: {e}");
+                                loading.set(false);
+                                error_message.set(Some(tr.delete_failed.to_string()));
+                            }
+                        }
+                    },
+                    "{tr.confirm_delete}"
+                }
+                button {
+                    class: "py-2.5 px-4 w-full text-sm font-medium rounded-lg border cursor-pointer disabled:opacity-50 disabled:pointer-events-none border-border text-c-secondary hover:bg-hover",
+                    disabled: loading(),
+                    onclick: move |_| {
+                        popup.close();
+                    },
+                    "{tr.cancel}"
                 }
             }
         }

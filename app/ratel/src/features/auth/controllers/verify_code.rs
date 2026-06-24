@@ -67,6 +67,16 @@ pub async fn verify_email_code(
         return Ok(());
     }
 
+    // Reviewer test accounts accept the fixed code "000000" at runtime — without
+    // the compile-time `bypass` feature (which never ships to production). The
+    // email is admin-managed (see admin test-accounts), so this is scoped to a
+    // known allowlist and skips the EmailVerification record requirement.
+    if code.eq("000000")
+        && crate::common::models::auth::TestAccount::is_test_account(cli, email).await
+    {
+        return Ok(());
+    }
+
     if verification_list.is_empty() {
         return Err(Error::NotFoundVerificationCode);
     }

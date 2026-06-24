@@ -17,7 +17,8 @@ pub struct GetMeResponse {
 #[mcp_tool(name = "get_me", description = "Get current user info and membership details.")]
 #[get("/api/auth/me", user: OptionalUser)]
 pub async fn get_me_handler() -> Result<GetMeResponse> {
-    let user: Option<User> = user.into();
+    // Treat a soft-deleted (tombstoned) account as logged-out.
+    let user: Option<User> = Option::<User>::from(user).filter(|u| u.deleted_at.is_none());
 
     let membership = {
         match &user {

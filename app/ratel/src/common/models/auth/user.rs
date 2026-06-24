@@ -62,6 +62,13 @@ pub struct User {
     /// extra interstitial impression after the field rolls out — acceptable).
     #[serde(default)]
     pub interstitial_seen: bool,
+
+    /// Soft-deletion timestamp (ms). `None` for active accounts. When set, the
+    /// account is tombstoned: `email`/`username` are anonymized so the original
+    /// identifiers are freed for re-signup, and auth/login paths reject the row.
+    /// Existing rows without this attribute deserialize as `None`.
+    #[serde(default)]
+    pub deleted_at: Option<i64>,
 }
 
 impl User {
