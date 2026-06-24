@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::components::AccountDeletionConfirm;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::{LoginModal, SignupModal};
 use crate::features::social::pages::team_arena::i18n::TeamArenaTranslate;
@@ -233,6 +234,30 @@ pub fn ArenaSettingsPanel(
                                 }
                             }
                             "{tr.logout}"
+                        }
+                        button {
+                            class: "ta-settings-action ta-settings-action--logout",
+                            r#type: "button",
+                            onclick: move |_| {
+                                on_close.call(());
+                                popup.open(rsx! {
+                                    AccountDeletionConfirm {}
+                                });
+                            },
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "1.5",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                polyline { points: "3 6 5 6 21 6" }
+                                path { d: "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" }
+                                path { d: "M10 11v6" }
+                                path { d: "M14 11v6" }
+                                path { d: "M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" }
+                            }
+                            "{tr.delete_account}"
                         }
                     } else {
                         button {

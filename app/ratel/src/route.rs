@@ -65,7 +65,7 @@ use crate::features::sub_team::pages::{
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
-use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
+use crate::views::{ChildSafetyPage, Index, PrivacyPolicyPage, TermsOfServicePage};
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
 
@@ -113,6 +113,9 @@ pub enum Route {
 
         #[route("/terms")]
         TermsOfServicePage { },
+
+        #[route("/child-safety")]
+        ChildSafetyPage { },
 
         #[route("/membership")]
         MembershipHome {  },

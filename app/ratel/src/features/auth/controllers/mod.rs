@@ -1,4 +1,5 @@
 pub mod change_account;
+pub mod delete_account;
 pub mod get_me;
 pub mod list_accounts;
 pub mod login;
@@ -12,6 +13,7 @@ pub mod update_user;
 pub mod verify_code;
 
 pub use change_account::*;
+pub use delete_account::*;
 pub use get_me::*;
 pub use list_accounts::*;
 pub use login::*;

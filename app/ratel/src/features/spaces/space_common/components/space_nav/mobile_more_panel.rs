@@ -33,6 +33,11 @@ translate! {
         ko: "서비스 이용약관",
     },
 
+    child_safety: {
+        en: "Child Safety",
+        ko: "아동 안전 기준",
+    },
+
     dark: {
         en: "Dark",
         ko: "다크",
@@ -56,10 +61,10 @@ pub fn MobileMoreTab(is_open: bool, onclick: EventHandler<MouseEvent>) -> Elemen
 
     rsx! {
         button {
-            class: "hidden max-tablet:flex flex-1 flex-col gap-0.5 items-center py-2 max-tablet:py-0 px-1 text-sm font-medium rounded-sm cursor-pointer text-text hover:bg-space-nav-item-hover",
+            class: "hidden flex-col flex-1 gap-0.5 items-center py-2 px-1 text-sm font-medium rounded-sm cursor-pointer max-tablet:flex max-tablet:py-0 text-text hover:bg-space-nav-item-hover",
             "aria-selected": is_open,
             onclick: move |e| onclick.call(e),
-            div { class: "h-6 w-6 flex items-center justify-center",
+            div { class: "flex justify-center items-center w-6 h-6",
                 lucide_dioxus::Ellipsis { class: "w-5 h-5 [&>circle]:fill-current text-icon-primary" }
             }
             "{tr.more}"
@@ -92,7 +97,7 @@ pub fn MobileMorePanel(
         BottomSheet { open: true, on_close: move |e| on_close.call(e),
             if is_logged_in && !user_display_name.is_empty() {
                 Row {
-                    class: "w-full gap-2.5",
+                    class: "gap-2.5 w-full",
                     cross_axis_align: CrossAxisAlign::Center,
                     img {
                         src: "{user_image}",
@@ -114,7 +119,7 @@ pub fn MobileMorePanel(
                 cross_axis_align: CrossAxisAlign::Center,
                 span { class: "text-sm font-medium text-foreground", "{tr.theme}" }
                 button {
-                    class: "flex gap-1.5 items-center py-1 px-2 text-sm font-medium rounded-md cursor-pointer transition-colors bg-card-bg text-foreground",
+                    class: "flex gap-1.5 items-center py-1 px-2 text-sm font-medium rounded-md transition-colors cursor-pointer bg-card-bg text-foreground",
                     onclick: move |_| {
                         theme_service.set(next_theme);
                     },
@@ -159,7 +164,7 @@ pub fn MobileMorePanel(
                 span { class: "text-sm font-medium text-foreground", "{tr.language}" }
                 Row { class: "gap-1", cross_axis_align: CrossAxisAlign::Center,
                     button {
-                        class: "py-1 px-3 text-xs font-medium rounded-md cursor-pointer transition-colors bg-card-bg text-foreground-muted aria-selected:bg-primary aria-selected:text-btn-primary-text",
+                        class: "py-1 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer bg-card-bg text-foreground-muted aria-selected:bg-primary aria-selected:text-btn-primary-text",
                         "aria-selected": matches!(current_lang, Language::En),
                         onclick: move |_| {
                             switch_language_to(Language::En);
@@ -167,7 +172,7 @@ pub fn MobileMorePanel(
                         "English"
                     }
                     button {
-                        class: "py-1 px-3 text-xs font-medium rounded-md cursor-pointer transition-colors bg-card-bg text-foreground-muted aria-selected:bg-primary aria-selected:text-btn-primary-text",
+                        class: "py-1 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer bg-card-bg text-foreground-muted aria-selected:bg-primary aria-selected:text-btn-primary-text",
                         "aria-selected": matches!(current_lang, Language::Ko),
                         onclick: move |_| {
                             switch_language_to(Language::Ko);
@@ -197,14 +202,19 @@ pub fn MobileMorePanel(
             // Privacy & Terms links
             Col { class: "gap-2",
                 Link {
-                    class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer no-underline",
+                    class: "text-xs no-underline cursor-pointer text-foreground-muted hover:text-foreground",
                     to: "/privacy",
                     "{tr.privacy_policy}"
                 }
                 Link {
-                    class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer no-underline",
+                    class: "text-xs no-underline cursor-pointer text-foreground-muted hover:text-foreground",
                     to: "/terms",
                     "{tr.terms_of_service}"
+                }
+                Link {
+                    class: "text-xs no-underline cursor-pointer text-foreground-muted hover:text-foreground",
+                    to: "/child-safety",
+                    "{tr.child_safety}"
                 }
             }
         }
